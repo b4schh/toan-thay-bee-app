@@ -15,7 +15,6 @@ export default function Welcome() {
       <Button
         text="Bắt đầu"
         variant="text"
-        textStyle={{ fontSize: 18 }}
         onPress={() => router.push('/(auth)/login')}
       />
     </View>

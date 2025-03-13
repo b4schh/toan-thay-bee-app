@@ -30,6 +30,8 @@ export default function TabsLayout() {
           backgroundColor: '#ffffff',
           paddingBottom: insets.bottom,
           height: 75 + insets.bottom,
+          borderTopLeftRadius: 40,
+          borderTopRightRadius: 40,
         },
         headerShown: false,
       }}

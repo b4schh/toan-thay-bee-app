@@ -1,8 +1,16 @@
 // components/Button.js
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  Image,
+  Platform,
+} from 'react-native';
+import AppText from './AppText';
+import colors from '../constants/colors';
 
-const Button = ({
+export default function Button({
   text,
   iconSource, // Prop để truyền source của ảnh
   onPress,
@@ -10,7 +18,7 @@ const Button = ({
   buttonStyle,
   textStyle,
   iconStyle,
-}) => {
+}) {
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -28,31 +36,27 @@ const Button = ({
         />
       )}
       {(variant === 'text' || variant === 'both') && text && (
-        <Text style={[styles.text, textStyle]}>{text}</Text>
+        <AppText style={[styles.text, textStyle]}>{text}</AppText>
       )}
     </TouchableOpacity>
   );
-};
+}
 
 const styles = StyleSheet.create({
   button: {
     flexDirection: 'row', // Để icon và text nằm ngang nếu cả 2 được render
     alignItems: 'center',
     justifyContent: 'center',
-    width: '80%',
     height: 48,
-    paddingHorizontal: 12,
-    // paddingVertical: 16,
+    width: '100%',
     borderRadius: 999,
-    backgroundColor: '#253F61',
-    marginHorizontal: 20,
+    backgroundColor: colors.primary,
   },
   text: {
     color: '#fff',
     fontSize: 16,
     fontFamily: 'BeVietnamPro-Bold',
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: Platform.OS === 'android' ? 3 : 0,
   },
   icon: {
     width: 24,
@@ -60,5 +64,3 @@ const styles = StyleSheet.create({
     resizeMode: 'contain', // Để đảm bảo ảnh hiển thị đúng kích thước
   },
 });
-
-export default Button;

@@ -3,14 +3,14 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 // Nếu dùng icon, bạn có thể cài đặt và import từ react-native-vector-icons
 // import Icon from 'react-native-vector-icons/FontAwesome';
 
-const ClassCard = ({
+export default function ClassCard({
   imageSource, // đường dẫn hoặc require() của ảnh
   className, // tên lớp (VD: "Lớp Đại 12A")
   time, // thời gian (VD: "Thứ Hai, 19h30 - 21h30")
   sessions, // số buổi học (VD: 12)
   membersCount, // số lượng thành viên (VD: 86)
   onPressJoin, // hàm gọi khi bấm vào nút "Vào học"
-}) => {
+}) {
   return (
     <View style={styles.card}>
       {/* Ảnh đại diện cho lớp học */}
@@ -42,9 +42,7 @@ const ClassCard = ({
       </View>
     </View>
   );
-};
-
-export default ClassCard;
+}
 
 const styles = StyleSheet.create({
   card: {
