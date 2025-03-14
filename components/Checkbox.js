@@ -1,12 +1,14 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { AntDesign } from '@expo/vector-icons';
 import AppText from './AppText';
 
 export default function Checkbox({ label, checked, onToggle }) {
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={onToggle} style={styles.checkboxContainer}>
-        <View style={[styles.checkbox, checked && styles.checked]} />
+        {/* {checked && <AppText style={styles.tick}>✓</AppText>} */}
+        {checked && <AntDesign name="check" style={styles.tick} />}
       </TouchableOpacity>
       <AppText style={styles.label}>{label}</AppText>
     </View>
@@ -39,5 +41,15 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     color: '#000',
+  },
+  tick: {
+    color: '#fff',
+    backgroundColor: '#253F61',
+    width: 24,
+    height: 24,
+    textAlign: 'center',
+    paddingTop: 2,
+    fontSize: 20,
+    borderRadius: 4,
   },
 });
