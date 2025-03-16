@@ -1,6 +1,6 @@
 // app/welcome.js
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from '../components/Button';
 
@@ -16,7 +16,14 @@ export default function Welcome() {
         text="Bắt đầu"
         variant="text"
         onPress={() => router.push('/(auth)/login')}
+        buttonStyle={styles.button}
       />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    width: "50%"
+  },
+});

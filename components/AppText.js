@@ -12,6 +12,7 @@ export default function AppText({ children, style, ...props }) {
 
 const styles = StyleSheet.create({
   text: {
+    textAlignVertical: 'center',
     fontFamily: 'BeVietnamPro-Regular', // Mặc định là hệ thống nếu không truyền
     fontSize: 16, // Mặc định 16 nếu không truyền
     color: '#000', // Mặc định màu đen nếu không truyền

@@ -1,65 +1,62 @@
 // app/auth/login.js
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   ActivityIndicator,
   TouchableOpacity,
   StyleSheet,
-  CheckBox,
 } from 'react-native';
 import { Formik } from 'formik';
-import Button from '../../components/Button';
 import * as Yup from 'yup';
+import { useRouter } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
+
+import Button from '../../components/Button';
 import TextInputField from '../../components/input-field/TextInputField';
 import Checkbox from '../../components/Checkbox';
 import AppText from '../../components/AppText';
+import CustomAlert from '../../components/CustomAlert';
 import colors from '../../constants/colors';
 
-import { useAuth } from '../../contexts/AuthContext';
-import { useRouter } from 'expo-router';
+// Import action login được tạo từ authSlice (sử dụng createAsyncThunk)
+import { login } from '../../features/auth/authSlice';
 
 export default function Login() {
-  const { signIn } = useAuth();
+  const dispatch = useDispatch();
   const router = useRouter();
-  // const [username, setUsername] = useState('');
-  // const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
 
+  // Lấy trạng thái auth từ Redux
+  const { user, loading } = useSelector((state) => state.auth);
+
+  // State cho custom alert
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+
+  // Schema validation cho form login
   const LoginSchema = Yup.object().shape({
     username: Yup.string().required('Tên đăng nhập không được để trống'),
     password: Yup.string().required('Mật khẩu không được để trống'),
   });
 
-  const handleLogin = () => {
-    // Bắt đầu quá trình đăng nhập
-    setLoading(true);
-
-    // Giả lập quá trình đăng nhập (gọi API giả)
-    setTimeout(() => {
-      // Giả sử đăng nhập thành công với email đã nhập
-      signIn({ username });
-      setLoading(false);
-      // Chuyển hướng đến trang chính của ứng dụng
+  // Nếu đã đăng nhập thành công (user !== null), chuyển hướng đến trang chính
+  useEffect(() => {
+    if (user) {
       router.replace('/(tabs)');
-    }, 2000); // Giả lập 2 giây chờ xử lý
-  };
-
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#000" />
-      </View>
-    );
-  }
-
-  console.log('Trang login');
+    }
+  }, [user, router]);
 
   return (
     <View style={styles.container}>
-      {/* Khu vực header */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
+
+      {/* Header */}
       <View style={styles.headerContainer}>
         <AppText
           style={[styles.headerText, { fontSize: 32, marginBottom: 12 }]}
@@ -71,13 +68,40 @@ export default function Login() {
         </AppText>
       </View>
 
-      {/* Khu vực nội dung (card trắng) */}
+      {/* Card chứa form */}
       <View style={styles.card}>
         <Formik
           initialValues={{ username: '', password: '', rememberMe: false }}
           validationSchema={LoginSchema}
-          onSubmit={(values) => {
-            console.log(values);
+          onSubmit={async (values, { setSubmitting }) => {
+            try {
+              // Tạo payload mới không chứa trường rememberMe
+              const payload = {
+                username: values.username,
+                password: values.password,
+              };
+              await dispatch(login(payload)).unwrap();
+              // Nếu đăng nhập thành công, việc chuyển hướng được thực hiện bởi useEffect dựa trên state auth.user
+            } catch (error) {
+              // Phân biệt lỗi xác thực và lỗi kết nối
+              let message = "";
+              if (
+                error &&
+                (error === 401 ||
+                  error === 403 ||
+                  error === 404)
+              ) {
+                message = "Tài khoản hoặc mật khẩu không đúng!";
+              } else {
+                message = "Kết nối không ổn định";
+              }
+              setAlertTitle("Đăng nhập thất bại");
+              setAlertMessage(message);
+              setAlertVisible(true);
+              console.error('Đăng nhập thất bại, Status =', error);
+            } finally {
+              setSubmitting(false);
+            }
           }}
           validateOnBlur={false}
           validateOnChange={false}
@@ -91,9 +115,9 @@ export default function Login() {
             touched,
             setFieldValue,
             setFieldError,
+            isSubmitting,
           }) => (
             <View style={styles.form}>
-              {/* Tên đăng nhập */}
               <View
                 style={[
                   styles.inputField,
@@ -104,9 +128,8 @@ export default function Login() {
                   label="Tên đăng nhập"
                   onChangeText={(text) => {
                     handleChange('username')(text);
-                    // Nếu có lỗi và người dùng nhập giá trị mới, xóa lỗi
                     if (errors.username) {
-                      setFieldError('username', '');
+                      setFieldError('username', undefined);
                     }
                   }}
                   onBlur={handleBlur('username')}
@@ -117,7 +140,6 @@ export default function Login() {
                       ? colors.danger
                       : colors.ink.light
                   }
-                  // Truyền style lỗi nếu có lỗi
                   labelStyle={
                     errors.username && touched.username ? styles.errorLabel : {}
                   }
@@ -127,20 +149,17 @@ export default function Login() {
                       : {}
                   }
                 />
-
                 {errors.username && touched.username && (
                   <Text style={styles.error}>{errors.username}</Text>
                 )}
 
-                {/* Mật khẩu */}
                 <TextInputField
                   label="Mật khẩu"
                   typeField="password"
                   onChangeText={(text) => {
                     handleChange('password')(text);
-                    // Nếu có lỗi và người dùng nhập giá trị mới, xóa lỗi
                     if (errors.password) {
-                      setFieldError('password', '');
+                      setFieldError('password', undefined);
                     }
                   }}
                   onBlur={handleBlur('password')}
@@ -151,7 +170,6 @@ export default function Login() {
                       ? colors.danger
                       : colors.ink.light
                   }
-                  // Truyền style lỗi nếu có lỗi
                   labelStyle={
                     errors.password && touched.password ? styles.errorLabel : {}
                   }
@@ -166,18 +184,20 @@ export default function Login() {
                 )}
               </View>
 
-              {/* Nút đăng nhập */}
-              <Button text="Đăng nhập" onPress={handleSubmit} />
+              <Button
+                text="Đăng nhập"
+                onPress={handleSubmit}
+                disabled={isSubmitting || loading}
+              />
 
-              {/* Ghi nhớ đăng nhập & Cần giúp đỡ? */}
               <View style={styles.row}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Checkbox
                     label="Ghi nhớ tôi"
-                    checked={values.rememberMe} // Lấy từ Formik
+                    checked={values.rememberMe}
                     onToggle={() =>
                       setFieldValue('rememberMe', !values.rememberMe)
-                    } // Cập nhật Formik
+                    }
                   />
                 </View>
                 <TouchableOpacity>
@@ -190,6 +210,12 @@ export default function Login() {
           )}
         </Formik>
       </View>
+
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#000" />
+        </View>
+      )}
     </View>
   );
 }
@@ -197,8 +223,8 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primary, // Màu xanh ở phần trên
-    paddingTop: 40, // Tạo khoảng cách xuống dưới cho header
+    backgroundColor: colors.primary,
+    paddingTop: 40,
   },
   headerContainer: {
     paddingHorizontal: 20,
@@ -216,36 +242,25 @@ const styles = StyleSheet.create({
     height: '100%',
     paddingVertical: 32,
     paddingHorizontal: 20,
-    // Đổ bóng nhẹ
-    elevation: 2, // cho Android
+    elevation: 2,
   },
   form: {
     gap: 16,
   },
   inputField: {},
   errorSpacing: {
-    marginBottom: 0, // tăng khoảng cách khi có lỗi để tránh dính
+    marginBottom: 0,
   },
   errorLabel: {
-    color: colors.danger, // Đổi màu label khi  có lỗi
+    color: colors.danger,
   },
   errorInputBorder: {
-    borderColor: colors.danger, // Đổi màu viền input khi có lỗi
+    borderColor: colors.danger,
   },
   error: {
     color: colors.danger,
-    marginTop: -12, // khoảng cách giữa input và error text
-    marginBottom: 8, // khoảng cách sau error text
-  },
-  row: {
-    flexDirection: 'row',
-    marginTop: 16,
-    justifyContent: 'space-between',
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'relative',
+    marginTop: -12,
+    marginBottom: 8,
   },
   row: {
     flexDirection: 'row',
@@ -253,8 +268,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
   },
-  checkboxContainer: {
-    flexDirection: 'row',
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
 });

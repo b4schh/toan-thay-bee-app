@@ -1,113 +1,109 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-// Nếu dùng icon, bạn có thể cài đặt và import từ react-native-vector-icons
-// import Icon from 'react-native-vector-icons/FontAwesome';
+import React, { memo } from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import Button from './Button';
+import AppText from './AppText';
+import colors from '../constants/colors';
+import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 
-export default function ClassCard({
-  imageSource, // đường dẫn hoặc require() của ảnh
-  className, // tên lớp (VD: "Lớp Đại 12A")
-  time, // thời gian (VD: "Thứ Hai, 19h30 - 21h30")
-  sessions, // số buổi học (VD: 12)
-  membersCount, // số lượng thành viên (VD: 86)
-  onPressJoin, // hàm gọi khi bấm vào nút "Vào học"
-}) {
+const ClassCard = ({
+  imageSource,
+  className,
+  time,
+  sessions,
+  membersCount,
+  onPressJoin,
+}) => {
   return (
     <View style={styles.card}>
-      {/* Ảnh đại diện cho lớp học */}
-      <Image source={imageSource} style={styles.image} />
+      {/* Ảnh lớp học */}
+      <Image
+        source={imageSource}
+        style={styles.image}
+        resizeMode="cover"
+      />
 
-      {/* Tên lớp */}
-      <Text style={styles.className}>{className}</Text>
+      {/* Nội dung */}
+      <View style={styles.body}>
+        <Text style={styles.className} numberOfLines={1}>{className}</Text>
+        <Text style={styles.detail}>{time}</Text>
+        <Text style={styles.detail}>{sessions} buổi học</Text>
+      </View>
 
-      {/* Thời gian lớp */}
-      <Text style={styles.time}>{time}</Text>
-
-      {/* Số buổi học */}
-      <Text style={styles.sessions}>{sessions} buổi</Text>
-
-      {/* Khu vực footer: nút "Vào học" và số thành viên */}
+      {/* Footer */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.joinButton} onPress={onPressJoin}>
-          <Text style={styles.joinButtonText}>Vào học</Text>
-        </TouchableOpacity>
-
-        {/* Số lượng thành viên */}
+        <Button
+          buttonStyle={styles.button}
+          textStyle={styles.buttonText}
+          text="Vào học"
+          onPress={onPressJoin || (() => console.log('Vào học'))}
+        />
         <View style={styles.membersContainer}>
-          {/* Nếu có icon, bạn có thể dùng:
-              <Icon name="users" size={16} color="#000" /> 
-             Hoặc thay thế bằng Image/Text tùy ý. 
-          */}
-          <Text style={styles.membersText}>{membersCount} thành viên</Text>
+          <FontAwesomeIcon name="user" size={14} color={colors.sky.dark} />
+          <AppText style={styles.membersText}>{membersCount} thành viên</AppText>
         </View>
       </View>
     </View>
   );
-}
+};
+
+export default memo(ClassCard);
 
 const styles = StyleSheet.create({
   card: {
     width: 220,
     height: 280,
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    backgroundColor: colors.sky.white,
+    borderRadius: 12,
     padding: 12,
-    marginVertical: 8,
-    // Shadow iOS
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    // Elevation Android
-    elevation: 3,
+    marginBottom: 8,
+    elevation: 2, // Bóng trên Android
   },
   image: {
     width: '100%',
-    height: 140,
-    borderRadius: 8,
-    marginBottom: 12,
-    backgroundColor: '#EAF2FF', // placeholder nếu ảnh chưa load
+    height: 120,
+    borderRadius: 12, // Bo góc hình ảnh
+    backgroundColor: '#EAF2FF',
+  },
+  body: {
+    paddingVertical: 12,
+    justifyContent: 'center',
+    flex: 1,
   },
   className: {
-    width: '100%',
-    color: '#202325',
     fontSize: 18,
     fontFamily: 'BeVietnamPro-Bold',
-    lineHeight: 18,
-    wordWrap: 'break-word',
+    color: '#202325',
+    lineHeight: 22,
   },
-  time: {
+  detail: {
+    fontFamily: 'BeVietnamPro-Medium',
     fontSize: 14,
-    color: '#555',
-    marginBottom: 4,
-  },
-  sessions: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 8,
+    color: colors.sky.dark,
+    lineHeight: 22,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  joinButton: {
-    backgroundColor: '#007bff',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 4,
+  button: {
+    backgroundColor: colors.primary,
+    paddingVertical: 6,
+    width: 80, // tăng một chút để hiển thị text rõ ràng
+    alignItems: 'center',
   },
-  joinButtonText: {
+  buttonText: {
     color: '#fff',
+    fontFamily: 'BeVietnamPro-Medium',
     fontSize: 14,
-    fontWeight: 'bold',
   },
   membersContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
   },
   membersText: {
-    marginLeft: 4,
-    fontSize: 14,
-    color: '#555',
+    fontSize: 12,
+    color: colors.sky.dark,
   },
 });

@@ -1,32 +1,29 @@
 // app/_layout.js
 import { Stack } from 'expo-router';
-import { AuthProvider, useAuth } from '../contexts/AuthContext';
-import { useState, useEffect, useRef } from 'react';
-import { View, Animated, Image, StyleSheet } from 'react-native';
+import { useState, useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { loadFonts } from '../utils/fonts';
+import { Provider, useSelector } from 'react-redux';
+import { store } from '../redux/store';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { View, ActivityIndicator } from 'react-native';
 
 // Ngăn tự động ẩn splash screen
 SplashScreen.preventAutoHideAsync();
 
 export default function Layout() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <Provider store={store}>
+      <SafeAreaProvider>
+        <AppContent />
+      </SafeAreaProvider>
+    </Provider>
   );
 }
 
 function AppContent() {
-  const { user } = useAuth();
+  const user = useSelector((state) => state.auth.user);
   const [isReady, setIsReady] = useState(false);
-
-  // Thêm state để kiểm soát hiển thị overlay animation
-  const [showSplashAnimation, setShowSplashAnimation] = useState(true);
-
-  // Giá trị Animated cho scale và opacity
-  const scaleAnim = useRef(new Animated.Value(0)).current; // Ban đầu logo nhỏ
-  const fadeAnim = useRef(new Animated.Value(1)).current; // Ban đầu full hiển thị
 
   useEffect(() => {
     async function loadAssets() {
@@ -36,7 +33,6 @@ function AppContent() {
         console.warn('Lỗi khi tải assets:', e);
       } finally {
         setIsReady(true);
-        // Sau khi hoàn thành, ẩn splash screen
         await SplashScreen.hideAsync();
       }
     }
@@ -44,28 +40,25 @@ function AppContent() {
   }, []);
 
   if (!isReady) {
-    // Khi assets chưa tải xong, trả về null để không render gì,
-    // Splash screen vẫn được hiển thị.
-    return null;
+    // Hiển thị loading khi chưa sẵn sàng
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#253F61" />
+      </View>
+    );
   }
 
-  // if (!isReady) {
-  //   return (
-  //     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-  //       <ActivityIndicator size="large" color="#000" />
-  //     </View>
-  //   );
-  // }
-
-  return user ? (
+  return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{}} />
-    </Stack>
-  ) : (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" options={{}} />
-      <Stack.Screen name="(auth)/login" options={{}} />
-      <Stack.Screen name="(auth)/signup" options={{}} />
+      {user ? (
+        <Stack.Screen name="(tabs)" options={{}} />
+      ) : (
+        <>
+          <Stack.Screen name="index" options={{}} />
+          <Stack.Screen name="(auth)/login" options={{}} />
+          <Stack.Screen name="(auth)/signup" options={{}} />
+        </>
+      )}
     </Stack>
   );
 }

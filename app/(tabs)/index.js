@@ -1,25 +1,303 @@
-import { View, Text } from 'react-native';
+import { useState, useMemo } from 'react';
+import { View, StyleSheet, FlatList, ScrollView } from 'react-native';
 import ClassCard from '../../components/ClassCard';
+import Button from '../../components/Button';
+import AppText from '../../components/AppText';
+import TabNavigation from '../../components/TabNavigation';
+import colors from '../../constants/colors';
 
 export default function HomeScreen() {
+  const [selectedTab, setSelectedTab] = useState('pending_assignments');
+
+  console.log('Tab hiện tại:', selectedTab);
+
+  const TabContent = useMemo(
+    () => ({
+      pending_assignments: (
+        <AppText style={styles.contentText}>📚 Bài tập chưa nộp</AppText>
+      ),
+      unread_documents: (
+        <AppText style={styles.contentText}>⭐ Tài liệu chưa xem</AppText>
+      ),
+      saved_exams: <AppText style={styles.contentText}>📌 Đề đã lưu</AppText>,
+      exam_history: (
+        <AppText style={styles.contentText}>🕚 Lịch sử làm bài</AppText>
+      ),
+    }),
+    [],
+  );
+
+  const classes = [
+    {
+      id: 1,
+      imageSource: '',
+      className: 'Lớp Đại 12A',
+      time: 'Thứ Hai, 19h30 - 21h30',
+      sessions: 12,
+      membersCount: 86,
+    },
+    {
+      id: 2,
+      imageSource: '',
+      className: 'Lớp Hình 12A',
+      time: 'Thứ Ba, 19h30 - 21h30',
+      sessions: 16,
+      membersCount: 68,
+    },
+  ];
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>Trang chủ</Text>
-      <ClassCard
-        imageSource={
-          {
-            // uri: 'https://scontent.fhan2-3.fna.fbcdn.net/v/t39.30808-6/484350247_639183142053897_6464830362574289513_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHOO34-SamdtkgDDY6XNka5nOWYcRp6-zWc5ZhxGnr7NXgFvGAyrjw2x20xTBJ0GjdI98U5w0iQEDhNwIbGHucb&_nc_ohc=eoczdpbL6OQQ7kNvgEl18z8&_nc_oc=Adhhl47y5D0EpAN92ATKMEpnLza6Enq48p5hn4ucLDGB04Hir0e-7klWvf1KqY4S1Kw&_nc_zt=23&_nc_ht=scontent.fhan2-3.fna&_nc_gid=A0jRG6l-TUvi6h8dgEF63Qo&oh=00_AYHzGyYUOYiYrNuVScLGFTtYkliGajpd24wKraGbMaJvtA&oe=67D83E33',
-          }
-        } // Hoặc require('...')
-        className="Lớp Đại 12A"
-        time="Thứ Hai, 19h30 - 21h30"
-        sessions={12}
-        membersCount={86}
-        onPressJoin={() => {
-          // Xử lý khi bấm nút "Vào học"
-          console.log('Vào học');
-        }}
-      />
+    <View style={styles.container}>
+      {/* Button */}
+      <View style={styles.buttonContainer}>
+        <Button
+          iconSource="menu"
+          iconType="Feather"
+          variant="icon"
+          buttonStyle={{ paddingVertical: 0, width: 'auto', height: 'auto' }}
+          onPress={() => console.log('Menu Clicked!')}
+        />
+        <View style={styles.buttonContainerRight}>
+          <Button
+            iconSource="search"
+            iconType="Feather"
+            variant="icon"
+            buttonStyle={{ backgroundColor: colors.sky.white }}
+            iconColor={colors.primary}
+            onPress={() => console.log('Search Clicked!')}
+          />
+          <Button
+            iconSource="bell"
+            iconType="Feather"
+            variant="icon"
+            buttonStyle={{ backgroundColor: colors.sky.white }}
+            iconColor={colors.primary}
+            onPress={() => console.log('Notification Clicked!')}
+          />
+        </View>
+      </View>
+
+      {/* Header */}
+      <View style={styles.headerContainer}>
+        <AppText style={[styles.headerText, { fontSize: 18 }]}>
+          Chào mừng!
+        </AppText>
+        <AppText style={[styles.headerText, { fontSize: 24 }]}>
+          Nguyễn Minh Đức
+        </AppText>
+      </View>
+
+      {/* Nội dung có thể scroll */}
+      <ScrollView
+        contentContainerStyle={{}}
+        showsVerticalScrollIndicator={false}
+        style={styles.scrollContainer}
+      >
+        {/* Body */}
+        <View style={styles.card}>
+          <View style={styles.recentClass}>
+            <AppText style={styles.title}>Lớp học gần đây</AppText>
+            <View style={{ paddingVertical: 10 }}>
+              <FlatList
+                data={classes}
+                renderItem={({ item }) => (
+                  <ClassCard
+                    imageSource={item.imageSource}
+                    className={item.className}
+                    time={item.time}
+                    sessions={item.sessions}
+                    membersCount={item.membersCount}
+                    onPressJoin={() => {
+                      // Xử lý khi bấm nút "Vào học"
+                      console.log('Vào học');
+                    }}
+                  />
+                )}
+                keyExtractor={(item) => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 16 }}
+                scrollEventThrottle={16} // Cập nhật mượt hơn
+                pagingEnabled={false}
+                removeClippedSubviews={true}
+              />
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <AppText style={styles.title}>Tổng quan</AppText>
+
+            {/* Navigation Bar */}
+            <TabNavigation
+              tabs={[
+                { id: 'pending_assignments', label: 'Bài tập chưa nộp' },
+                { id: 'unread_documents', label: 'Tài liệu chưa xem' },
+                { id: 'saved_exams', label: 'Đề đã lưu' },
+                { id: 'exam_history', label: 'Lịch sử làm bài' },
+              ]}
+              selectedTab={selectedTab}
+              onTabPress={setSelectedTab}
+            />
+
+            {/* Nội dung hiển thị bên dưới */}
+            <View style={[styles.contentContainer]}>
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+              {TabContent[selectedTab] || (
+                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+              )}
+            </View>
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.primary,
+    paddingTop: 0,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  buttonContainerRight: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  headerContainer: {
+    gap: 4,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  headerText: {
+    fontFamily: 'BeVietnamPro-Bold',
+    color: colors.sky.white,
+  },
+  scrollContainer: {
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+  },
+  card: {
+    backgroundColor: colors.sky.lightest,
+    // borderTopLeftRadius: 40,
+    // borderTopRightRadius: 40,
+    height: '100%',
+    paddingTop: 24,
+    paddingBottom: 80,
+    paddingHorizontal: 20,
+  },
+  title: {
+    fontFamily: 'BeVietnamPro-Bold',
+    color: colors.ink.darkest,
+    fontSize: 18,
+  },
+  section: {
+    gap: 12,
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.sky.lightest,
+  },
+  contentText: {
+    textAlign: 'center',
+    fontSize: 18,
+    fontFamily: 'BeVietnamPro-Medium',
+    color: colors.ink.darkest,
+  },
+});
