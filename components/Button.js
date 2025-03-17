@@ -1,112 +1,91 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
-import { MaterialIcons, FontAwesome, Ionicons, Feather } from '@expo/vector-icons'; // Import các thư viện icon
+import { TouchableOpacity, StyleSheet, View } from 'react-native';
+import * as Icons from '@expo/vector-icons'; // Import tất cả icon libraries từ expo
 import AppText from './AppText';
 import colors from '../constants/colors';
 
-export default function Button({
-  text,
-  iconSource, // Có thể là tên icon (chuỗi) hoặc ảnh
-  iconType = 'MaterialIcons', // Loại icon mặc định (MaterialIcons, FontAwesome, Ionicons,...)
-  variant = 'text', // Các giá trị: 'text', 'icon', 'both'
+const Button = ({
   onPress,
-  buttonStyle,
-  textStyle,
-  iconStyle,
-  iconSize = 24, // Kích thước icon mặc định
-  iconColor = 'white', // Màu icon mặc định
-}) {
-  // Kiểm tra iconSource để xác định cách hiển thị icon
+  text, // Nội dung text
+  icon, // Tên icon
+  iconLibrary = 'Ionicons', // Default là Ionicons
+  iconSize = 24, // Kích thước icon, mặc định = 24
+  iconColor = colors.sky.white, // Màu icon, mặc định là trắng
+  iconComponent,
+  style, // Custom style của button
+  textStyle, // Custom style của text
+  iconStyle, // Custom style của icon
+  disabled = false,
+  ...props
+}) => {
+  // Hàm render icon với khả năng chọn library
   const renderIcon = () => {
-    if (!iconSource) return null;
-
-    // Nếu iconSource là một chuỗi (tên icon), sử dụng thư viện icon
-    if (typeof iconSource === 'string' && !iconSource.includes('/')) {
-      const IconComponent = getIconComponent(iconType);
+    if (iconComponent) {
+      // Trường hợp sử dụng custom icon component (Ảnh, SVG,...)
+      return iconComponent;
+    }
+    if (icon && Icons[iconLibrary]) {
+      const IconComponent = Icons[iconLibrary];
       return (
         <IconComponent
-          name={iconSource}
+          name={icon}
           size={iconSize}
           color={iconColor}
-          style={[styles.icon, iconStyle]}
+          style={[styles.icon, iconStyle, text && styles.iconWithText]}
         />
       );
     }
-
-    // Nếu iconSource là hình ảnh (require hoặc URL), dùng Image
-    return (
-      <Image
-        source={
-          typeof iconSource === 'string' ? { uri: iconSource } : iconSource
-        }
-        style={[
-          styles.icon,
-          iconStyle,
-          variant === 'both' && text ? { marginRight: 8 } : {},
-        ]}
-      />
-    );
+    return null;
   };
 
   return (
     <TouchableOpacity
+      style={[styles.button, style, disabled && styles.disabled]}
       onPress={onPress}
+      disabled={disabled}
       activeOpacity={0.8}
-      style={[
-        styles.button,
-        variant === 'icon' && styles.iconOnly,
-        variant === 'text' && styles.textOnly,
-        buttonStyle,
-      ]}
+      {...props}
     >
-      {(variant === 'icon' || variant === 'both') && renderIcon()}
-      {(variant === 'text' || variant === 'both') && text && (
-        <AppText style={[styles.text, textStyle]}>{text}</AppText>
-      )}
+      <View style={styles.content}>
+        {renderIcon()}
+        {text && <AppText style={[styles.text, textStyle]}>{text}</AppText>}
+      </View>
     </TouchableOpacity>
   );
-}
-
-// Hàm chọn loại icon dựa trên iconType
-const getIconComponent = (type) => {
-  switch (type) {
-    case 'FontAwesome':
-      return FontAwesome;
-    case 'Feather':
-      return Feather;
-    case 'Ionicons':
-      return Ionicons;
-    case 'MaterialIcons':
-    default:
-      return MaterialIcons;
-  }
 };
 
+// Styles cơ bản
 const styles = StyleSheet.create({
   button: {
-    flexDirection: 'row', // Để icon và text nằm ngang nếu cả 2 được render
+    backgroundColor: colors.primary,
+    borderRadius: 99,
+    // paddingVertical: 12,
+    // paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 999,
-    backgroundColor: colors.primary,
+    height: 48,
+    width: 48
   },
-  iconOnly: {
-    height: 44,
-    width: 44,
-  },
-  textOnly: {
-    width: '100%',
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   text: {
+    fontFamily: 'BeVietnamPro-Medium',
     color: colors.sky.white,
-    fontSize: 16,
-    fontFamily: 'BeVietnamPro-Bold',
-    marginBottom: Platform.OS === 'android' ? 3 : 0,
+    marginTop: -3,
   },
   icon: {
-    width: 24,
-    height: 24,
-    resizeMode: 'contain', // Để đảm bảo ảnh hiển thị đúng kích thước
+    // Không set color và size ở đây nữa để prop override
+  },
+  iconWithText: {
+    marginRight: 8,
+  },
+  disabled: {
+    backgroundColor: '#CCCCCC',
+    opacity: 0.8,
   },
 });
+
+// Export component
+export default Button;

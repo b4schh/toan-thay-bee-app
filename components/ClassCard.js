@@ -1,83 +1,130 @@
+// components/ClassCard.js
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import Button from './Button';
 import AppText from './AppText';
 import colors from '../constants/colors';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 
+// Hàm so sánh props để tối ưu memo
+const arePropsEqual = (prevProps, nextProps) => {
+  return (
+    prevProps.imageSource === nextProps.imageSource &&
+    prevProps.className === nextProps.className &&
+    prevProps.time === nextProps.time &&
+    prevProps.sessions === nextProps.sessions &&
+    prevProps.membersCount === nextProps.membersCount &&
+    prevProps.status === nextProps.status &&
+    prevProps.onPressJoin === nextProps.onPressJoin &&
+    prevProps.variant === nextProps.variant
+  );
+};
+
 const ClassCard = ({
   imageSource,
-  className,
-  time,
+  className = 'Tên lớp không xác định',
+  time = 'Không có thời gian',
   sessions,
   membersCount,
+  status,
   onPressJoin,
+  variant = 'large', // 'large' cho trang chủ, 'small' cho mục đích khác
 }) => {
+  const isPending = status === 'Đang chờ phê duyệt';
+
+  // Chọn style dựa trên variant
+  const cardStyle = variant === 'large' ? styles.cardLarge : styles.cardSmall;
+  const imageStyle =
+    variant === 'large' ? styles.imageLarge : styles.imageSmall;
+  const classNameStyle =
+    variant === 'large' ? styles.classNameLarge : styles.classNameSmall;
+  const detailStyle =
+    variant === 'large' ? styles.detailLarge : styles.detailSmall;
+  const buttonStyle =
+    variant === 'large' ? styles.buttonLarge : styles.buttonSmall;
+  const membersTextStyle =
+    variant === 'large' ? styles.membersTextLarge : styles.membersTextSmall;
+
   return (
-    <View style={styles.card}>
-      {/* Ảnh lớp học */}
+    <View style={[styles.cardBase, cardStyle]}>
       <Image
-        source={imageSource}
-        style={styles.image}
+        source={imageSource || require('../assets/images/default-image.jpg')}
+        style={[styles.imageBase, imageStyle]}
         resizeMode="cover"
       />
-
-      {/* Nội dung */}
       <View style={styles.body}>
-        <Text style={styles.className} numberOfLines={1}>{className}</Text>
-        <Text style={styles.detail}>{time}</Text>
-        <Text style={styles.detail}>{sessions} buổi học</Text>
-      </View>
+        <AppText
+          style={[styles.classNameBase, classNameStyle]}
+          numberOfLines={1}
+        >
+          {className}
+        </AppText>
+        {/* <AppText style={[styles.detailBase, detailStyle]}>{time}</AppText> */}
 
-      {/* Footer */}
+        <AppText style={[styles.detailBase, detailStyle]}>
+          {sessions} buổi học
+        </AppText>
+      </View>
       <View style={styles.footer}>
-        <Button
-          buttonStyle={styles.button}
-          textStyle={styles.buttonText}
-          text="Vào học"
-          onPress={onPressJoin || (() => console.log('Vào học'))}
-        />
-        <View style={styles.membersContainer}>
-          <FontAwesomeIcon name="user" size={14} color={colors.sky.dark} />
-          <AppText style={styles.membersText}>{membersCount} thành viên</AppText>
-        </View>
+        {isPending ? (
+          <Button
+            text="Đang chờ phê duyệt"
+            style={[styles.buttonBase, buttonStyle]}
+            textStyle={styles.buttonText}
+            disabled
+          />
+        ) : (
+          <>
+            <Button
+              text="Vào học"
+              style={[styles.buttonBase, buttonStyle]}
+              textStyle={styles.buttonText}
+              onPress={onPressJoin || (() => console.log('Vào học'))}
+            />
+            {variant === 'large' && (
+              <View style={styles.membersContainer}>
+                <FontAwesomeIcon
+                  name="user"
+                  size={14}
+                  color={colors.sky.dark}
+                />
+                <AppText style={[styles.membersTextBase, membersTextStyle]}>
+                  {membersCount} thành viên
+                </AppText>
+              </View>
+            )}
+          </>
+        )}
       </View>
     </View>
   );
 };
 
-export default memo(ClassCard);
+export default memo(ClassCard, arePropsEqual);
 
 const styles = StyleSheet.create({
-  card: {
-    width: 220,
-    height: 280,
+  // Style chung
+  cardBase: {
     backgroundColor: colors.sky.white,
     borderRadius: 12,
     padding: 12,
-    marginBottom: 8,
-    elevation: 2, // Bóng trên Android
   },
-  image: {
+  imageBase: {
     width: '100%',
-    height: 120,
-    borderRadius: 12, // Bo góc hình ảnh
+    borderRadius: 12,
     backgroundColor: '#EAF2FF',
   },
   body: {
-    paddingVertical: 12,
-    justifyContent: 'center',
     flex: 1,
+    justifyContent: 'center',
   },
-  className: {
-    fontSize: 18,
+  classNameBase: {
     fontFamily: 'BeVietnamPro-Bold',
-    color: '#202325',
+    color: colors.ink.darkest,
     lineHeight: 22,
   },
-  detail: {
+  detailBase: {
     fontFamily: 'BeVietnamPro-Medium',
-    fontSize: 14,
     color: colors.sky.dark,
     lineHeight: 22,
   },
@@ -86,24 +133,60 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  button: {
-    backgroundColor: colors.primary,
-    paddingVertical: 6,
-    width: 80, // tăng một chút để hiển thị text rõ ràng
-    alignItems: 'center',
+  buttonBase: {
+    height: 36,
   },
   buttonText: {
-    color: '#fff',
-    fontFamily: 'BeVietnamPro-Medium',
-    fontSize: 14,
+    fontSize: 12,
   },
   membersContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  membersText: {
-    fontSize: 12,
+  membersTextBase: {
     color: colors.sky.dark,
+  },
+
+  // Style cho phiên bản lớn (trang chủ)
+  cardLarge: {
+    width: 220,
+    height: 280,
+  },
+  imageLarge: {
+    height: 140,
+  },
+  classNameLarge: {
+    fontSize: 18,
+  },
+  detailLarge: {
+    fontSize: 14,
+  },
+  buttonLarge: {
+    width: 80,
+  },
+  membersTextLarge: {
+    fontSize: 12,
+  },
+
+  // Style cho phiên bản nhỏ
+  cardSmall: {
+    width: 168, // Nhỏ hơn phiên bản lớn
+    height: 220, // Nhỏ hơn phiên bản lớn
+  },
+  imageSmall: {
+    height: 100, // Giảm chiều cao ảnh
+  },
+  classNameSmall: {
+    fontSize: 16, // Giảm font size
+  },
+  detailSmall: {
+    fontSize: 12, // Giảm font size
+  },
+  buttonSmall: {
+    width: "100%", // Giảm width của button
+  },
+  membersTextSmall: {
+    fontSize: 10, // Giảm font size
   },
 });

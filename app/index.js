@@ -3,6 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from '../components/Button';
+import colors from '../constants/colors'
 
 export default function Welcome() {
   const router = useRouter();
@@ -13,11 +14,11 @@ export default function Welcome() {
         Chào mừng đến với ứng dụng!
       </Text>
       <Button
-        text="Bắt đầu"
-        variant="text"
-        onPress={() => router.push('/(auth)/login')}
-        buttonStyle={styles.button}
-      />
+          text="Bắt đầu"
+          iconColor={colors.primary}
+          style={[styles.button, { }]}
+          onPress={() => router.push('(auth)/login')}
+        />
     </View>
   );
 }

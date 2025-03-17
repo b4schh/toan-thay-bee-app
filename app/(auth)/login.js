@@ -187,7 +187,9 @@ export default function Login() {
               <Button
                 text="Đăng nhập"
                 onPress={handleSubmit}
+                style={styles.button}
                 disabled={isSubmitting || loading}
+
               />
 
               <View style={styles.row}>
@@ -261,6 +263,9 @@ const styles = StyleSheet.create({
     color: colors.danger,
     marginTop: -12,
     marginBottom: 8,
+  },
+  button : {
+    width: "100%"
   },
   row: {
     flexDirection: 'row',

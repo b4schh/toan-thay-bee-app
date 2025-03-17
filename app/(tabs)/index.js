@@ -50,28 +50,32 @@ export default function HomeScreen() {
       {/* Button */}
       <View style={styles.buttonContainer}>
         <Button
-          iconSource="menu"
-          iconType="Feather"
-          variant="icon"
-          buttonStyle={{ paddingVertical: 0, width: 'auto', height: 'auto' }}
+          icon="menu"
+          iconLibrary="Feather"
+          iconColor={colors.sky.white}
+          style={[{ width: 'auto', height: 'auto' }]}
           onPress={() => console.log('Menu Clicked!')}
         />
         <View style={styles.buttonContainerRight}>
           <Button
-            iconSource="search"
-            iconType="Feather"
-            variant="icon"
-            buttonStyle={{ backgroundColor: colors.sky.white }}
+            icon="search"
+            iconLibrary="Feather"
             iconColor={colors.primary}
-            onPress={() => console.log('Search Clicked!')}
+            style={[
+              styles.button,
+              { paddingHorizontal: 0, paddingVertical: 0 },
+            ]}
+            onPress={() => console.log('Menu Clicked!')}
           />
           <Button
-            iconSource="bell"
-            iconType="Feather"
-            variant="icon"
-            buttonStyle={{ backgroundColor: colors.sky.white }}
+            icon="bell"
+            iconLibrary="Feather"
             iconColor={colors.primary}
-            onPress={() => console.log('Notification Clicked!')}
+            style={[
+              styles.button,
+              { paddingHorizontal: 0, paddingVertical: 0 },
+            ]}
+            onPress={() => console.log('Menu Clicked!')}
           />
         </View>
       </View>
@@ -224,15 +228,6 @@ export default function HomeScreen() {
               {TabContent[selectedTab] || (
                 <AppText style={styles.contentText}>Không có dữ liệu</AppText>
               )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
             </View>
           </View>
         </View>
@@ -246,6 +241,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.primary,
     paddingTop: 0,
+  },
+  button: {
+    backgroundColor: colors.sky.white,
+    width: 48,
+    height: 48,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -270,15 +270,14 @@ const styles = StyleSheet.create({
   scrollContainer: {
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
+    flex: 1,
+    paddingTop: 24,
+    paddingHorizontal: 20,
+    backgroundColor: colors.sky.lightest,
   },
   card: {
-    backgroundColor: colors.sky.lightest,
-    // borderTopLeftRadius: 40,
-    // borderTopRightRadius: 40,
-    height: '100%',
-    paddingTop: 24,
-    paddingBottom: 80,
-    paddingHorizontal: 20,
+    flexGrow: 1,
+    paddingBottom: 50,
   },
   title: {
     fontFamily: 'BeVietnamPro-Bold',

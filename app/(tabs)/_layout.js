@@ -11,6 +11,7 @@ export default function TabsLayout() {
     // <SafeAreaView style={{ flex: 1 }}>
     <Tabs
       screenOptions={{
+        keyboardHidesTabBar: true,
         tabBarActiveTintColor: '#253F61',
         tabBarInactiveTintColor: '#9DB2CE',
         tabBarItemStyle: {
@@ -27,8 +28,8 @@ export default function TabsLayout() {
         },
         // Thêm paddingBottom và điều chỉnh chiều cao tab bar dựa vào insets.bottom
         tabBarStyle: {
-          position: 'absolute',
-          zIndex: 99,
+          // position: 'absolute',
+          // zIndex: 99,
           backgroundColor: '#ffffff',
           paddingBottom: insets.bottom,
           height: 75 + insets.bottom,
