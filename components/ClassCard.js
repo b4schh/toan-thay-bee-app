@@ -37,7 +37,7 @@ const ClassCard = ({
     router.push(`/class/${classId}`);
   };
 
-  const isPending = status === 'Đang chờ phê duyệt';
+  const isPending = status === 'WS';
 
   // Chọn style dựa trên variant
   const cardStyle = variant === 'large' ? styles.cardLarge : styles.cardSmall;

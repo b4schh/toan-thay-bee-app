@@ -6,6 +6,9 @@ import {
   checkLoginAPI,
 } from '../../services/authApi';
 import { addError } from '../state/stateApiSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
 
 // Thunk đăng nhập
 export const login = createAsyncThunk(
@@ -13,9 +16,8 @@ export const login = createAsyncThunk(
   async (credentials, { dispatch, rejectWithValue }) => {
     try {
       const response = await loginAPI(credentials);
-      const { user } = response.data; // API trả về { user }
-      console.log('Đăng nhập thành công:', user);
-      
+      const { user, token } = response.data; // API trả về { user }
+      await AsyncStorage.setItem('authToken', token);
       return user;
     } catch (error) {
       const errorMsg = error.response.status || 'Đăng nhập thất bại';
