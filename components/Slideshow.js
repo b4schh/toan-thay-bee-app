@@ -4,12 +4,20 @@ import colors from '../constants/colors';
 
 const { width } = Dimensions.get('window');
 
+const defaultImage = require('../assets/images/default-image.jpg');
+
 export default function Slideshow({ images = [] }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const flatListRef = useRef(null);
 
+  const imageList = images.length > 0 ? images : [defaultImage];
+
   const renderItem = ({ item }) => (
-    <Image source={{ uri: item }} style={styles.image} resizeMode="cover" />
+    <Image
+      source={typeof item === 'string' ? { uri: item } : item} // ✅ Hỗ trợ cả URL và require()
+      style={styles.image}
+      resizeMode="cover"
+    />
   );
 
   const handleScroll = (event) => {
@@ -22,15 +30,16 @@ export default function Slideshow({ images = [] }) {
     <View style={styles.carouselContainer}>
       <FlatList
         ref={flatListRef}
-        data={images}
+        data={imageList}
         renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(index) => index.toString()}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
       />
+
       {/* Pagination Dots */}
       <View style={styles.paginationContainer}>
         {images.map((_, index) => (
@@ -50,22 +59,23 @@ export default function Slideshow({ images = [] }) {
 const styles = StyleSheet.create({
   carouselContainer: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 0,
   },
   image: {
     width: width,
-    height: 200,
+    height: 250,
   },
   paginationContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 10,
+    marginTop: -50,
+    marginBottom: 10,
   },
   dotStyle: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.sky.white,
     marginHorizontal: 5,
   },
 });

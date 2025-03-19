@@ -8,10 +8,10 @@ export const CLASS_DATA = [
       membersCount: 86,
       status: 'Đã tham gia',
       description:
-        'Lớp Đại 12A giúp học sinh nắm vững kiến thức, rèn luyện kỹ năng giải bài tập và chuẩn bị cho kỳ thi THPT Quốc gia.',
+        'Lớp Đại 12A giúp học sinh nắm vững kiến thức, rèn luyện kỹ năng giải bài tập và chuẩn bị cho kỳ thi THPT Quốc gia. Phương pháp giảng dạy dễ hiểu, tài liệu chọn lọc và hỗ trợ tận tình giúp học sinh tự tin đạt kết quả cao.',
       sessions: [
         {
-          id: 'session_1',
+          id: '1',
           title: 'Đạo hàm',
           details: {
             theory: 'Lý thuyết về đạo hàm...',
@@ -20,7 +20,7 @@ export const CLASS_DATA = [
           },
         },
         {
-          id: 'session_2',
+          id: '2',
           title: 'Nguyên hàm',
           details: {
             theory: 'Lý thuyết về nguyên hàm...',
@@ -42,7 +42,7 @@ export const CLASS_DATA = [
         'Lớp Đại 12B giúp học sinh nắm vững kiến thức, rèn luyện kỹ năng giải bài tập và chuẩn bị cho kỳ thi THPT Quốc gia.',
       sessions: [
         {
-          id: 'session_1',
+          id: '1',
           title: 'Đạo hàm',
           details: {
             theory: 'Lý thuyết về đạo hàm...',
@@ -51,7 +51,7 @@ export const CLASS_DATA = [
           },
         },
         {
-          id: 'session_2',
+          id: '2',
           title: 'Nguyên hàm',
           details: {
             theory: 'Lý thuyết về nguyên hàm...',
@@ -73,7 +73,7 @@ export const CLASS_DATA = [
         'Lớp Hình 12B giúp học sinh nắm vững kiến thức, rèn luyện kỹ năng giải bài tập và chuẩn bị cho kỳ thi THPT Quốc gia.',
       sessions: [
         {
-          id: 'session_1',
+          id: '1',
           title: 'Khối lăng trụ đứng',
           details: {
             theory: 'Lý thuyết về lăng trụ đứng...',
@@ -82,7 +82,7 @@ export const CLASS_DATA = [
           },
         },
         {
-          id: 'session_2',
+          id: '2',
           title: 'Tam giác',
           details: {
             theory: 'Lý thuyết về tam giác...',
@@ -104,7 +104,7 @@ export const CLASS_DATA = [
         'Lớp Hình 12A giúp học sinh nắm vững kiến thức, rèn luyện kỹ năng giải bài tập và chuẩn bị cho kỳ thi THPT Quốc gia.',
       sessions: [
         {
-          id: 'session_1',
+          id: '1',
           title: 'Khối lăng trụ đứng',
           details: {
             theory: 'Lý thuyết về lăng trụ đứng...',
@@ -113,7 +113,7 @@ export const CLASS_DATA = [
           },
         },
         {
-          id: 'session_2',
+          id: '2',
           title: 'Tam giác',
           details: {
             theory: 'Lý thuyết về tam giác...',

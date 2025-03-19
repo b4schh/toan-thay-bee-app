@@ -14,9 +14,9 @@ export default function Layout() {
   return (
     <Provider store={store}>
       <SafeAreaProvider>
-        <React.StrictMode>
+        {/* <React.StrictMode> */}
           <AppContent />
-        </React.StrictMode>
+        {/* </React.StrictMode> */}
       </SafeAreaProvider>
     </Provider>
   );
