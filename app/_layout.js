@@ -1,5 +1,4 @@
-// app/_layout.js
-import { Stack } from 'expo-router';
+import { Stack, Slot } from 'expo-router';
 import { useState, useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { loadFonts } from '../utils/fonts';
@@ -8,7 +7,7 @@ import { store } from '../redux/store';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, ActivityIndicator } from 'react-native';
 
-// Ngăn tự động ẩn splash screen
+// Ngăn splash screen tự động ẩn
 SplashScreen.preventAutoHideAsync();
 
 export default function Layout() {
@@ -33,14 +32,19 @@ function AppContent() {
         console.warn('Lỗi khi tải assets:', e);
       } finally {
         setIsReady(true);
-        await SplashScreen.hideAsync();
       }
     }
     loadAssets();
   }, []);
 
+  // Chỉ ẩn SplashScreen sau khi component render xong
+  useEffect(() => {
+    if (isReady) {
+      SplashScreen.hideAsync();
+    }
+  }, [isReady]);
+
   if (!isReady) {
-    // Hiển thị loading khi chưa sẵn sàng
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#253F61" />
@@ -51,12 +55,12 @@ function AppContent() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       {user ? (
-        <Stack.Screen name="(tabs)" options={{}} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       ) : (
         <>
-          <Stack.Screen name="index" options={{}} />
-          <Stack.Screen name="(auth)/login" options={{}} />
-          <Stack.Screen name="(auth)/signup" options={{}} />
+          <Stack.Screen name="index" options={{ title: "Trang chủ" }} />
+          <Stack.Screen name="(auth)/login" options={{ title: "Đăng nhập" }} />
+          <Stack.Screen name="(auth)/signup" options={{ title: "Đăng ký" }} />
         </>
       )}
     </Stack>

@@ -12,7 +12,7 @@ const CustomAlert = ({ visible, title, message, onClose }) => {
       <View style={styles.modalContainer}>
         {title && <AppText style={styles.title}>{title}</AppText>}
         <AppText style={styles.message}>{message}</AppText>
-        <Button text="OK" onPress={onClose} buttonStyle={styles.button} />
+        <Button text="OK" onPress={onClose} style={styles.button} />
       </View>
     </Modal>
   );
@@ -38,6 +38,7 @@ const styles = StyleSheet.create({
   },
   button: {
     paddingVertical: 8,
+    width: '100%'
   }
 });
 

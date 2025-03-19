@@ -1,9 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
-  Text,
   TextInput,
-  Modal,
   Image,
   StyleSheet,
   FlatList,
@@ -12,73 +10,40 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import ClassCard from '../../components/ClassCard';
 import SearchBar from '../../components/SearchBar';
 import AppText from '../../components/AppText';
 import Button from '../../components/Button';
 import TabNavigation from '../../components/TabNavigation';
+import CustomModal from '../../components/CustomModal';
 import colors from '../../constants/colors';
+import { CLASS_DATA } from '../../const_data/class-data';
 
-const CLASS_DATA = [
-  {
-    id: 1,
-    imageSource: '',
-    className: 'Lớp Đại 12A',
-    time: 'Thứ Hai, 19h30 - 21h30',
-    sessions: 12,
-    membersCount: 86,
-    status: 'Đã tham gia',
-  },
-  {
-    id: 2,
-    imageSource: '',
-    className: 'Lớp Đại 12B',
-    time: 'Thứ Ba, 19h30 - 21h30',
-    sessions: 16,
-    membersCount: 68,
-    status: 'Đang chờ phê duyệt',
-  },
-  {
-    id: 3,
-    imageSource: '',
-    className: 'Lớp Hình 12B',
-    time: 'Thứ Ba, 19h30 - 21h30',
-    sessions: 16,
-    membersCount: 68,
-    status: 'Đang chờ phê duyệt',
-  },
-  {
-    id: 4,
-    imageSource: '',
-    className: 'Lớp Hình 12A',
-    time: 'Thứ Ba, 19h30 - 21h30',
-    sessions: 12,
-    membersCount: 68,
-    status: 'Đã tham gia',
-  },
-];
-
-// Hàm lọc dữ liệu
-const filterClasses = (classes, status) => {
-  if (status === 'all') return classes;
-  return classes.filter((item) =>
-    status === 'joined'
-      ? item.status === 'Đã tham gia'
-      : item.status === 'Đang chờ phê duyệt',
-  );
+// Hook lọc dữ liệu
+const useFilteredClasses = (classes, status) => {
+  return useMemo(() => {
+    if (status === 'all') return classes;
+    return classes.filter((item) =>
+      status === 'joined'
+        ? item.status === 'Đã tham gia'
+        : item.status === 'Đang chờ phê duyệt',
+    );
+  }, [classes, status]);
 };
 
 export default function ClassroomScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [classCode, setClassCode] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [isJoining, setIsJoining] = useState(false);
 
   // Sử dụng useMemo để tối ưu hiệu suất lọc dữ liệu
-  const filteredClasses = useMemo(
-    () => filterClasses(CLASS_DATA, selectedStatus),
-    [selectedStatus],
-  );
+  const filteredClasses = useFilteredClasses(CLASS_DATA, selectedStatus);
 
+  const router = useRouter();
+  console.log(CLASS_DATA);
+  
   // Cấu hình tabs
   const tabs = useMemo(
     () => [
@@ -90,23 +55,46 @@ export default function ClassroomScreen() {
   );
 
   // Xử lý sự kiện tham gia lớp
-  const handleJoinClass = () => {
-    console.log('Mã lớp học:', classCode);
-    setModalVisible(false);
-    setClassCode('');
-  };
+  const handleJoin = useCallback(() => {
+    if (!classCode.trim()) {
+      alert('Vui lòng nhập mã lớp học');
+      return;
+    }
+    setIsJoining(true);
+    setTimeout(() => {
+      console.log('Mã lớp học:', classCode);
+      setIsJoining(false);
+      setModalVisible(false);
+      setClassCode('');
+    }, 1000); // Giả lập API call
+  }, [classCode]);
 
   // Render item cho FlatList
-  const renderClassItem = ({ item }) => (
-    <ClassCard
-      imageSource={item.imageSource}
-      className={item.className}
-      sessions={item.sessions}
-      membersCount={item.membersCount}
-      status={item.status}
-      onPressJoin={() => alert(`Vào học ${item.className}`)}
-      variant="small"
-    />
+  const renderClassItem = useCallback(
+    ({ item }) => (
+      <ClassCard
+        className={item.className}
+        sessions={item.sessionCount}
+        membersCount={item.membersCount}
+        status={item.status}
+        onPressJoin={() =>
+          router.push({
+            pathname: `/classroom/${item.id}`,
+            params: {
+              className: item.className,
+              time: item.time,
+              sessionCount: item.sessionCount,
+              membersCount: item.membersCount,
+              description: item.description,
+              status: item.status,
+              sessions: JSON.stringify(item.sessions)
+            },
+          })
+        }
+        variant="small"
+      />
+    ),
+    [],
   );
 
   console.log('Tab hiện tại:', selectedStatus);
@@ -136,7 +124,6 @@ export default function ClassroomScreen() {
               }}
             />
             <Button
-              icon="plus"
               iconComponent={
                 <Image
                   source={require('../../assets/icons/filter-icon.png')}
@@ -169,32 +156,31 @@ export default function ClassroomScreen() {
           />
 
           {/* Modal nhập mã lớp học */}
-          <Modal visible={modalVisible} transparent animationType="fade">
-            <View style={styles.modalBackground}>
-              <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Nhập mã lớp học</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Nhập mã..."
-                  value={classCode}
-                  onChangeText={setClassCode}
-                />
-                <View style={styles.buttonRow}>
-                  <Button
-                    text={'Hủy'}
-                    textStyle={styles.cancelText}
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => setModalVisible(false)}
-                  />
-                  <Button
-                    text={'Tham gia'}
-                    style={styles.modalButton}
-                    onPress={handleJoinClass}
-                  />
-                </View>
-              </View>
-            </View>
-          </Modal>
+          <CustomModal
+            visible={modalVisible}
+            title="Nhập mã lớp học"
+            onClose={() => setModalVisible(false)}
+            actions={[
+              {
+                text: 'Hủy',
+                onPress: () => setModalVisible(false),
+                style: [styles.modalButton, styles.cancelButton],
+                textStyle: styles.cancelText,
+              },
+              {
+                text: 'Tham gia',
+                onPress: handleJoin,
+                style: styles.modalButton,
+              },
+            ]}
+          >
+            <TextInput
+              style={styles.input}
+              placeholder="Nhập mã..."
+              value={classCode}
+              onChangeText={setClassCode}
+            />
+          </CustomModal>
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
@@ -220,6 +206,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   button: {
+    width: 48,
     borderRadius: 18,
   },
   modalBackground: {
@@ -247,12 +234,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    gap: 10,
   },
   modalButton: {
     flex: 1,

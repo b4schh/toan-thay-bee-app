@@ -5,6 +5,7 @@ import Button from './Button';
 import AppText from './AppText';
 import colors from '../constants/colors';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
+import { useRouter } from 'expo-router';
 
 // Hàm so sánh props để tối ưu memo
 const arePropsEqual = (prevProps, nextProps) => {
@@ -30,6 +31,12 @@ const ClassCard = ({
   onPressJoin,
   variant = 'large', // 'large' cho trang chủ, 'small' cho mục đích khác
 }) => {
+  const router = useRouter();
+
+  const handlePress = () => {
+    router.push(`/class/${classId}`);
+  };
+
   const isPending = status === 'Đang chờ phê duyệt';
 
   // Chọn style dựa trên variant
@@ -184,7 +191,7 @@ const styles = StyleSheet.create({
     fontSize: 12, // Giảm font size
   },
   buttonSmall: {
-    width: "100%", // Giảm width của button
+    width: '100%', // Giảm width của button
   },
   membersTextSmall: {
     fontSize: 10, // Giảm font size

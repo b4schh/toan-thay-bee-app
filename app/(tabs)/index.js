@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { View, StyleSheet, FlatList, ScrollView } from 'react-native';
 import ClassCard from '../../components/ClassCard';
+import ScrollableCard from '../../components/ScrollableCard';
 import Button from '../../components/Button';
 import AppText from '../../components/AppText';
 import TabNavigation from '../../components/TabNavigation';
@@ -24,7 +25,7 @@ export default function HomeScreen() {
         <AppText style={styles.contentText}>🕚 Lịch sử làm bài</AppText>
       ),
     }),
-    [],
+    [selectedTab],
   );
 
   const classes = [
@@ -45,6 +46,23 @@ export default function HomeScreen() {
       membersCount: 68,
     },
   ];
+
+  const renderClassItem = useCallback(
+    ({ item }) => (
+      <ClassCard
+        imageSource={item.imageSource}
+        className={item.className}
+        time={item.time}
+        sessions={item.sessions}
+        membersCount={item.membersCount}
+        onPressJoin={() => {
+          // Xử lý khi bấm nút "Vào học"
+          console.log('Vào học');
+        }}
+      />
+    ),
+    [],
+  );
   return (
     <View style={styles.container}>
       {/* Button */}
@@ -91,38 +109,20 @@ export default function HomeScreen() {
       </View>
 
       {/* Nội dung có thể scroll */}
-      <ScrollView
-        contentContainerStyle={{}}
-        showsVerticalScrollIndicator={false}
-        style={styles.scrollContainer}
-      >
+      <ScrollableCard>
         {/* Body */}
         <View style={styles.card}>
-          <View style={styles.recentClass}>
+          <View style={styles.section}>
             <AppText style={styles.title}>Lớp học gần đây</AppText>
             <View style={{ paddingVertical: 10 }}>
               <FlatList
                 data={classes}
-                renderItem={({ item }) => (
-                  <ClassCard
-                    imageSource={item.imageSource}
-                    className={item.className}
-                    time={item.time}
-                    sessions={item.sessions}
-                    membersCount={item.membersCount}
-                    onPressJoin={() => {
-                      // Xử lý khi bấm nút "Vào học"
-                      console.log('Vào học');
-                    }}
-                  />
-                )}
+                renderItem={renderClassItem}
                 keyExtractor={(item) => item.id}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ gap: 16 }}
-                scrollEventThrottle={16} // Cập nhật mượt hơn
                 pagingEnabled={false}
-                removeClippedSubviews={true}
               />
             </View>
           </View>
@@ -231,7 +231,7 @@ export default function HomeScreen() {
             </View>
           </View>
         </View>
-      </ScrollView>
+      </ScrollableCard>
     </View>
   );
 }
@@ -267,17 +267,9 @@ const styles = StyleSheet.create({
     fontFamily: 'BeVietnamPro-Bold',
     color: colors.sky.white,
   },
-  scrollContainer: {
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
-    flex: 1,
-    paddingTop: 24,
-    paddingHorizontal: 20,
-    backgroundColor: colors.sky.lightest,
-  },
   card: {
     flexGrow: 1,
-    paddingBottom: 50,
+    paddingBottom: 128,
   },
   title: {
     fontFamily: 'BeVietnamPro-Bold',

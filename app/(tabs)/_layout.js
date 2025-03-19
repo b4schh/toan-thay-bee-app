@@ -28,15 +28,14 @@ export default function TabsLayout() {
         },
         // Thêm paddingBottom và điều chỉnh chiều cao tab bar dựa vào insets.bottom
         tabBarStyle: {
-          // position: 'absolute',
-          // zIndex: 99,
+          position: 'absolute',
+          zIndex: 99,
           backgroundColor: '#ffffff',
           paddingBottom: insets.bottom,
           height: 75 + insets.bottom,
           borderTopLeftRadius: 40,
           borderTopRightRadius: 40,
           overflow: 'visible',
-          
         },
         headerShown: false,
       }}
@@ -139,6 +138,9 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="classroom/[id]" options={{ href: null }} />
+      <Tabs.Screen name="classroom/[id]/detail" options={{ href: null }} />
+      <Tabs.Screen name="classroom/[id]/[lessonId]" options={{ href: null }} />
     </Tabs>
     // </SafeAreaView>
   );

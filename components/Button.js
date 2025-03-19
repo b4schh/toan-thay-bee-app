@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, View } from 'react-native';
+import { TouchableOpacity, StyleSheet, View, Platform } from 'react-native';
 import * as Icons from '@expo/vector-icons'; // Import tất cả icon libraries từ expo
 import AppText from './AppText';
 import colors from '../constants/colors';
@@ -48,7 +48,17 @@ const Button = ({
     >
       <View style={styles.content}>
         {renderIcon()}
-        {text && <AppText style={[styles.text, textStyle]}>{text}</AppText>}
+        {text && (
+          <AppText
+            style={[
+              styles.text,
+              textStyle,
+              Platform.OS === 'android' ? { marginTop: -3 } : {},
+            ]}
+          >
+            {text}
+          </AppText>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -64,7 +74,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 48,
-    width: 48
+    width: '100%',
   },
   content: {
     flexDirection: 'row',
@@ -73,7 +83,6 @@ const styles = StyleSheet.create({
   text: {
     fontFamily: 'BeVietnamPro-Medium',
     color: colors.sky.white,
-    marginTop: -3,
   },
   icon: {
     // Không set color và size ở đây nữa để prop override
