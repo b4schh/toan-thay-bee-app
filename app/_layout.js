@@ -1,5 +1,5 @@
 import { Stack, Slot } from 'expo-router';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { loadFonts } from '../utils/fonts';
 import { Provider, useSelector } from 'react-redux';
@@ -14,7 +14,9 @@ export default function Layout() {
   return (
     <Provider store={store}>
       <SafeAreaProvider>
-        <AppContent />
+        <React.StrictMode>
+          <AppContent />
+        </React.StrictMode>
       </SafeAreaProvider>
     </Provider>
   );
@@ -58,9 +60,9 @@ function AppContent() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       ) : (
         <>
-          <Stack.Screen name="index" options={{ title: "Trang chủ" }} />
-          <Stack.Screen name="(auth)/login" options={{ title: "Đăng nhập" }} />
-          <Stack.Screen name="(auth)/signup" options={{ title: "Đăng ký" }} />
+          <Stack.Screen name="index" options={{ title: 'Trang chủ' }} />
+          <Stack.Screen name="(auth)/login" options={{ title: 'Đăng nhập' }} />
+          <Stack.Screen name="(auth)/signup" options={{ title: 'Đăng ký' }} />
         </>
       )}
     </Stack>

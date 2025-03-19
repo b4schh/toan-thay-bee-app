@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Image, Dimensions } from 'react-native';
-import { useRouter } from 'expo-router';
-import Carousel, { Pagination } from 'react-native-snap-carousel';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import ScrollableCard from '../../../components/ScrollableCard';
 import colors from '../../../constants/colors';
 import AppText from '../../../components/AppText';
+import Button from '../../../components/Button';
 
 const { width } = Dimensions.get('window');
 
@@ -21,20 +21,22 @@ export default function ClassroomIntro() {
     <Image source={{ uri: item }} style={styles.image} />
   );
 
-  const {
-    id,
-    className,
-    time,
-    sessionCount,
-    membersCount,
-    description,
-    status,
-    sessions,
-  } = useLocalSearchParams(); // Lấy id từ URL
   const router = useRouter();
 
+  const {
+    id = '',
+    className = '',
+    time = '',
+    sessionCount = 0,
+    membersCount = 0,
+    description = '',
+    status = '',
+    sessions = '[]',
+  } = useLocalSearchParams();
+
   console.log('Giới thiệu lớp:', id);
-  const sessionDetail = JSON.parse(sessions);
+  const sessionDetail = sessions ? JSON.parse(sessions) : [];
+
   console.log('Session:', sessionDetail);
 
   console.log(`Thông tin lớp: 
@@ -50,24 +52,9 @@ status: ${status}`);
     <View style={{ flex: 1, backgroundColor: 'lightblue' }}>
       {/* Slideshow */}
       <View style={styles.carouselContainer}>
-        <Carousel
-          data={images}
-          renderItem={renderItem}
-          sliderWidth={width}
-          itemWidth={width * 0.8}
-          onSnapToItem={(index) => setActiveSlide(index)}
-        />
-        <Pagination
-          dotsLength={images.length}
-          activeDotIndex={activeSlide}
-          containerStyle={styles.paginationContainer}
-          dotStyle={styles.dotStyle}
-          inactiveDotOpacity={0.4}
-          inactiveDotScale={0.6}
-        />
       </View>
 
-      <ScrollableCard>
+      <ScrollableCard style={{ flex: 1 }}>
         <AppText>{className}</AppText>
         <AppText>{className}</AppText>
         <AppText>{className}</AppText>
@@ -112,3 +99,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+
