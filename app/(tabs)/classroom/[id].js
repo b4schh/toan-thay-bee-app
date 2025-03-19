@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Image, Dimensions } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import ScrollableCard from '../../../components/ScrollableCard';
 import colors from '../../../constants/colors';
 import AppText from '../../../components/AppText';
 import Button from '../../../components/Button';
+import Slideshow from '../../../components/Slideshow';
 
 const { width } = Dimensions.get('window');
 
@@ -15,12 +16,6 @@ const images = [
 ];
 
 export default function ClassroomIntro() {
-  const [activeSlide, setActiveSlide] = useState(0);
-
-  const renderItem = ({ item }) => (
-    <Image source={{ uri: item }} style={styles.image} />
-  );
-
   const router = useRouter();
 
   const {
@@ -51,8 +46,7 @@ status: ${status}`);
   return (
     <View style={{ flex: 1, backgroundColor: 'lightblue' }}>
       {/* Slideshow */}
-      <View style={styles.carouselContainer}>
-      </View>
+      <Slideshow images={images} />
 
       <ScrollableCard style={{ flex: 1 }}>
         <AppText>{className}</AppText>

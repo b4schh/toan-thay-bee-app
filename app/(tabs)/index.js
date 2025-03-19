@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { View, StyleSheet, FlatList, ScrollView } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
 import ClassCard from '../../components/ClassCard';
 import ScrollableCard from '../../components/ScrollableCard';
 import Button from '../../components/Button';
@@ -114,7 +114,7 @@ export default function HomeScreen() {
         <View style={styles.card}>
           <View style={styles.section}>
             <AppText style={styles.title}>Lớp học gần đây</AppText>
-            <View style={{ paddingVertical: 10 }}>
+            <View>
               <FlatList
                 data={classes}
                 renderItem={renderClassItem}
@@ -269,6 +269,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flexGrow: 1,
+    gap: 12,
     paddingBottom: 128,
   },
   title: {
