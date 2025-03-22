@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -19,7 +19,9 @@ import TabNavigation from '../../components/TabNavigation';
 import CustomModal from '../../components/CustomModal';
 import colors from '../../constants/colors';
 import { CLASS_DATA } from '../../const_data/class-data';
-
+import { fetchClassesByUser } from '../../features/class/classSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { use } from 'react';
 // Hook lọc dữ liệu
 const useFilteredClasses = (classes, status) => {
   return useMemo(() => {
@@ -39,11 +41,24 @@ export default function ClassroomScreen() {
   const [isJoining, setIsJoining] = useState(false);
 
   // Sử dụng useMemo để tối ưu hiệu suất lọc dữ liệu
-  const filteredClasses = useFilteredClasses(CLASS_DATA, selectedStatus);
+
+
+  const { classes } = useSelector((state) => state.class);
+  const { search, currentPage, limit, totalItems, sortOrder } = useSelector(state => state.filter);
+  const dispatch = useDispatch();
+  const filteredClasses = useFilteredClasses(classes, selectedStatus); // ✅ Gọi trực tiếp trong component
+
+  useEffect(() => {
+    dispatch(fetchClassesByUser({ search, currentPage, limit, sortOrder }));
+  }, [dispatch, search, currentPage, limit, sortOrder]);
+
+  useEffect(() => {
+    console.log('Classes:', classes);
+  }, [classes]);
 
   const router = useRouter();
   console.log(CLASS_DATA);
-  
+
   // Cấu hình tabs
   const tabs = useMemo(
     () => [
@@ -73,10 +88,10 @@ export default function ClassroomScreen() {
   const renderClassItem = useCallback(
     ({ item }) => (
       <ClassCard
-        className={item.className}
-        sessions={item.sessionCount}
-        membersCount={item.membersCount}
-        status={item.status}
+        className={item.name}
+        sessions={item.lessonCount}
+        membersCount={item.studentCount}
+        status={item.studentClassStatus}
         onPressJoin={() =>
           router.push({
             pathname: `/classroom/${item.id}`,
