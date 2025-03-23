@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   modalTitle: {
-    fontFamily: 'BeVietnamPro-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 20,
   },
   content: {

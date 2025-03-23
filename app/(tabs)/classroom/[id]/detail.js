@@ -5,12 +5,26 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchDetailClassByUser } from '../../../../features/class/classSlice';
 import { Feather } from '@expo/vector-icons';
 
 const ClassroomDetail = () => {
   const { id } = useLocalSearchParams();
+  const dispatch = useDispatch();
+  const { classDetail } = useSelector((state) => state.class);
+
   const router = useRouter();
+
+  useEffect(() => {
+    dispatch(fetchDetailClassByUser({classId: id}));
+  }, [id, dispatch]);
+
+  useEffect(() => {
+    console.log(classDetail);
+  }, [classDetail])
 
   console.log('Chi tiết lớp:', id);
 
@@ -47,7 +61,7 @@ export default ClassroomDetail;
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    paddingTop: 100
+    paddingTop: 100,
   },
   backButton: {
     position: 'absolute',

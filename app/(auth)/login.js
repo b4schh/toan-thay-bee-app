@@ -28,6 +28,7 @@ export default function Login() {
 
   // Lấy trạng thái auth từ Redux
   const { user, loading } = useSelector((state) => state.auth);
+  console.log("Redux state sau khi login:", user, loading);
 
   // State cho custom alert
   const [alertVisible, setAlertVisible] = useState(false);
@@ -45,6 +46,8 @@ export default function Login() {
     if (user) {
       router.replace('/(tabs)');
     }
+    // router.replace('/(tabs)');
+
   }, [user, router]);
 
   return (
@@ -59,7 +62,7 @@ export default function Login() {
       {/* Header */}
       <View style={styles.headerContainer}>
         <AppText
-          style={[styles.headerText, { fontSize: 32, marginBottom: 12 }]}
+          style={[styles.headerText, { fontSize: 32 }]}
         >
           Chào mừng!
         </AppText>
@@ -231,9 +234,10 @@ const styles = StyleSheet.create({
   headerContainer: {
     paddingHorizontal: 20,
     marginBottom: 20,
+    gap: 12
   },
   headerText: {
-    fontFamily: 'BeVietnamPro-Bold',
+    fontFamily: 'Inter-Bold',
     color: colors.sky.white,
   },
   card: {

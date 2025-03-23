@@ -53,7 +53,6 @@ const Button = ({
             style={[
               styles.text,
               textStyle,
-              Platform.OS === 'android' ? { marginTop: -3 } : {},
             ]}
           >
             {text}
@@ -81,7 +80,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    fontFamily: 'BeVietnamPro-Medium',
+    fontFamily: 'Inter-Bold',
     color: colors.sky.white,
   },
   icon: {

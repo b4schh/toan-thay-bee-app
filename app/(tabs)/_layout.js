@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { SafeAreaView, Image, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import colors from '../../constants/colors';
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
@@ -15,14 +16,14 @@ export default function TabsLayout() {
         tabBarActiveTintColor: '#253F61',
         tabBarInactiveTintColor: '#9DB2CE',
         tabBarItemStyle: {
-          // flexDirection: 'column', // Sắp xếp icon và label theo chiều dọc
-          // alignItems: 'center',
-          // justifyContent: 'center',
+          flexDirection: 'column', // Sắp xếp icon và label theo chiều dọc
+          alignItems: 'center',
+          justifyContent: 'center',
           paddingHorizontal: 0,
           paddingVertical: 12,
         },
         tabBarLabelStyle: {
-          fontFamily: 'BeVietnamPro-Medium',
+          fontFamily: 'Inter-Medium',
           fontSize: 12,
           // marginTop: 5,
         },
@@ -32,7 +33,7 @@ export default function TabsLayout() {
           zIndex: 99,
           backgroundColor: '#ffffff',
           paddingBottom: insets.bottom,
-          height: 75 + insets.bottom,
+          height: 80 + insets.bottom,
           borderTopLeftRadius: 40,
           borderTopRightRadius: 40,
           overflow: 'visible',
@@ -41,7 +42,7 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="home/index"
         options={{
           title: 'Trang chủ',
           tabBarIcon: ({ focused, color, size }) => (
@@ -57,7 +58,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="docs"
+        name="docs/index"
         options={{
           title: 'Tài liệu',
           tabBarIcon: ({ focused, color, size }) => (
@@ -77,21 +78,17 @@ export default function TabsLayout() {
         options={{
           title: '',
           tabBarItemStyle: {
-            // Dịch toàn bộ container (bao gồm hit area) lên trên
-            marginTop: -4,
+            // marginTop: 21,
           },
           tabBarIcon: ({ focused, color, size }) => (
             <View
               style={{
-                backgroundColor: '#253F61',
-                width: size * 3, // tăng kích thước
-                height: size * 3,
+                backgroundColor: colors.primary,
+                width: size * 2.5, // tăng kích thước
+                height: size * 2.5,
                 borderRadius: (size * 3) / 2,
                 alignItems: 'center',
                 justifyContent: 'center',
-                // Thêm border
-                borderWidth: 8,
-                borderColor: '#fff',
               }}
             >
               <Image
@@ -138,9 +135,7 @@ export default function TabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen name="classroom/[id]" options={{ href: null }} />
-      <Tabs.Screen name="classroom/[id]/detail" options={{ href: null }} />
-      <Tabs.Screen name="classroom/[id]/[lessonId]" options={{ href: null }} />
+      <Tabs.Screen name="index" options={{ href: null }} />
     </Tabs>
     // </SafeAreaView>
   );

@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     // gap: 10,
   },
   title: {
-    fontFamily: 'BeVietnamPro-Bold',
+    fontFamily: 'Inter-Bold',
     fontSize: 20,
     marginBottom: 10,
   },

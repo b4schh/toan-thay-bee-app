@@ -64,8 +64,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
+    fontFamily: 'Inter-Medium',
     fontSize: 16,
-    fontFamily: 'BeVietnamPro-Medium',
     color: colors.ink.darkest,
     marginBottom: 12,
   },
@@ -88,8 +88,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   toggleButtonText: {
-    color: colors.primary,
-    fontFamily: 'BeVietnamPro-Medium',
+    fontWeight: 500,
     fontSize: 14,
+    color: colors.primary,
   },
 });

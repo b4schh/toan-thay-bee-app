@@ -62,11 +62,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   tabText: {
+    fontFamily: 'Inter-Medium',
     fontSize: 16,
-    fontFamily: 'BeVietnamPro-Medium',
     color: colors.primary,
     textAlignVertical: 'center',
-    marginBottom: Platform.OS === 'android' ? 3 : 0,
   },
   activeTabText: {
     color: colors.sky.white,
