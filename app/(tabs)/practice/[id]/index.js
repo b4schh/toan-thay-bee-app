@@ -7,7 +7,6 @@ import Button from '../../../../components/Button';
 import { useDispatch } from 'react-redux';
 import { fetchPublicQuestionsByExamId } from '../../../../features/question/questionSlice';
 
-
 export default function ExamDetailScreen() {
   const {
     id,
@@ -75,6 +74,7 @@ export default function ExamDetailScreen() {
             router.push({
               pathname: `/practice/${id}/do-exam`,
               params: {
+                name: name,
               },
             });
           }}
