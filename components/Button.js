@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    fontFamily: 'Inter-Bold',
+    fontFamily: 'Inter-Medium',
     color: colors.sky.white,
   },
   icon: {

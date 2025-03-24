@@ -10,10 +10,10 @@ import { useRouter } from 'expo-router';
 // Hàm so sánh props để tối ưu memo
 const ClassCard = ({
   imageSource,
-  className = 'Tên lớp không xác định',
+  name = 'Tên lớp không xác định',
   time = 'Không có thời gian',
-  lessonsCount,
-  membersCount,
+  lessonCount,
+  studentCount,
   status,
   onPressJoin,
   variant = 'large', // 'large' cho trang chủ, 'small' cho mục đích khác
@@ -26,8 +26,8 @@ const ClassCard = ({
   const cardStyle = variant === 'large' ? styles.cardLarge : styles.cardSmall;
   const imageStyle =
     variant === 'large' ? styles.imageLarge : styles.imageSmall;
-  const classNameStyle =
-    variant === 'large' ? styles.classNameLarge : styles.classNameSmall;
+  const nameStyle =
+    variant === 'large' ? styles.nameLarge : styles.nameSmall;
   const detailStyle =
     variant === 'large' ? styles.detailLarge : styles.detailSmall;
   const buttonStyle =
@@ -44,15 +44,15 @@ const ClassCard = ({
       />
       <View style={styles.body}>
         <AppText
-          style={[styles.classNameBase, classNameStyle]}
+          style={[styles.nameBase, nameStyle]}
           numberOfLines={1}
         >
-          {className}
+          {name}
         </AppText>
         {/* <AppText style={[styles.detailBase, detailStyle]}>{time}</AppText> */}
 
         <AppText style={[styles.detailBase, detailStyle]}>
-          {lessonsCount} buổi học
+          {lessonCount} buổi học
         </AppText>
       </View>
       <View style={styles.footer}>
@@ -79,7 +79,7 @@ const ClassCard = ({
                   color={colors.sky.dark}
                 />
                 <AppText style={[styles.membersTextBase, membersTextStyle]}>
-                  {membersCount} thành viên
+                  {studentCount} thành viên
                 </AppText>
               </View>
             )}
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  classNameBase: {
+  nameBase: {
     fontFamily: 'Inter-Bold',
     color: colors.ink.darkest,
     lineHeight: 22,
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   imageLarge: {
     height: 140,
   },
-  classNameLarge: {
+  nameLarge: {
     fontSize: 18,
   },
   detailLarge: {

@@ -1,6 +1,16 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 const applyRequestInterceptor = (axiosInstance) => {
     axiosInstance.interceptors.request.use(
-        (config) => {
+        async (config) => {
+            // Lấy token từ AsyncStorage
+            const token = await AsyncStorage.getItem('token');
+
+            // Nếu có token, thêm vào header Authorization
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+
             console.log('📤 Request:', {
                 method: config.method,
                 url: config.url,

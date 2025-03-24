@@ -37,8 +37,10 @@ export default function ClassroomScreen() {
   const [classCode, setClassCode] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [isJoining, setIsJoining] = useState(false);
+  console.log('Tab hiện tại:', selectedStatus);
 
-  const { classes } = useSelector((state) => state.class);
+  const { classes } = useSelector((state) => state.classes);
+  
   const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
     (state) => state.filter,
   );
@@ -108,7 +110,6 @@ export default function ClassroomScreen() {
     [],
   );
 
-  console.log('Tab hiện tại:', selectedStatus);
 
   return (
     <KeyboardAvoidingView

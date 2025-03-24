@@ -1,81 +1,136 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getAllExamsByUser, getExamById } from '../../services/examApi';
-import { apiHandler } from '../../utils/apiHandler';
-import {
-  setCurrentPage,
-  setTotalPages,
-  setTotalItems,
-} from '../filter/filterSlice';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import * as examApi from "../../services/examApi";
+import { setCurrentPage, setTotalPages, setTotalItems } from "../filter/filterSlice";
+import { apiHandler } from "../../utils/apiHandler";
 
-export const fetchExamsByUser = createAsyncThunk(
-  'exam/fetchExamsByUser',
-  async ({ search, currentPage, limit, sortOrder }, { dispatch }) => {
-    return await apiHandler(
-      dispatch,
-      getAllExamsByUser,
-      { search, currentPage, limit, sortOrder },
-      (data) => {
-        dispatch(setCurrentPage(data.currentPage));
-        dispatch(setTotalPages(data.totalPages));
-        dispatch(setTotalItems(data.totalItems));
-      },
-      true,
-      false,
-    );
-  },
+export const fetchExams = createAsyncThunk(
+    "exams/fetchExams",
+    async ({ search, currentPage, limit, sortOrder }, { dispatch }) => {
+        return await apiHandler(dispatch, examApi.getAllExamAPI, { search, currentPage, limit, sortOrder }, (data) => {
+            dispatch(setCurrentPage(data.currentPage));
+            dispatch(setTotalPages(data.totalPages));
+            dispatch(setTotalItems(data.totalItems));
+        }, true, false);
+    }
 );
 
-// 🔥 Fetch chi tiết đề thi
-export const fetchExamDetail = createAsyncThunk(
-  'exam/fetchExamDetail',
-  async ({ examId }, { dispatch }) => {
-    return await apiHandler(
-      dispatch,
-      getExamById,
-      { examId },
-      () => {},
-      false,
-      false,
-    );
-  },
+export const fetchPublicExams = createAsyncThunk(
+    "exams/fetchPublicExams",
+    async ({ search, currentPage, limit, sortOrder }, { dispatch }) => {
+        return await apiHandler(dispatch, examApi.getAllPublicExamAPI, { search, currentPage, limit, sortOrder }, (data) => {
+            dispatch(setCurrentPage(data.currentPage));
+            dispatch(setTotalPages(data.totalPages));
+            dispatch(setTotalItems(data.totalItems));
+        }, true, false);
+    }
 );
 
-// 📌 Khởi tạo state ban đầu
-const initialState = {
-  exams: [],
-  examDetail: null,
-};
+export const fetchExamById = createAsyncThunk(
+    "exams/fetchExamById",
+    async (id, { dispatch }) => {
+        return await apiHandler(dispatch, examApi.getExamByIdAPI, id, () => { }, true, false);
+    }
+);
 
-// 🎯 Exam Slice
+export const fetchPublicExamById = createAsyncThunk(
+    "exams/fetchPublicExamById",
+    async (id, { dispatch }) => {
+        return await apiHandler(dispatch, examApi.getExamPublic, id, () => { }, true, false);
+    }
+);
+
+export const putExam = createAsyncThunk(
+    "exams/putExam",
+    async ({ examId, examData }, { dispatch }) => {
+        return await apiHandler(dispatch, examApi.putExamAPI, { examId, examData }, () => { }, true, false);
+    }
+);
+
+export const putImageExam = createAsyncThunk(
+    "exams/putImageExam",
+    async ({ examId, examImage }, { dispatch }) => {
+        return await apiHandler(dispatch, examApi.putImageExamAPI, { examId, examImage }, () => { }, true, false);
+    }
+);
+
+export const postExam = createAsyncThunk(
+    "exams/postExam",
+    async ({ examData, examImage, questions, questionImages, statementImages }, { dispatch }) => {
+        return await apiHandler(dispatch, examApi.postExamAPI, { examData, examImage, questions, questionImages, statementImages }, () => { }, true, false);
+    }
+);
+
+export const saveExamForUser = createAsyncThunk(
+    "exams/saveExamForUser",
+    async ({ examId }, { dispatch }) => {
+        return await apiHandler(dispatch, examApi.saveExamForUserAPI, { examId }, () => { }, true, false);
+    }
+);
+
+export const deleteExam = createAsyncThunk(
+    "exams/deleteExam",
+    async (id, { dispatch }) => {
+        return await apiHandler(dispatch, examApi.deleteExamAPI, id, () => { }, true, false);
+    }
+);
+
 const examSlice = createSlice({
-  name: 'exam',
-  initialState,
-  reducers: {
-    setExams: (state, action) => {
-      state.exams = action.payload;
+    name: "exams",
+    initialState: {
+        exams: [],
+        exam: null,
     },
-    setExamDetail: (state, action) => {
-      state.examDetail = action.payload;
-      F;
+    reducers: {
+        setExam: (state, action) => {
+            state.exam = action.payload;
+        }
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchExamsByUser.pending, (state) => {
-        state.exams = [];
-      })
-      .addCase(fetchExamsByUser.fulfilled, (state, action) => {
-        state.exams = action.payload.data;
-      })
-      .addCase(fetchExamDetail.pending, (state) => {
-        state.examDetail = null;
-      })
-      .addCase(fetchExamDetail.fulfilled, (state, action) => {
-        state.examDetail = action.payload.data;
-      });
-  },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchExams.pending, (state) => {
+                state.exams = [];
+            })
+            .addCase(fetchExams.fulfilled, (state, action) => {
+                if (action.payload) {
+                    state.exams = action.payload.data;
+                }
+            })
+            .addCase(fetchExamById.pending, (state) => {
+                state.exam = null;
+            })
+            .addCase(fetchExamById.fulfilled, (state, action) => {
+                if (action.payload) {
+                    state.exam = action.payload.data;
+                }
+            })
+            .addCase(fetchPublicExams.pending, (state) => {
+                state.exams = [];
+            })
+            .addCase(fetchPublicExams.fulfilled, (state, action) => {
+                if (action.payload) {
+                    state.exams = action.payload.data;
+                }
+            })
+            .addCase(fetchPublicExamById.pending, (state) => {
+                state.exam = null;
+            })
+            .addCase(fetchPublicExamById.fulfilled, (state, action) => {
+                if (action.payload) {
+                    state.exam = action.payload.data;
+                }
+            })
+            .addCase(saveExamForUser.fulfilled, (state, action) => {
+                if (action.payload) {
+                    const { examId, isSave } = action.payload;
+                    if (state.exams) state.exams.map((exam) => {
+                        exam.isSave = exam.id === examId ? isSave : exam.isSave;
+                        return exam;
+                    });
+                    if (state.exam) state.exam.isSave = isSave;
+                }
+            });
+    }
 });
 
-// 🎯 Export actions & reducer
-export const { setExams, setExamDetail } = examSlice.actions;
+export const { setExam } = examSlice.actions;
 export default examSlice.reducer;

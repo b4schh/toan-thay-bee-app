@@ -9,11 +9,7 @@ import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 const ExamCard = ({
   imageUrl,
   name,
-  class: examClass,
-  typeOfExam,
-  year,
-  testDuration,
-  passRate,
+  participantsCount,
   onPress,
 }) => {
   const router = useRouter();

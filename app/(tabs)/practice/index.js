@@ -10,6 +10,7 @@ import {
   Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
 import ExamCard from '../../../components/card/ExamCard';
 import SearchBar from '../../../components/SearchBar';
 import AppText from '../../../components/AppText';
@@ -17,8 +18,7 @@ import Button from '../../../components/Button';
 import TabNavigation from '../../../components/TabNavigation';
 import CustomModal from '../../../components/CustomModal';
 import colors from '../../../constants/colors';
-import { fetchExamsByUser } from '../../../features/exam/examSlice';
-import { useDispatch, useSelector } from 'react-redux';
+import { fetchPublicExams } from '../../../features/exam/examSlice';
 
 const useFilteredExam = (exams, grade) => {
   return useMemo(() => {
@@ -29,8 +29,11 @@ const useFilteredExam = (exams, grade) => {
 
 export default function PracticeScreen() {
   const [selectedGrade, setSelectedGrade] = useState('all');
+  const router = useRouter();
 
-  const { exams } = useSelector((state) => state.exam);
+  const { exams } = useSelector((state) => state.exams);
+  console.log(exams);
+  
   const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
     (state) => state.filter,
   );
@@ -39,7 +42,7 @@ export default function PracticeScreen() {
   const filteredExam = useFilteredExam(exams, selectedGrade);
 
   useEffect(() => {
-    dispatch(fetchExamsByUser({ search, currentPage, limit, sortOrder }));
+    dispatch(fetchPublicExams({ search, currentPage, limit, sortOrder }));
   }, [dispatch, search, currentPage, limit, sortOrder]);
 
   useEffect(() => {
@@ -61,7 +64,18 @@ export default function PracticeScreen() {
       <ExamCard
         name={item.name}
         imageUrl={item.imageUrl}
-        onPress={() => console.log('Đề thi:', item.name)}
+        onPress={() =>
+          router.push({
+            pathname: `/practice/${item.id}`,
+            params: {
+              name: item.name,
+              createdAt: item.createdAt,
+              isDone: item.isDone,
+              testDuration: item.testDuration,
+              passRate: item.passRate,
+            },
+          })
+        }
       />
     ),
     [],
