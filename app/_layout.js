@@ -6,11 +6,19 @@ import { store } from '../redux/store';
 import * as SplashScreen from 'expo-splash-screen';
 import { loadFonts } from '../utils/fonts';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { setRouter } from '../services/RouterService';
 
 // Ngăn splash screen tự động ẩn
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const router = useRouter();
+
+  useEffect(() => {
+    setRouter(router); // ✅ gán router toàn cục khi App mount
+  }, [router]);
+
   return (
     <Provider store={store}>
       <SafeAreaProvider>
@@ -24,6 +32,10 @@ function AppContent() {
   const user = useSelector((state) => state.auth.user);
   const [isReady, setIsReady] = useState(false);
   const [appRendered, setAppRendered] = useState(false);
+
+  useEffect(() => {
+    console.log('App re-rendered!');
+  });
 
   useEffect(() => {
     async function loadAssets() {
@@ -63,6 +75,8 @@ function AppContent() {
       {user ? (
         <>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="index" options={{ title: 'Trang chủ' }} />
+          <Stack.Screen name="(auth)/login" options={{ title: 'Đăng nhập' }} />
         </>
       ) : (
         <>

@@ -28,11 +28,14 @@ const useFilteredExam = (exams, grade) => {
 };
 
 export default function PracticeScreen() {
+  useEffect(() => {
+    console.log('PracticeScreen re-rendered!');
+  });
+
   const [selectedGrade, setSelectedGrade] = useState('all');
   const router = useRouter();
 
   const { exams } = useSelector((state) => state.exams);
-  console.log(exams);
   
   const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
     (state) => state.filter,
@@ -42,12 +45,14 @@ export default function PracticeScreen() {
   const filteredExam = useFilteredExam(exams, selectedGrade);
 
   useEffect(() => {
-    dispatch(fetchPublicExams({ search, currentPage, limit, sortOrder }));
+    if (search !== undefined && currentPage !== undefined && limit !== undefined && sortOrder !== undefined) {
+      dispatch(fetchPublicExams({ search, currentPage, limit, sortOrder }));
+    }
   }, [dispatch, search, currentPage, limit, sortOrder]);
 
-  useEffect(() => {
-    console.log('Exams:', exams);
-  }, [exams]);
+  // useEffect(() => {
+  //   console.log('Exams:', exams);
+  // }, [exams]);
 
   const tabs = useMemo(
     () => [

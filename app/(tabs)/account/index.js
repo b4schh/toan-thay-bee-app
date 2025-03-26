@@ -14,7 +14,7 @@ export default function AccountScreen() {
       // Dispatch thunk logout và chờ kết quả
       await dispatch(logout()).unwrap();
       // Sau khi đăng xuất thành công, chuyển hướng về trang login
-      router.push('/(auth)/login');
+      router.replace('/(auth)/login');
     } catch (error) {
       console.error('Đăng xuất thất bại:', error);
     }

@@ -7,6 +7,7 @@ import {
 } from '../../services/authApi';
 import { addError } from '../state/stateApiSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { apiHandler } from '../../utils/apiHandler';
 
 // Thunk đăng nhập
 export const login = createAsyncThunk(
@@ -28,15 +29,8 @@ export const login = createAsyncThunk(
 // Thunk kiểm tra đăng nhập
 export const checkLogin = createAsyncThunk(
   'auth/checkLogin',
-  async (_, { dispatch, rejectWithValue }) => {
-    try {
-      const response = await checkLoginAPI();
-      return response.data.user; // API trả về { user }
-    } catch (error) {
-      const errorMsg = error.response?.data.message || 'Không thể xác thực';
-      dispatch(addError(errorMsg));
-      return rejectWithValue(errorMsg);
-    }
+  async (_, { dispatch }) => {
+    return await apiHandler(dispatch, checkLoginAPI, null, null, false);
   },
 );
 
@@ -59,15 +53,8 @@ export const register = createAsyncThunk(
 // Thunk đăng xuất
 export const logout = createAsyncThunk(
   'auth/logout',
-  async (_, { dispatch, rejectWithValue }) => {
-    try {
-      await logoutAPI();
-      return;
-    } catch (error) {
-      const errorMsg = error.response?.data || 'Đăng xuất thất bại';
-      dispatch(addError(errorMsg));
-      return rejectWithValue(errorMsg);
-    }
+  async (_, { dispatch }) => {
+    return await apiHandler(dispatch, logoutAPI, null, null, false);
   },
 );
 

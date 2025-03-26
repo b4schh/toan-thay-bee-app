@@ -1,3 +1,5 @@
+import { redirectToLogin } from './RouterService';
+
 const applyResponseInterceptor = (axiosInstance) => {
     axiosInstance.interceptors.response.use(
         (response) => {
@@ -16,7 +18,7 @@ const applyResponseInterceptor = (axiosInstance) => {
             // Nếu lỗi 401, logout user
             if (error.response && error.response.status === 401) {
                 console.warn('🔒 Unauthorized! Redirecting to login...');
-                window.location.href = '/login';
+                redirectToLogin(); // ✅ gọi router.replace từ global router
             }
 
             return Promise.reject(error);

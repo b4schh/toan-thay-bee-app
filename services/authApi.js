@@ -2,12 +2,26 @@
 import api from './api';
 
 // Gọi API đăng ký
-export const registerAPI = (userData) =>  api.post('/v1/user/register', userData);
+export const registerAPI = (userData) =>
+  api.post('/v1/user/register', userData);
 
 // Gọi API đăng nhập
-export const loginAPI = (credentials) =>  api.post('/v1/user/login', credentials);
+export const loginAPI = (credentials) =>
+  api.post('/v1/user/login', credentials);
 
 // Gọi API đăng xuất
-export const logoutAPI = () => api.post('/v1/user/logout');
+export const logoutAPI = async (_, token) => {
+  return api.post('/v1/user/logout', null, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
 
-export const checkLoginAPI = () => api.get('/v1/user/check-login');
+export const checkLoginApi = async (_, token) => {
+  return api.get('/v1/user/check-login', {
+    headers: {
+      Authorization: `Bearer ${token}`, // nếu dùng token
+    },
+  });
+};

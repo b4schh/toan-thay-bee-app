@@ -1,32 +1,35 @@
-import { setErrorMessage, setLoading, setSuccessMessage } from '../features/state/stateApiSlice'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setErrorMessage, setLoading, setSuccessMessage } from '../features/state/stateApiSlice';
 
 export const apiHandler = async (dispatch, apiFunc, params, successCallback, useSuccessMessage = true, setDelay = true) => {
     try {
-        dispatch(setLoading(true)); // Bật trạng thái loading
+        dispatch(setLoading(true));
 
-        // Delay 500ms trước khi thực hiện API
         if (setDelay) {
             await new Promise((resolve) => setTimeout(resolve, 500));
         }
-        // Gọi API với tham số truyền vào
-        const response = await apiFunc(params);
-        // Lưu message thành công nếu có
 
+        // ✅ Lấy token từ AsyncStorage
+        const token = await AsyncStorage.getItem('authToken');
+        if (!token) {
+            throw new Error("🚨 Bạn cần đăng nhập trước khi gọi API.");
+        }
+        // ✅ Gọi API và tự chèn token
+        const response = await apiFunc(params, token);
+        
         if (response.data?.message && useSuccessMessage) {
             dispatch(setSuccessMessage(response.data.message));
         }
-        if (response?.message && useSuccessMessage) {
-            dispatch(setSuccessMessage(response.message));
-        }
-
+        
         if (successCallback) {
             successCallback(response.data);
         }
         return response.data ? response.data : response;
     } catch (error) {
         const errorMsg = error.response ? error.response.data.message : error.message;
-        dispatch(setErrorMessage(errorMsg)); // Lưu lỗi vào stateApiSlice
+        console.error("🚨 Có lỗi xảy ra khi gọi API:", errorMsg);
+        dispatch(setErrorMessage(errorMsg));
     } finally {
-        dispatch(setLoading(false)); // Tắt trạng thái loading
+        dispatch(setLoading(false));
     }
 };

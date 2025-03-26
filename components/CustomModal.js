@@ -29,7 +29,7 @@ export default function CustomModal({
                   key={index}
                   text={action.text}
                   onPress={action.onPress}
-                  style={action.style}
+                  style={[styles.button, action.style]}
                   textStyle={action.textStyle}
                 />
               ))}
@@ -49,9 +49,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContainer: {
-    width: 300,
+    width: 340,
     backgroundColor: colors.sky.white,
-    borderRadius: 10,
+    borderRadius: 16,
     padding: 20,
     alignItems: 'center',
     gap: 10,
@@ -59,9 +59,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontFamily: 'Inter-Bold',
     fontSize: 20,
+    textAlign: 'center',
+    maxWidth: 200,
   },
   content: {
+    alignItems: 'center',
     width: '100%',
+    marginBottom: 8,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -69,4 +73,7 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 10,
   },
+  button: {
+    flex: 1
+  }
 });

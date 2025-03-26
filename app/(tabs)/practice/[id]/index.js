@@ -72,7 +72,7 @@ export default function ExamDetailScreen() {
           text={'Bắt đầu làm bài'}
           onPress={() => {
             router.push({
-              pathname: `/practice/${id}/do-exam`,
+              pathname: `/exam/${id}/do-exam`,
               params: {
                 name: name,
               },

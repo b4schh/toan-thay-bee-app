@@ -7,30 +7,30 @@ import colors from '../../constants/colors';
 export default LessonDetails = ({ lesson }) => {
   return (
     <View style={styles.content}>
-      {lesson.details.theory && (
-        <View style={styles.row}>
-          <Icons.Feather name="book" size={20} color={colors.ink.darker} />
-          <AppText style={styles.text}>Lý thuyết</AppText>
+      {lesson.learningItems.map((item, index) => (
+        <View style={styles.row} key={index}>
+          {item.typeOfLearningItem === 'DOC' ? (
+            <>
+              <Icons.Feather name="book" size={20} color={colors.ink.darker} />
+              <AppText style={styles.text}>{item.name}</AppText>
+            </>
+          ) : item.typeOfLearningItem === 'VID' ? (
+            <>
+              <Icons.Feather name="youtube" size={20} color={colors.ink.darker} />
+              <AppText style={styles.text}>{item.name}</AppText>
+            </>
+          ) : (
+            <>
+              <Icons.Ionicons
+                name="document-text-outline"
+                size={20}
+                color={colors.ink.darker}
+              />
+              <AppText style={styles.text}>{item.name}</AppText>
+            </>
+          )}
         </View>
-      )}
-
-      {lesson.details.materials && (
-        <View style={styles.row}>
-          <Icons.Feather name="youtube" size={20} color={colors.ink.darker} />
-          <AppText style={styles.text}>Tài liệu</AppText>
-        </View>
-      )}
-
-      {lesson.details.exercises && (
-        <View style={styles.row}>
-          <Icons.Ionicons
-            name="document-text-outline"
-            size={20}
-            color={colors.ink.darker}
-          />
-          <AppText style={styles.text}>Bài tập</AppText>
-        </View>
-      )}
+      ))}
     </View>
   );
 };
@@ -53,4 +53,3 @@ const styles = StyleSheet.create({
     color: colors.ink.darker,
   },
 });
-

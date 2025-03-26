@@ -48,16 +48,7 @@ const Button = ({
     >
       <View style={styles.content}>
         {renderIcon()}
-        {text && (
-          <AppText
-            style={[
-              styles.text,
-              textStyle,
-            ]}
-          >
-            {text}
-          </AppText>
-        )}
+        {text && <AppText style={[styles.text, textStyle]}>{text}</AppText>}
       </View>
     </TouchableOpacity>
   );
@@ -72,8 +63,8 @@ const styles = StyleSheet.create({
     // paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 48,
     width: '100%',
+    height: 48,
   },
   content: {
     flexDirection: 'row',
@@ -90,7 +81,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   disabled: {
-    backgroundColor: '#CCCCCC',
+    backgroundColor: "#CCC",
     opacity: 0.8,
   },
 });

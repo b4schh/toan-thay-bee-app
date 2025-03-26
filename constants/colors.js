@@ -1,8 +1,8 @@
 export default {
   primary: '#253F61',
-  danger: '#D22B2B',
-  success: '#28A745',
-  warning: '#FFC107',
+  danger: '#D84A4A',
+  success: '#34ce57',
+  warning: '#f9de06',
   ink: {
     darkest: '#090A0A',
     darker: '#202325',

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
 import ClassCard from '../../../components/card/ClassCard';
 import ScrollableCard from '../../../components/ScrollableCard';
@@ -6,63 +6,93 @@ import Button from '../../../components/Button';
 import AppText from '../../../components/AppText';
 import TabNavigation from '../../../components/TabNavigation';
 import colors from '../../../constants/colors';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchClassesByUser } from '../../../features/class/classSlice';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  const { user } = useSelector((state) => state.auth);
+  const { classes } = useSelector((state) => state.classes);
+
+  const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
+    (state) => state.filter,
+  );
+
+  useEffect(() => {
+    if (
+      search !== undefined &&
+      currentPage !== undefined &&
+      limit !== undefined &&
+      sortOrder !== undefined
+    ) {
+      dispatch(fetchClassesByUser({ search, currentPage, limit, sortOrder }));
+    }
+  }, [search, currentPage, limit, sortOrder]);
+
+  useEffect(() => console.log('📌 Danh sách lớp học:', classes), [classes]);
+
   const [selectedTab, setSelectedTab] = useState('pending_assignments');
-  
-  console.log('Tab hiện tại:', selectedTab);
 
   const TabContent = useMemo(
     () => ({
       pending_assignments: (
-        <AppText style={styles.contentText}>📚 Bài tập chưa nộp</AppText>
+        <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
       ),
       unread_documents: (
-        <AppText style={styles.contentText}>⭐ Tài liệu chưa xem</AppText>
+        <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
       ),
       saved_exams: <AppText style={styles.contentText}>📌 Đề đã lưu</AppText>,
       exam_history: (
-        <AppText style={styles.contentText}>🕚 Lịch sử làm bài</AppText>
+        <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
       ),
     }),
     [selectedTab],
   );
 
-  const classes = [
+  const mockClasses = [
     {
-      id: 1,
-      imageSource: '',
-      className: 'Lớp Đại 12A',
-      time: 'Thứ Hai, 19h30 - 21h30',
+      id: '1',
+      name: 'Lớp React',
+      dayOfWeek: 'Thứ 2',
+      studyTime: ' 8:00 - 10:00',
       sessions: 12,
-      membersCount: 86,
+      membersCount: 30,
     },
     {
-      id: 2,
-      imageSource: '',
-      className: 'Lớp Hình 12A',
-      time: 'Thứ Ba, 19h30 - 21h30',
-      sessions: 16,
-      membersCount: 68,
+      id: '2',
+      name: 'Lớp NodeJS',
+      dayOfWeek: 'Thứ 3',
+      studyTime: ' 9:00 - 11:00',
+      sessions: 10,
+      membersCount: 25,
     },
   ];
 
-  const renderClassItem = useCallback(
-    ({ item }) => (
+  const renderClassItem = useCallback(({ item }) => {
+    console.log('📌 Render lớp học:', item);
+    return (
       <ClassCard
         imageSource={item.imageSource}
-        className={item.className}
-        time={item.time}
-        sessions={item.sessions}
-        membersCount={item.membersCount}
+        name={item.name}
+        time={item.dayOfWeek + item.studyTime}
+        lessonCount={item.lessonCount}
+        studentCount={item.studentCount}
         onPressJoin={() => {
-          // Xử lý khi bấm nút "Vào học"
-          console.log('Vào học');
+          console.log('Vào lớp có id:', item.id);
+
+          router.push({
+            pathname: `/classroom/${item.class_code}/`,
+            params: {
+              id: item.id,
+            },
+          });
         }}
       />
-    ),
-    [],
-  );
+    );
+  }, []);
   return (
     <View style={styles.container}>
       {/* Button */}
@@ -76,19 +106,10 @@ export default function HomeScreen() {
         />
         <View style={styles.buttonContainerRight}>
           <Button
-            icon="search"
-            iconLibrary="Feather"
-            iconColor={colors.primary}
-            style={[
-              styles.button,
-              { paddingHorizontal: 0, paddingVertical: 0 },
-            ]}
-            onPress={() => console.log('Search Clicked!')}
-          />
-          <Button
             icon="bell"
             iconLibrary="Feather"
             iconColor={colors.primary}
+            iconSize={18}
             style={[
               styles.button,
               { paddingHorizontal: 0, paddingVertical: 0 },
@@ -104,7 +125,7 @@ export default function HomeScreen() {
           Chào mừng!
         </AppText>
         <AppText style={[styles.headerText, { fontSize: 24 }]}>
-          Nguyễn Minh Đức
+          {user?.lastName} {user?.firstName}
         </AppText>
       </View>
 
@@ -147,7 +168,7 @@ export default function HomeScreen() {
               {TabContent[selectedTab] || (
                 <AppText style={styles.contentText}>Không có dữ liệu</AppText>
               )}
-              {TabContent[selectedTab] || (
+              {/* {TabContent[selectedTab] || (
                 <AppText style={styles.contentText}>Không có dữ liệu</AppText>
               )}
               {TabContent[selectedTab] || (
@@ -227,7 +248,7 @@ export default function HomeScreen() {
               )}
               {TabContent[selectedTab] || (
                 <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
+              )} */}
             </View>
           </View>
         </View>
@@ -244,8 +265,8 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: colors.sky.white,
-    width: 48,
-    height: 48,
+    width: 36,
+    height: 36,
   },
   buttonContainer: {
     flexDirection: 'row',

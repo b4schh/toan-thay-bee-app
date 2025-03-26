@@ -28,7 +28,7 @@ export default function Login() {
 
   // Lấy trạng thái auth từ Redux
   const { user, loading } = useSelector((state) => state.auth);
-  console.log("Redux state sau khi login:", user, loading);
+  // console.log("Redux state sau khi login:", user, loading);
 
   // State cho custom alert
   const [alertVisible, setAlertVisible] = useState(false);

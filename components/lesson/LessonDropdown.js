@@ -21,7 +21,7 @@ export default function LessonDropdown({ lesson }) {
             color={expanded ? colors.sky.white : colors.ink.darkest}
           />
           <AppText style={[styles.title, expanded && styles.activeText]}>
-            {"Buổi " + lesson.id + ": " + lesson.title}
+            {   lesson.name}
           </AppText>
         </TouchableOpacity>
       </View>

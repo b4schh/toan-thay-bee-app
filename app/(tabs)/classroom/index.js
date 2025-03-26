@@ -17,7 +17,7 @@ import Button from '../../../components/Button';
 import TabNavigation from '../../../components/TabNavigation';
 import CustomModal from '../../../components/CustomModal';
 import colors from '../../../constants/colors';
-import { fetchClassesByUser } from '../../../features/class/classSlice';
+import { fetchClassesByUser, joinClass } from '../../../features/class/classSlice';
 import { useDispatch, useSelector } from 'react-redux';
 
 // Hook lọc dữ liệu
@@ -26,8 +26,8 @@ const useFilteredClasses = (classes, status) => {
     if (status === 'all') return classes;
     return classes.filter((item) =>
       status === 'joined'
-        ? item.status === 'Đã tham gia'
-        : item.status === 'Đang chờ phê duyệt',
+        ? item.studentClassStatus === 'JS'
+        : item.studentClassStatus === 'WS',
     );
   }, [classes, status]);
 };
@@ -37,10 +37,10 @@ export default function ClassroomScreen() {
   const [classCode, setClassCode] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [isJoining, setIsJoining] = useState(false);
-  console.log('Tab hiện tại:', selectedStatus);
+  // console.log('Tab hiện tại:', selectedStatus);
 
   const { classes } = useSelector((state) => state.classes);
-  
+
   const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
     (state) => state.filter,
   );
@@ -49,8 +49,15 @@ export default function ClassroomScreen() {
   const filteredClasses = useFilteredClasses(classes, selectedStatus);
 
   useEffect(() => {
-    dispatch(fetchClassesByUser({ search, currentPage, limit, sortOrder }));
-  }, [dispatch, search, currentPage, limit, sortOrder]);
+    if (
+      search !== undefined &&
+      currentPage !== undefined &&
+      limit !== undefined &&
+      sortOrder !== undefined
+    ) {
+      dispatch(fetchClassesByUser({ search, currentPage, limit, sortOrder }));
+    }
+  }, [search, currentPage, limit, sortOrder]);
 
   useEffect(() => {
     console.log('Classes:', classes);
@@ -70,18 +77,30 @@ export default function ClassroomScreen() {
 
   // Xử lý sự kiện tham gia lớp
   const handleJoin = useCallback(() => {
+    const class_code = classCode
+    console.log('📌 Mã lớp học trước khi gửi:', class_code); // Kiểm tra giá trị classCode
+    
     if (!classCode.trim()) {
-      alert('Vui lòng nhập mã lớp học');
+      alert('⚠️ Vui lòng nhập mã lớp học!');
       return;
     }
+
     setIsJoining(true);
-    setTimeout(() => {
-      console.log('Mã lớp học:', classCode);
-      setIsJoining(false);
-      setModalVisible(false);
-      setClassCode('');
-    }, 1000); // Giả lập API call
-  }, [classCode]);
+
+    dispatch(joinClass({ class_code }))
+      .then((result) => {
+        if (result.meta.requestStatus === 'fulfilled') {
+          alert('🎉 Tham gia lớp học thành công!');
+          setModalVisible(false);
+          setClassCode('');
+        } else {
+          alert('❌ Mã lớp học không hợp lệ hoặc có lỗi xảy ra!');
+        }
+      })
+      .finally(() => {
+        setIsJoining(false);
+      });
+  }, [classCode, dispatch]);
 
   // Render item cho FlatList
   const renderClassItem = useCallback(
@@ -91,25 +110,21 @@ export default function ClassroomScreen() {
         studentCount={item.studentCount}
         lessonCount={item.lessonCount}
         status={item.studentClassStatus}
-        onPressJoin={() =>
+        onPressJoin={() => {
+          console.log('Vào lớp có id:', item.id);
+
           router.push({
-            pathname: `/classroom/${item.id}/`,
+            pathname: `/classroom/${item.class_code}/`,
             params: {
               id: item.id,
-              name: item.name,
-              studentCount: item.studentCount,
-              lessonCount: item.lessonCount,
-              description: item.description,
-              status: item.studentClassStatus,
             },
-          })
-        }
+          });
+        }}
         variant="small"
       />
     ),
     [],
   );
-
 
   return (
     <KeyboardAvoidingView
@@ -164,6 +179,7 @@ export default function ClassroomScreen() {
             <AppText style={styles.emptyText}>Không có lớp nào</AppText>
           }
           renderItem={renderClassItem}
+          showsVerticalScrollIndicator={false}
         />
 
         {/* Modal nhập mã lớp học */}
@@ -203,6 +219,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.sky.lightest,
     padding: 20,
     gap: 10,
+    paddingBottom: 80,
   },
   header: {
     fontFamily: 'Inter-Bold',

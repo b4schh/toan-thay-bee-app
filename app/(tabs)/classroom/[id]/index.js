@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import ScrollableCard from '../../../../components/ScrollableCard';
@@ -9,36 +9,25 @@ import Slideshow from '../../../../components/Slideshow';
 import LessonDropdown from '../../../../components/lesson/LessonDropdown';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 import { Feather } from '@expo/vector-icons';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchLessonLearningItemByClassId } from '../../../../features/class/classSlice';
 
 const images = [];
 
 export default function ClassroomIntro() {
   const router = useRouter();
+  const dispatch = useDispatch();
 
-  const {
-    id = '',
-    name = '',
-    time = '',
-    studentCount = 0,
-    lessionCount = 0,
-    description = '',
-    status = '',
-    lessons = '[]',
-  } = useLocalSearchParams();
-
-  console.log('Giới thiệu lớp:', id);
-  const lessonDetail = lessons ? JSON.parse(lessons) : [];
-
-  console.log('Session:', lessonDetail);
-
-  console.log(`Thông tin lớp: 
-id: ${id}
-name: ${name}
-time: ${time}
-lessionCount: ${lessionCount}
-studentCount: ${studentCount}
-description: ${description}
-status: ${status}`);
+  const class_code = useLocalSearchParams().id;
+  
+  useEffect(() => {
+    if (class_code) {
+      dispatch(fetchLessonLearningItemByClassId({ class_code }));
+    }
+  }, [class_code]);
+  const { classDetail } = useSelector((state) => state.classes);
+  
+  // useEffect(() => console.log('Lessons:', classDetail), [classDetail]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -57,39 +46,41 @@ status: ${status}`);
       </TouchableOpacity>
 
       {/* Slideshow */}
-      <Slideshow images={images} />
+      <Slideshow images={[]} />
 
       <ScrollableCard contentStyle={styles.contentStyle}>
-        <AppText style={styles.title}>{name}</AppText>
+        <AppText style={styles.title}>{classDetail?.name}</AppText>
 
         <View style={styles.membersContainer}>
           <FontAwesomeIcon name="user" size={16} color={colors.sky.dark} />
           <AppText style={styles.membersTextBase}>
-            {studentCount} thành viên
+            {classDetail?.studentCount} thành viên
           </AppText>
         </View>
 
         <AppText style={styles.subTitle}>Mô tả lớp</AppText>
 
-        <AppText style={styles.description}>{description}</AppText>
+        <AppText style={styles.description}>{classDetail?.description}</AppText>
 
         <AppText style={styles.subTitle}>Nội dung lớp học</AppText>
 
         <View style={{ paddingVertical: 10, gap: 10 }}>
-          {lessionCount === 0 ? (
+          {classDetail?.lessonCount === 0 ? (
             <AppText style={styles.emptyText}>Lớp học chưa có nội dung</AppText>
           ) : (
-            lessonDetail.map((session) => (
-              <LessonDropdown key={session.id} session={session} />
+            classDetail?.lessons?.map((lesson) => (
+              <LessonDropdown key={lesson.id} lesson={lesson} />
             ))
           )}
         </View>
 
         <Button
           style={{ marginBottom: 100 }}
-          text={status === 'pending' ? 'Đang chờ phê duyệt' : 'Vào lớp'}
-          disabled={status === 'pending'}
-          onPress={() => router.push(`/classroom/${id}/detail`)}
+          text={
+            classDetail?.userStatus === 'WS' ? 'Đang chờ phê duyệt' : 'Vào lớp'
+          }
+          disabled={classDetail?.userStatus === 'WS'}
+          onPress={() => router.push(`/classroom/${class_code}/detail`)}
         />
       </ScrollableCard>
     </View>
@@ -135,5 +126,5 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: 'center',
-  }
+  },
 });

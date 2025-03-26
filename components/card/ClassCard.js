@@ -1,6 +1,6 @@
 // components/ClassCard.js
 import React, { memo } from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import Button from '../Button';
 import AppText from '../AppText';
 import colors from '../../constants/colors';
@@ -26,8 +26,7 @@ const ClassCard = ({
   const cardStyle = variant === 'large' ? styles.cardLarge : styles.cardSmall;
   const imageStyle =
     variant === 'large' ? styles.imageLarge : styles.imageSmall;
-  const nameStyle =
-    variant === 'large' ? styles.nameLarge : styles.nameSmall;
+  const nameStyle = variant === 'large' ? styles.nameLarge : styles.nameSmall;
   const detailStyle =
     variant === 'large' ? styles.detailLarge : styles.detailSmall;
   const buttonStyle =
@@ -36,17 +35,18 @@ const ClassCard = ({
     variant === 'large' ? styles.membersTextLarge : styles.membersTextSmall;
 
   return (
-    <View style={[styles.cardBase, cardStyle]}>
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPressJoin}
+      style={[styles.cardBase, cardStyle]}
+    >
       <Image
         source={imageSource || require('../../assets/images/default-image.jpg')}
         style={[styles.imageBase, imageStyle]}
         resizeMode="cover"
       />
       <View style={styles.body}>
-        <AppText
-          style={[styles.nameBase, nameStyle]}
-          numberOfLines={1}
-        >
+        <AppText style={[styles.nameBase, nameStyle]} numberOfLines={1}>
           {name}
         </AppText>
         {/* <AppText style={[styles.detailBase, detailStyle]}>{time}</AppText> */}
@@ -86,7 +86,7 @@ const ClassCard = ({
           </>
         )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

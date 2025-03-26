@@ -1,8 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import {
-  getAllClassesByUser,
-  getDetailClassByUser,
-} from '../../services/classApi';
+import * as ClassAPI from '../../services/classApi';
 import { apiHandler } from '../../utils/apiHandler';
 import {
   setCurrentPage,
@@ -11,12 +8,12 @@ import {
 } from '../filter/filterSlice';
 
 export const fetchClassesByUser = createAsyncThunk(
-  'class/fetchClassesByUser',
-  async ({ search, currentPage, Limit, sortOrder }, { dispatch }) => {
+  'classes/fetchClassesByUser',
+  async ({ search, currentPage, limit, sortOrder }, { dispatch }) => {
     return await apiHandler(
       dispatch,
-      getAllClassesByUser,
-      { search, currentPage, Limit, sortOrder },
+      ClassAPI.getAllClassesByUser,
+      { search, currentPage, limit, sortOrder },
       (data) => {
         dispatch(setCurrentPage(data.currentPage));
         dispatch(setTotalPages(data.totalPages));
@@ -29,17 +26,62 @@ export const fetchClassesByUser = createAsyncThunk(
 );
 
 export const fetchDetailClassByUser = createAsyncThunk(
-  'class/fetchDetailClassByUser',
-  async ({ classId }, { dispatch }) => {
+  'classes/fetchDetailClassByUser',
+  async ({ class_code }, { dispatch }) => {
     return await apiHandler(
       dispatch,
-      getDetailClassByUser,
-      { classId },
+      ClassAPI.getDetailClassByUser,
+      { class_code },
       () => {},
       false,
       false,
     );
   },
+);
+
+export const fetchLessonLearningItemByClassId = createAsyncThunk(
+  'classes/fetchLessonLearningItemByClassId',
+  async ({ class_code }, { dispatch }) => {
+    return await apiHandler(
+      dispatch,
+      ClassAPI.getLessonLearningItemByClassId,
+      { class_code },
+      () => {},
+      false,
+      false,
+    );
+  },
+);
+
+export const fetchDataForLearning = createAsyncThunk(
+  'classes/fetchDataForLearning',
+  async ({ class_code }, { dispatch }) => {
+    return await apiHandler(
+      dispatch,
+      ClassAPI.getDataForLearning,
+      { class_code },
+      () => {},
+      false,
+      false,
+    );
+  },
+);
+
+export const joinClass = createAsyncThunk(
+  'classes/joinClass',
+  async ({ class_code }, { dispatch, getState }) => {
+    const token = getState().auth.token; // Giả sử bạn có lưu token trong state.auth
+    return await apiHandler(
+      dispatch,
+      ClassAPI.joinClassByCode,
+      { class_code },
+      () => {
+        dispatch(fetchClassesByUser(getState().filter)); // Load lại danh sách lớp học
+      },
+      true,
+      false
+    );
+  }
 );
 
 const initialState = {
@@ -48,7 +90,7 @@ const initialState = {
 };
 
 const classSlice = createSlice({
-  name: 'class',
+  name: 'classes',
   initialState,
   reducers: {
     setClasses: (state, action) => {
@@ -64,14 +106,35 @@ const classSlice = createSlice({
         state.classes = [];
       })
       .addCase(fetchClassesByUser.fulfilled, (state, action) => {
-        state.classes = action.payload.data;
+        console.log('Data:', action.payload);
+        if (action.payload) {
+          state.classes = action.payload.data;
+        }
       })
       .addCase(fetchDetailClassByUser.pending, (state, action) => {
         state.classDetail = null;
       })
       .addCase(fetchDetailClassByUser.fulfilled, (state, action) => {
         state.classDetail = action.payload.data;
-      });
+      })
+      .addCase(fetchLessonLearningItemByClassId.pending, (state, action) => {
+        state.classDetail = null;
+      })
+      .addCase(fetchLessonLearningItemByClassId.fulfilled, (state, action) => {
+        state.classDetail = action.payload.data;
+      })
+      .addCase(fetchDataForLearning.pending, (state, action) => {
+        state.classDetail = null;
+      })
+      .addCase(fetchDataForLearning.fulfilled, (state, action) => {
+        state.classDetail = action.payload.data;
+      })
+      // .addCase(joinClass.pending, (state) => {
+      //   state.isJoining = true;
+      // })
+      .addCase(joinClass.fulfilled, (state) => {
+        state.classDetail.userStatus === 'JS'
+      })
   },
 });
 
