@@ -19,6 +19,7 @@ import CustomModal from '../../../components/CustomModal';
 import colors from '../../../constants/colors';
 import { fetchClassesByUser, joinClass } from '../../../features/class/classSlice';
 import { useDispatch, useSelector } from 'react-redux';
+import LoadingOverlay from '../../../components/LoadingOverlay';
 
 // Hook lọc dữ liệu
 const useFilteredClasses = (classes, status) => {
@@ -41,23 +42,23 @@ export default function ClassroomScreen() {
 
   const { classes } = useSelector((state) => state.classes);
 
-  const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
-    (state) => state.filter,
-  );
   const dispatch = useDispatch();
-
+  
   const filteredClasses = useFilteredClasses(classes, selectedStatus);
-
-  useEffect(() => {
-    if (
-      search !== undefined &&
-      currentPage !== undefined &&
-      limit !== undefined &&
-      sortOrder !== undefined
-    ) {
-      dispatch(fetchClassesByUser({ search, currentPage, limit, sortOrder }));
-    }
-  }, [search, currentPage, limit, sortOrder]);
+  
+  // const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
+  //   (state) => state.filter,
+  // );
+  // useEffect(() => {
+  //   if (
+  //     search !== undefined &&
+  //     currentPage !== undefined &&
+  //     limit !== undefined &&
+  //     sortOrder !== undefined
+  //   ) {
+  //     dispatch(fetchClassesByUser({ search, currentPage, limit, sortOrder }));
+  //   }
+  // }, [search, currentPage, limit, sortOrder]);
 
   useEffect(() => {
     console.log('Classes:', classes);
@@ -112,7 +113,7 @@ export default function ClassroomScreen() {
         status={item.studentClassStatus}
         onPressJoin={() => {
           console.log('Vào lớp có id:', item.id);
-
+          
           router.push({
             pathname: `/classroom/${item.class_code}/`,
             params: {
@@ -131,6 +132,7 @@ export default function ClassroomScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
+      <LoadingOverlay/>
       <View style={styles.container}>
         {/* Header */}
         <AppText style={styles.header}>Lớp của bạn</AppText>

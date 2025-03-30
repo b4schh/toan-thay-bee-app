@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Modal,
@@ -6,21 +6,26 @@ import {
   TextInput,
   ScrollView,
   StyleSheet,
+  Text,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchPublicQuestionsByExamId } from '../../../features/question/questionSlice';
+import { initializeTimer, decrementTimer } from '../../../features/exam/examSlice';
 import { setAnswer } from '../../../features/answer/answerSlice';
 import LatexRenderer from '../../../components/latex/LatexRenderer';
 import AppText from '../../../components/AppText';
 import Button from '../../../components/Button';
 import ExamOverviewOverlay from '../../../components/ExamOverviewOverlay';
+import Timer from '../../../components/Timer';
 import colors from '../../../constants/colors';
 
 export default function DoExamScreen() {
   const router = useRouter();
-  const { id, name, sectionIndexParam, questionIndexParam } =
+  const { id, name, testDuration, sectionIndexParam, questionIndexParam } =
     useLocalSearchParams();
+  console.log('Thoi gian lam bai:', testDuration);
+
   const dispatch = useDispatch();
 
   // Fetch dữ liệu khi component mount
@@ -44,9 +49,9 @@ export default function DoExamScreen() {
     ? questions.filter((q) => q.typeOfQuestion === 'TLN')
     : [];
 
-  useEffect(() => console.log('Trac nghiem', tnQuestions), [tnQuestions]);
-  useEffect(() => console.log('Dung sai', dsQuestions), [dsQuestions]);
-  useEffect(() => console.log('Tra loi ngan', tlnQuestions), [tlnQuestions]);
+  // useEffect(() => console.log('Trac nghiem', tnQuestions), [tnQuestions]);
+  // useEffect(() => console.log('Dung sai', dsQuestions), [dsQuestions]);
+  // useEffect(() => console.log('Tra loi ngan', tlnQuestions), [tlnQuestions]);
 
   // Tạo danh sách các phần và câu hỏi
   const sections = [
@@ -67,18 +72,9 @@ export default function DoExamScreen() {
   const [isOverviewVisible, setIsOverviewVisible] = useState(false); // State để hiển thị overlay
 
   // Log để kiểm tra dữ liệu (có thể xóa sau khi debug xong)
-  useEffect(() => {
-    console.log('Ket qua', answers);
-  }, [answers]);
-
-  // Kiểm tra nếu chưa có dữ liệu
-  if (!questions || questions.length === 0) {
-    return (
-      <View style={styles.container}>
-        <AppText>Đang tải câu hỏi...</AppText>
-      </View>
-    );
-  }
+  // useEffect(() => {
+  //   console.log('Ket qua', answers);
+  // }, [answers]);
 
   // Tính số thứ tự câu hỏi
   const getQuestionNumber = () => {
@@ -89,15 +85,22 @@ export default function DoExamScreen() {
     return count + currentQuestionIndex + 1;
   };
 
-  // Lấy câu hỏi hiện tại
-  const currentSection = sections[currentSectionIndex];
-  const currentQuestion = currentSection.questions[currentQuestionIndex];
-
   const handleSelectQuestion = (sectionIndex, questionIndex) => {
     setCurrentSectionIndex(sectionIndex);
     setCurrentQuestionIndex(questionIndex);
     setIsOverviewVisible(false); // Đóng overlay sau khi chọn câu hỏi
   };
+
+  // Lấy timeLeft từ Redux store
+  const { timeLeft, isTimerRunning } = useSelector(state => state.exams);
+
+  // Tự động nộp bài khi hết giờ
+  useEffect(() => {
+    if (timeLeft === 0 && isTimerRunning) {
+      alert('Hết giờ! Bài thi đã được nộp tự động.');
+      router.replace('home/');
+    }
+  }, [timeLeft, isTimerRunning]);
 
   // --- Sửa hàm xử lý chọn đáp án: sử dụng dispatch để cập nhật Redux ---
   // Xử lý chọn đáp án cho TN
@@ -137,136 +140,178 @@ export default function DoExamScreen() {
     }
   };
 
-  // Kiểm tra có thể điều hướng không
+  // Kiểm tra điều kiện biên
   const isFirstQuestion =
     currentSectionIndex === 0 && currentQuestionIndex === 0;
+  const currentSection = sections[currentSectionIndex] || {
+    questions: [],
+    title: '',
+  };
+  const currentQuestion = currentSection.questions[currentQuestionIndex] || {
+    id: '',
+    content: '',
+    statements: [],
+  };
   const isLastQuestion =
+    sections.length > 0 &&
     currentSectionIndex === sections.length - 1 &&
     currentQuestionIndex === currentSection.questions.length - 1;
+
+  // console.log(currentQuestion.content);
+  // console.log(currentQuestion.statements);
 
   return (
     <View style={{ flex: 1 }}>
       {/* Nút chuyển sang trang ExamOverview */}
       <ScrollView style={styles.container}>
-        <View style={styles.headerContainer}>
-          {/* Tên đề */}
-          <AppText
-            style={styles.examName}
-            numberOfLines={2}
-            ellipsizeMode="tail"
-          >
-            {name.toUpperCase()}
-          </AppText>
-          <Button
-            icon="menu"
-            iconLibrary="Feather"
-            iconColor={colors.ink.darkest}
-            style={[
-              {
-                width: 'auto',
-                height: 'auto',
-                backgroundColor: 'transparent',
-                marginTop: 3,
-              },
-            ]}
-            onPress={() => setIsOverviewVisible(true)} // Mở overlay
-          />
-        </View>
-
-        {/* Nút điều hướng */}
-        <View style={styles.navigationContainer}>
-          <Button
-            text="Câu trước"
-            style={[styles.navButton, isFirstQuestion && styles.disabledButton]}
-            onPress={goToPrevious}
-            disabled={isFirstQuestion}
-          />
-          <Button
-            text="Câu tiếp theo"
-            style={[styles.navButton, isLastQuestion && styles.disabledButton]}
-            onPress={goToNext}
-            disabled={isLastQuestion}
-          />
-        </View>
-
-        {/* Hiển thị tên phần */}
-        <AppText style={styles.sectionTitle}>{currentSection.title}</AppText>
-        {/* Hiển thị số thứ tự câu */}
-        <AppText style={styles.questionNumber}>
-          Câu {getQuestionNumber()} (ID {currentQuestion.id}):
-        </AppText>
-        {/* Hiển thị đề bài */}
-        <AppText style={styles.questionContent}>
-          {currentQuestion.content}
-        </AppText>
-
-        {/* Hiển thị tùy theo loại câu hỏi */}
-        {currentSection.type === 'TN' && (
-          <View>
-            {currentQuestion.statements.map((statement) => (
-              <TouchableOpacity
-                key={statement.id}
-                style={styles.optionContainer}
-                onPress={() => handleSelectAnswer(statement.id)}
+        {!questions || questions.length === 0 ? (
+          <AppText>Đang tải câu hỏi...</AppText>
+        ) : (
+          <>
+            <View style={styles.headerContainer}>
+              {/* Tên đề */}
+              <AppText
+                style={styles.examName}
+                numberOfLines={2}
+                ellipsizeMode="tail"
               >
-                <View style={styles.radioCircle}>
-                  {answers[currentQuestion.id] === statement.id && (
-                    <View style={styles.selectedCircle} />
-                  )}
-                </View>
-                <AppText style={styles.optionText}>{statement.content}</AppText>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+                {name.toUpperCase()}
+              </AppText>
+              <Timer duration={testDuration} style={styles.timer} />
+              <Button
+                icon="menu"
+                iconLibrary="Feather"
+                iconColor={colors.ink.darkest}
+                style={[
+                  {
+                    width: 'auto',
+                    height: 'auto',
+                    backgroundColor: 'transparent',
+                    marginTop: 3,
+                  },
+                ]}
+                onPress={() => setIsOverviewVisible(true)} // Mở overlay
+              />
+            </View>
 
-        {currentSection.type === 'DS' && (
-          <View style={styles.dsContainer}>
-            {currentQuestion.statements.map((statement, index) => (
-              <View key={statement.id} style={styles.trueFalseContainer}>
-                <AppText
-                  style={styles.statementText}
-                >{`${index + 1}. ${statement.content}`}</AppText>
-                <View style={styles.trueFalseButtons}>
-                  <Button
-                    text="Đúng"
-                    textStyle={[
-                      answers[statement.id] !== true && styles.buttonText,
-                    ]}
-                    style={[
-                      styles.trueFalseButton,
-                      answers[statement.id] === true && styles.selectedButton,
-                    ]}
-                    onPress={() => handleSelectTrueFalse(statement.id, true)}
-                  />
-                  <Button
-                    text="Sai"
-                    textStyle={[
-                      answers[statement.id] !== false && styles.buttonText,
-                    ]}
-                    style={[
-                      styles.trueFalseButton,
-                      answers[statement.id] === false && styles.selectedButton,
-                    ]}
-                    onPress={() => handleSelectTrueFalse(statement.id, false)}
-                  />
-                </View>
+            {/* Nút điều hướng */}
+            <View style={styles.navigationContainer}>
+              <Button
+                text="Câu trước"
+                style={[
+                  styles.navButton,
+                  isFirstQuestion && styles.disabledButton,
+                ]}
+                onPress={goToPrevious}
+                disabled={isFirstQuestion}
+              />
+              <Button
+                text="Câu tiếp theo"
+                style={[
+                  styles.navButton,
+                  isLastQuestion && styles.disabledButton,
+                ]}
+                onPress={goToNext}
+                disabled={isLastQuestion}
+              />
+            </View>
+
+            {/* Hiển thị tên phần */}
+            <AppText style={styles.sectionTitle}>
+              {currentSection.title}
+            </AppText>
+            {/* Hiển thị số thứ tự câu */}
+            <AppText style={styles.questionNumber}>
+              Câu {getQuestionNumber()} (ID {currentQuestion.id}):
+            </AppText>
+            {/* Hiển thị đề bài */}
+            <AppText style={styles.questionContent}>
+              <Text>{currentQuestion.content}</Text>/
+              {/* <LatexRenderer text={currentQuestion.content} /> */}
+              {/* <LatexRenderer
+                text={
+                  'Cho hàm số \( y=f(x) \) liên tục, nhận giá trị dương trên đoạn \( [a ; b] \). Xét hình phẳng \( (H) \) giới hạn bởi đồ thị hàm số \( y=f(x) \), trục hoành và hai đường thẳng \( x=a, x=b \). Khối tròn xoay được tạo thành khi quay hình phẳng \( (H) \) quanh trục \( O x \) có thể tích là:'
+                }
+              /> */}
+            </AppText>
+
+            {/* Hiển thị tùy theo loại câu hỏi */}
+            {currentSection.type === 'TN' && (
+              <View>
+                {currentQuestion.statements.map((statement) => (
+                  <TouchableOpacity
+                    key={statement.id}
+                    style={styles.optionContainer}
+                    onPress={() => handleSelectAnswer(statement.id)}
+                  >
+                    <View style={styles.radioCircle}>
+                      {answers[currentQuestion.id] === statement.id && (
+                        <View style={styles.selectedCircle} />
+                      )}
+                    </View>
+                    <AppText style={styles.optionText}>
+                      {statement.content}
+                    </AppText>
+                  </TouchableOpacity>
+                ))}
               </View>
-            ))}
-          </View>
-        )}
+            )}
 
-        {currentSection.type === 'TLN' && (
-          <TextInput
-            style={styles.input}
-            placeholder="Nhập đáp án"
-            value={answers[currentQuestion.id] || ''}
-            onChangeText={handleInputAnswer}
-          />
+            {currentSection.type === 'DS' && (
+              <View style={styles.dsContainer}>
+                {currentQuestion.statements.map((statement, index) => (
+                  <View key={statement.id} style={styles.trueFalseContainer}>
+                    <AppText
+                      style={styles.statementText}
+                    >{`${index + 1}. ${statement.content}`}</AppText>
+                    <View style={styles.trueFalseButtons}>
+                      <Button
+                        text="Đúng"
+                        textStyle={[
+                          answers[statement.id] !== true && styles.buttonText,
+                        ]}
+                        style={[
+                          styles.trueFalseButton,
+                          answers[statement.id] === true &&
+                            styles.selectedButton,
+                        ]}
+                        onPress={() =>
+                          handleSelectTrueFalse(statement.id, true)
+                        }
+                      />
+                      <Button
+                        text="Sai"
+                        textStyle={[
+                          answers[statement.id] !== false && styles.buttonText,
+                        ]}
+                        style={[
+                          styles.trueFalseButton,
+                          answers[statement.id] === false &&
+                            styles.selectedButton,
+                        ]}
+                        onPress={() =>
+                          handleSelectTrueFalse(statement.id, false)
+                        }
+                      />
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {currentSection.type === 'TLN' && (
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập đáp án"
+                value={answers[currentQuestion.id] || ''}
+                onChangeText={handleInputAnswer}
+              />
+            )}
+          </>
         )}
       </ScrollView>
-      {/* Overlay ExamOverview */}
 
+      {/* Overlay ExamOverview */}
       <Modal
         visible={isOverviewVisible}
         transparent={true}
@@ -277,6 +322,7 @@ export default function DoExamScreen() {
           <ExamOverviewOverlay
             sections={sections}
             answers={answers}
+            testDuration={testDuration}
             currentSectionIndex={currentSectionIndex}
             currentQuestionIndex={currentQuestionIndex}
             onSelectQuestion={handleSelectQuestion}

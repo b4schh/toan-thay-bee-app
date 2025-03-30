@@ -19,6 +19,7 @@ import TabNavigation from '../../../components/TabNavigation';
 import CustomModal from '../../../components/CustomModal';
 import colors from '../../../constants/colors';
 import { fetchPublicExams } from '../../../features/exam/examSlice';
+import LoadingOverlay from '../../../components/LoadingOverlay';
 
 const useFilteredExam = (exams, grade) => {
   return useMemo(() => {
@@ -28,15 +29,17 @@ const useFilteredExam = (exams, grade) => {
 };
 
 export default function PracticeScreen() {
+  const { loading } = useSelector((state) => state.states);
+
   useEffect(() => {
-    console.log('PracticeScreen re-rendered!');
-  });
+    console.log('Loading:', loading);
+  }, [loading]);
 
   const [selectedGrade, setSelectedGrade] = useState('all');
   const router = useRouter();
 
   const { exams } = useSelector((state) => state.exams);
-  
+
   const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
     (state) => state.filter,
   );
@@ -45,14 +48,12 @@ export default function PracticeScreen() {
   const filteredExam = useFilteredExam(exams, selectedGrade);
 
   useEffect(() => {
-    if (search !== undefined && currentPage !== undefined && limit !== undefined && sortOrder !== undefined) {
-      dispatch(fetchPublicExams({ search, currentPage, limit, sortOrder }));
-    }
-  }, [dispatch, search, currentPage, limit, sortOrder]);
+    dispatch(fetchPublicExams({ search, currentPage, limit, sortOrder }));
+  }, [dispatch]);
 
-  // useEffect(() => {
-  //   console.log('Exams:', exams);
-  // }, [exams]);
+  useEffect(() => {
+    console.log('Exams:', exams);
+  }, [exams]);
 
   const tabs = useMemo(
     () => [
@@ -126,6 +127,9 @@ export default function PracticeScreen() {
         renderItem={renderExamItem}
         showsVerticalScrollIndicator={false}
       />
+
+      {/* Overlay loading mờ (hiển thị nếu loading=true) */}
+      {loading && <LoadingOverlay />}
     </View>
   );
 }

@@ -17,6 +17,7 @@ import TextInputField from '../../components/input-field/TextInputField';
 import Checkbox from '../../components/Checkbox';
 import AppText from '../../components/AppText';
 import CustomAlert from '../../components/CustomAlert';
+import LoadingOverlay from '../../components/LoadingOverlay';
 import colors from '../../constants/colors';
 
 // Import action login được tạo từ authSlice (sử dụng createAsyncThunk)
@@ -28,12 +29,11 @@ export default function Login() {
 
   // Lấy trạng thái auth từ Redux
   const { user, loading } = useSelector((state) => state.auth);
-  // console.log("Redux state sau khi login:", user, loading);
 
   // State cho custom alert
   const [alertVisible, setAlertVisible] = useState(false);
-  const [alertTitle, setAlertTitle] = useState("");
-  const [alertMessage, setAlertMessage] = useState("");
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
 
   // Schema validation cho form login
   const LoginSchema = Yup.object().shape({
@@ -47,7 +47,6 @@ export default function Login() {
       router.replace('/(tabs)');
     }
     // router.replace('/(tabs)');
-
   }, [user, router]);
 
   return (
@@ -61,9 +60,7 @@ export default function Login() {
 
       {/* Header */}
       <View style={styles.headerContainer}>
-        <AppText
-          style={[styles.headerText, { fontSize: 32 }]}
-        >
+        <AppText style={[styles.headerText, { fontSize: 32 }]}>
           Chào mừng!
         </AppText>
         <AppText style={[styles.headerText, { fontSize: 24 }]}>
@@ -87,18 +84,13 @@ export default function Login() {
               // Nếu đăng nhập thành công, việc chuyển hướng được thực hiện bởi useEffect dựa trên state auth.user
             } catch (error) {
               // Phân biệt lỗi xác thực và lỗi kết nối
-              let message = "";
-              if (
-                error &&
-                (error === 401 ||
-                  error === 403 ||
-                  error === 404)
-              ) {
-                message = "Tài khoản hoặc mật khẩu không đúng!";
+              let message = '';
+              if (error && (error === 401 || error === 403 || error === 404)) {
+                message = 'Tài khoản hoặc mật khẩu không đúng!';
               } else {
-                message = "Kết nối không ổn định";
+                message = 'Kết nối không ổn định';
               }
-              setAlertTitle("Đăng nhập thất bại");
+              setAlertTitle('Đăng nhập thất bại');
               setAlertMessage(message);
               setAlertVisible(true);
               console.error('Đăng nhập thất bại, Status =', error);
@@ -192,7 +184,6 @@ export default function Login() {
                 onPress={handleSubmit}
                 style={styles.button}
                 disabled={isSubmitting || loading}
-
               />
 
               <View style={styles.row}>
@@ -216,11 +207,8 @@ export default function Login() {
         </Formik>
       </View>
 
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#000" />
-        </View>
-      )}
+      {loading && <LoadingOverlay />}
+      <LoadingOverlay/>
     </View>
   );
 }
@@ -234,7 +222,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     paddingHorizontal: 20,
     marginBottom: 20,
-    gap: 12
+    gap: 12,
   },
   headerText: {
     fontFamily: 'Inter-Bold',
@@ -268,23 +256,13 @@ const styles = StyleSheet.create({
     marginTop: -12,
     marginBottom: 8,
   },
-  button : {
-    width: "100%"
+  button: {
+    width: '100%',
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 10,
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
 });

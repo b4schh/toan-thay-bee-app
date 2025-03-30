@@ -18,7 +18,7 @@ export const logoutAPI = async (_, token) => {
   });
 };
 
-export const checkLoginApi = async (_, token) => {
+export const checkLoginAPI = async (_, token) => {
   return api.get('/v1/user/check-login', {
     headers: {
       Authorization: `Bearer ${token}`, // nếu dùng token

@@ -125,3 +125,79 @@ const learningItems = [
     url: 'https://firebasestorage.googleapis.com/v0/b/toan-thay-bee-dc180.firebasestorage.app/o/pdfs%2F1743006963965-demo.pdf?alt=media&token=4d1c0ae7-93d5-4b0a-a2fe-fd31feee74e4',
   },
 ];
+
+const bc = {
+  examData: {
+    id: 1,
+    name: 'Đề thi Toán THPT',
+    class: 'l12',
+    typeOfExam: 'GK1',
+    year: '2023-2024',
+    duration: 90,
+  },
+  questions: [
+    {
+      questionData: {
+        class: 'Math',
+        content: 'What is 2 + 2?',
+        solutionUrl: 'https://example.com/solution',
+        needImage: true,
+        typeOfQuestion: 'TN',
+      },
+      statements: [
+        {
+          content: '3',
+          isCorrect: false,
+          needImage: false,
+        },
+        {
+          content: '4',
+          isCorrect: true,
+          needImage: true,
+        },
+        {
+          content: '5',
+          isCorrect: false,
+          needImage: false,
+        },
+        {
+          content: '6',
+          isCorrect: false,
+          needImage: true,
+        },
+      ],
+        
+    },
+    {
+      questionData: {
+        class: 'Math',
+        content: 'What is 2 + 2?',
+        solutionUrl: 'https://example.com/solution',
+        needImage: true,
+        typeOfQuestion: 'TN',
+      },
+      statements: [
+        {
+          content: '3',
+          isCorrect: false,
+          needImage: false,
+        },
+        {
+          content: '4',
+          isCorrect: true,
+          needImage: true,
+        },
+        {
+          content: '5',
+          isCorrect: false,
+          needImage: false,
+        },
+        {
+          content: '6',
+          isCorrect: false,
+          needImage: true,
+        },
+      ],
+    },
+  ],
+};

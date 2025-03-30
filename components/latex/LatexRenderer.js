@@ -9,6 +9,8 @@ function wrapTextAndExtractMath(input) {
   // Regex match tất cả biểu thức LaTeX dạng $...$, $$...$$, \(...\), \[...\]
   const parts = input.split(/(\\\[.*?\\\]|\\\(.*?\\\)|\$\$.*?\$\$|\$.*?\$)/g);
 
+  console.log('Parts:', parts);
+
   // Duyệt qua từng phần
   const processed = parts.map((part) => {
     if (!part.trim()) return '';
@@ -17,10 +19,14 @@ function wrapTextAndExtractMath(input) {
     const mathMatch = part.match(
       /^(\$\$|\$|\\\[|\\\()(.+?)(\$\$|\$|\\\]|\\\))$/,
     );
+    console.log('Math Match:', mathMatch);
 
     if (mathMatch) {
+      console.log('Math Match trim:', mathMatch);
+
       return mathMatch[2].trim(); // Lấy nội dung bên trong dấu $ hoặc \(
     } else {
+      console.log('Text', mathMatch);
       // Bọc văn bản thường vào \text{}
       return `\\text{${part.trim()} }`;
     }
@@ -32,6 +38,8 @@ function wrapTextAndExtractMath(input) {
 const LatexRenderer = ({ text, style }) => {
   const cleanText = wrapTextAndExtractMath(text);
 
+  console.log("Clean Text:", cleanText);
+  
   const [loaded, setLoaded] = useState(false);
 
   return (

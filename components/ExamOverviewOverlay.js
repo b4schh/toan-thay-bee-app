@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { useSelector } from 'react-redux';
 import colors from '../constants/colors';
 import Feather from '@expo/vector-icons/Feather';
 import AppText from './AppText';
@@ -15,11 +16,27 @@ export default function ExamOverviewOverlay({
   onSelectQuestion,
   onClose,
 }) {
-  // Xử lý thoát/nộp bài
   const [isModalVisible, setModalVisible] = useState(false);
   const router = useRouter();
+
+  // Lấy thời gian từ Redux store
+  const { timeLeft } = useSelector(state => state.exams);
+
   const handleLeave = () => {
     router.replace('home/'); // Thay 'Home' bằng tên màn hình bạn muốn chuyển đến
+  };
+
+  const handleSubmit = () => {
+    alert('Hết giờ! Bài thi đã được nộp tự động.');
+    router.replace('home/');
+  };
+
+  const formatTime = (seconds) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hrs.toString().padStart(2, '0')}:${mins
+      .toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const screenWidth = Dimensions.get('window').width;
@@ -84,6 +101,7 @@ export default function ExamOverviewOverlay({
     <View style={styles.overlay}>
       <View style={styles.headerContainer}>
         <AppText style={styles.title}>TIẾN ĐỘ LÀM BÀI</AppText>
+        <AppText style={styles.timer}>⏳ {formatTime(timeLeft)}</AppText>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <Feather name="x" size={24} color="black" />
         </TouchableOpacity>
@@ -200,6 +218,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  timer: {
+    fontSize: 18,
+    color: colors.danger,
+    fontFamily: 'Inter-Bold',
+    marginHorizontal: 12,
   },
   title: {
     fontSize: 20,

@@ -11,9 +11,11 @@ export const apiHandler = async (dispatch, apiFunc, params, successCallback, use
 
         // ✅ Lấy token từ AsyncStorage
         const token = await AsyncStorage.getItem('authToken');
+        
         if (!token) {
             throw new Error("🚨 Bạn cần đăng nhập trước khi gọi API.");
         }
+        
         // ✅ Gọi API và tự chèn token
         const response = await apiFunc(params, token);
         

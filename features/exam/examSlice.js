@@ -79,11 +79,34 @@ const examSlice = createSlice({
     initialState: {
         exams: [],
         exam: null,
+        timeLeft: 0,
+        isTimerRunning: false,
+        initialDuration: 0,
     },
     reducers: {
         setExam: (state, action) => {
             state.exam = action.payload;
-        }
+        },
+        initializeTimer: (state, action) => {
+            state.timeLeft = action.payload;
+            state.initialDuration = action.payload;
+            state.isTimerRunning = true;
+        },
+        decrementTimer: (state) => {
+            if (state.timeLeft > 0 && state.isTimerRunning) {
+                state.timeLeft -= 1;
+            }
+        },
+        pauseTimer: (state) => {
+            state.isTimerRunning = false;
+        },
+        resumeTimer: (state) => {
+            state.isTimerRunning = true;
+        },
+        resetTimer: (state) => {
+            state.timeLeft = state.initialDuration;
+            state.isTimerRunning = false;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -132,5 +155,13 @@ const examSlice = createSlice({
     }
 });
 
-export const { setExam } = examSlice.actions;
+export const { 
+    setExam, 
+    initializeTimer, 
+    decrementTimer, 
+    pauseTimer, 
+    resumeTimer, 
+    resetTimer 
+} = examSlice.actions;
+
 export default examSlice.reducer;

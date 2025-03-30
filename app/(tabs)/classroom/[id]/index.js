@@ -21,6 +21,8 @@ export default function ClassroomIntro() {
   const class_code = useLocalSearchParams().id;
   
   useEffect(() => {
+    console.log("Class ID:", class_code);
+
     if (class_code) {
       dispatch(fetchLessonLearningItemByClassId({ class_code }));
     }

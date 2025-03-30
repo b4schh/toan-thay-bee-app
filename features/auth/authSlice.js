@@ -16,7 +16,11 @@ export const login = createAsyncThunk(
     try {
       const response = await loginAPI(credentials);
       const { user, token } = response.data; // API trả về { user }
-      await AsyncStorage.setItem('authToken', token);
+
+      // Lưu token vào AsyncStorage với key 'token'
+      if (token) {
+        await AsyncStorage.setItem('authToken', token);
+      }
       return user;
     } catch (error) {
       const errorMsg = error.response.status || 'Đăng nhập thất bại';

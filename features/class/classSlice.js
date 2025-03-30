@@ -70,7 +70,6 @@ export const fetchDataForLearning = createAsyncThunk(
 export const joinClass = createAsyncThunk(
   'classes/joinClass',
   async ({ class_code }, { dispatch, getState }) => {
-    const token = getState().auth.token; // Giả sử bạn có lưu token trong state.auth
     return await apiHandler(
       dispatch,
       ClassAPI.joinClassByCode,
@@ -78,7 +77,7 @@ export const joinClass = createAsyncThunk(
       () => {
         dispatch(fetchClassesByUser(getState().filter)); // Load lại danh sách lớp học
       },
-      true,
+      false,
       false
     );
   }

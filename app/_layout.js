@@ -1,13 +1,13 @@
 import { Stack } from 'expo-router';
 import React, { useState, useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
-import { Provider, useSelector } from 'react-redux';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import { store } from '../redux/store';
 import * as SplashScreen from 'expo-splash-screen';
 import { loadFonts } from '../utils/fonts';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { setRouter } from '../services/RouterService';
+import { checkLogin } from '../features/auth/authSlice';
 
 // Ngăn splash screen tự động ẩn
 SplashScreen.preventAutoHideAsync();
@@ -29,13 +29,10 @@ export default function RootLayout() {
 }
 
 function AppContent() {
-  const user = useSelector((state) => state.auth.user);
+  // const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
   const [isReady, setIsReady] = useState(false);
   const [appRendered, setAppRendered] = useState(false);
-
-  useEffect(() => {
-    console.log('App re-rendered!');
-  });
 
   useEffect(() => {
     async function loadAssets() {
@@ -62,21 +59,11 @@ function AppContent() {
     }
   }, [isReady, appRendered]);
 
-  if (!isReady) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#253F61" />
-      </View>
-    );
-  }
-
   return (
     <Stack screenOptions={{ headerShown: false }}>
       {user ? (
         <>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="index" options={{ title: 'Trang chủ' }} />
-          <Stack.Screen name="(auth)/login" options={{ title: 'Đăng nhập' }} />
         </>
       ) : (
         <>

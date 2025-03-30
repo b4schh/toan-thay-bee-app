@@ -5,12 +5,14 @@ import ScrollableCard from '../../../components/ScrollableCard';
 import Button from '../../../components/Button';
 import AppText from '../../../components/AppText';
 import TabNavigation from '../../../components/TabNavigation';
+import LoadingOverlay from '../../../components/LoadingOverlay';
 import colors from '../../../constants/colors';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchClassesByUser } from '../../../features/class/classSlice';
 import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
+  
   const router = useRouter();
   const dispatch = useDispatch();
 
@@ -38,16 +40,16 @@ export default function HomeScreen() {
 
   const TabContent = useMemo(
     () => ({
-      pending_assignments: (
-        <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
-      ),
-      unread_documents: (
-        <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
-      ),
-      saved_exams: <AppText style={styles.contentText}>📌 Đề đã lưu</AppText>,
-      exam_history: (
-        <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
-      ),
+      // pending_assignments: (
+      //   <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
+      // ),
+      // unread_documents: (
+      //   <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
+      // ),
+      // saved_exams: <AppText style={styles.contentText}>📌 Đề đã lưu</AppText>,
+      // exam_history: (
+      //   <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
+      // ),
     }),
     [selectedTab],
   );
@@ -95,6 +97,7 @@ export default function HomeScreen() {
   }, []);
   return (
     <View style={styles.container}>
+
       {/* Button */}
       <View style={styles.buttonContainer}>
         <Button
@@ -166,7 +169,7 @@ export default function HomeScreen() {
             {/* Nội dung hiển thị bên dưới */}
             <View style={[styles.contentContainer]}>
               {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
+                <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
               )}
               {/* {TabContent[selectedTab] || (
                 <AppText style={styles.contentText}>Không có dữ liệu</AppText>
@@ -253,6 +256,8 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollableCard>
+
+      <LoadingOverlay/>
     </View>
   );
 }

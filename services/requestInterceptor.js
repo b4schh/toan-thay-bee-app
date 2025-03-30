@@ -4,7 +4,7 @@ const applyRequestInterceptor = (axiosInstance) => {
     axiosInstance.interceptors.request.use(
         async (config) => {
             // Lấy token từ AsyncStorage
-            const token = await AsyncStorage.getItem('token');
+            const token = await AsyncStorage.getItem('authToken');
 
             // Nếu có token, thêm vào header Authorization
             if (token) {
