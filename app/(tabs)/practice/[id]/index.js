@@ -3,7 +3,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import colors from '../../../../constants/colors';
 import AppText from '../../../../components/AppText';
-import Button from '../../../../components/Button';
+import Button from '../../../../components/button/Button';
 import { useDispatch } from 'react-redux';
 import { fetchPublicQuestionsByExamId } from '../../../../features/question/questionSlice';
 

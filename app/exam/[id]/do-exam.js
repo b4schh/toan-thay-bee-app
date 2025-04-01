@@ -11,12 +11,15 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchPublicQuestionsByExamId } from '../../../features/question/questionSlice';
-import { initializeTimer, decrementTimer } from '../../../features/exam/examSlice';
+import {
+  initializeTimer,
+  decrementTimer,
+} from '../../../features/exam/examSlice';
 import { setAnswer } from '../../../features/answer/answerSlice';
 import LatexRenderer from '../../../components/latex/LatexRenderer';
 import AppText from '../../../components/AppText';
-import Button from '../../../components/Button';
-import ExamOverviewOverlay from '../../../components/ExamOverviewOverlay';
+import Button from '../../../components/button/Button';
+import ExamOverviewOverlay from '../../../components/overlay/ExamOverviewOverlay';
 import Timer from '../../../components/Timer';
 import colors from '../../../constants/colors';
 
@@ -92,7 +95,7 @@ export default function DoExamScreen() {
   };
 
   // Lấy timeLeft từ Redux store
-  const { timeLeft, isTimerRunning } = useSelector(state => state.exams);
+  const { timeLeft, isTimerRunning } = useSelector((state) => state.exams);
 
   // Tự động nộp bài khi hết giờ
   useEffect(() => {
@@ -156,9 +159,6 @@ export default function DoExamScreen() {
     sections.length > 0 &&
     currentSectionIndex === sections.length - 1 &&
     currentQuestionIndex === currentSection.questions.length - 1;
-
-  // console.log(currentQuestion.content);
-  // console.log(currentQuestion.statements);
 
   return (
     <View style={{ flex: 1 }}>
@@ -227,12 +227,6 @@ export default function DoExamScreen() {
             {/* Hiển thị đề bài */}
             <AppText style={styles.questionContent}>
               <Text>{currentQuestion.content}</Text>/
-              {/* <LatexRenderer text={currentQuestion.content} /> */}
-              {/* <LatexRenderer
-                text={
-                  'Cho hàm số \( y=f(x) \) liên tục, nhận giá trị dương trên đoạn \( [a ; b] \). Xét hình phẳng \( (H) \) giới hạn bởi đồ thị hàm số \( y=f(x) \), trục hoành và hai đường thẳng \( x=a, x=b \). Khối tròn xoay được tạo thành khi quay hình phẳng \( (H) \) quanh trục \( O x \) có thể tích là:'
-                }
-              /> */}
             </AppText>
 
             {/* Hiển thị tùy theo loại câu hỏi */}
@@ -311,25 +305,16 @@ export default function DoExamScreen() {
         )}
       </ScrollView>
 
-      {/* Overlay ExamOverview */}
-      <Modal
+      {/* ExamOverviewOverlay */}
+      <ExamOverviewOverlay
         visible={isOverviewVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setIsOverviewVisible(false)}
-      >
-        <View style={styles.overlayContainer}>
-          <ExamOverviewOverlay
-            sections={sections}
-            answers={answers}
-            testDuration={testDuration}
-            currentSectionIndex={currentSectionIndex}
-            currentQuestionIndex={currentQuestionIndex}
-            onSelectQuestion={handleSelectQuestion}
-            onClose={() => setIsOverviewVisible(false)}
-          />
-        </View>
-      </Modal>
+        sections={sections}
+        answers={answers}
+        currentSectionIndex={currentSectionIndex}
+        currentQuestionIndex={currentQuestionIndex}
+        onSelectQuestion={handleSelectQuestion}
+        onClose={() => setIsOverviewVisible(false)}
+      />
     </View>
   );
 }
@@ -433,9 +418,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: colors.ink.darker,
   },
-  // selectedText: {
-  //   color: '#fff', // Màu chữ khi được chọn
-  // },
   input: {
     borderWidth: 1,
     borderColor: '#000',

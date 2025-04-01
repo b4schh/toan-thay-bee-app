@@ -1,24 +1,86 @@
-// SearchBar.js
-import React, { memo } from "react";
-import { View, TextInput, StyleSheet } from "react-native";
+import React, { useState, memo, useEffect, useCallback, useRef } from "react";
+import { View, TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useDispatch, useSelector } from 'react-redux';
+import { setScreenSearch } from '../features/filter/filterSlice';
 import colors from '../constants/colors';
 
-const SearchBar = ({ onSearch }) => {
+const SearchBar = memo(({ placeholder, screen }) => {
+  const dispatch = useDispatch();
+  const { screens } = useSelector((state) => state.filter);
+  const [searchText, setSearchText] = useState(screens[screen]?.search || '');
+  const timeoutRef = useRef(null);
+
+  // Sync với global state khi component mount hoặc screen thay đổi
+  useEffect(() => {
+    setSearchText(screens[screen]?.search || '');
+  }, [screen, screens[screen]?.search]);
+
+  // Cleanup timeout khi component unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleSearch = useCallback((text) => {
+    setSearchText(text);
+    
+    // Clear previous timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // Set new timeout
+    timeoutRef.current = setTimeout(() => {
+      dispatch(setScreenSearch({
+        screen,
+        search: text
+      }));
+    }, 500);
+  }, [dispatch, screen]);
+
+  const handleClear = useCallback(() => {
+    setSearchText('');
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    dispatch(setScreenSearch({
+      screen,
+      search: ''
+    }));
+  }, [dispatch, screen]);
+
   return (
     <View style={styles.container}>
-      <Ionicons name="search" size={20} color={colors.ink.darkest} style={styles.icon} />
+      <Ionicons 
+        name="search" 
+        size={20} 
+        color={colors.ink.darkest} 
+        style={styles.icon} 
+      />
       <TextInput
         style={styles.input}
-        placeholder="Tìm kiếm..."
-        onChangeText={onSearch}
+        placeholder={placeholder}
+        placeholderTextColor={colors.ink.light}
+        value={searchText}
+        onChangeText={handleSearch}
         returnKeyType="search"
       />
+      {searchText ? (
+        <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
+          <Ionicons 
+            name="close-circle" 
+            size={20} 
+            color={colors.ink.light} 
+          />
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
-};
-
-export default memo(SearchBar); // Dùng memo để tránh re-render không cần thiết
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -31,11 +93,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.sky.light,
     backgroundColor: colors.sky.lighter,
+    elevation: 2,
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 4,
   },
   icon: {
-    marginRight: 5,
+    marginRight: 8,
   },
   input: {
     flex: 1,
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: colors.ink.darkest,
   },
+  clearButton: {
+    padding: 4,
+  }
 });
+
+// Add display name for debugging
+SearchBar.displayName = 'SearchBar';
+
+export default SearchBar;

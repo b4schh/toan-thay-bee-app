@@ -1,27 +1,45 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import * as examApi from "../../services/examApi";
-import { setCurrentPage, setTotalPages, setTotalItems } from "../filter/filterSlice";
+import {
+    setScreenCurrentPage,
+    setScreenTotalPages,
+    setScreenTotalItems,
+  } from '../filter/filterSlice';
 import { apiHandler } from "../../utils/apiHandler";
 
 export const fetchExams = createAsyncThunk(
     "exams/fetchExams",
     async ({ search, currentPage, limit, sortOrder }, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.getAllExamAPI, { search, currentPage, limit, sortOrder }, (data) => {
-            dispatch(setCurrentPage(data.currentPage));
-            dispatch(setTotalPages(data.totalPages));
-            dispatch(setTotalItems(data.totalItems));
-        }, true, false);
+        return await apiHandler(
+            dispatch, 
+            examApi.getAllExamAPI, 
+            { search, currentPage, limit, sortOrder }, 
+            (data) => {
+                dispatch(setScreenCurrentPage({ screen: 'exam', page: data.currentPage }));
+                dispatch(setScreenTotalPages({ screen: 'exam', totalPages: data.totalPages }));
+                dispatch(setScreenTotalItems({ screen: 'exam', totalItems: data.totalItems }));
+            }, 
+            true, 
+            false
+        );
     }
 );
 
 export const fetchPublicExams = createAsyncThunk(
     "exams/fetchPublicExams",
     async ({ search, currentPage, limit, sortOrder }, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.getAllPublicExamAPI, { search, currentPage, limit, sortOrder }, (data) => {
-            dispatch(setCurrentPage(data.currentPage));
-            dispatch(setTotalPages(data.totalPages));
-            dispatch(setTotalItems(data.totalItems));
-        }, true, false);
+        return await apiHandler(
+            dispatch, 
+            examApi.getAllPublicExamAPI, 
+            { search, currentPage, limit, sortOrder }, 
+            (data) => {
+                dispatch(setScreenCurrentPage({ screen: 'exam', page: data.currentPage }));
+                dispatch(setScreenTotalPages({ screen: 'exam', totalPages: data.totalPages }));
+                dispatch(setScreenTotalItems({ screen: 'exam', totalItems: data.totalItems }));
+            }, 
+            false,
+            true
+        );
     }
 );
 
@@ -130,7 +148,7 @@ const examSlice = createSlice({
                 state.exams = [];
             })
             .addCase(fetchPublicExams.fulfilled, (state, action) => {
-                if (action.payload) {
+                if (action.payload?.data) {
                     state.exams = action.payload.data;
                 }
             })

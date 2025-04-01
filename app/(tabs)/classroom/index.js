@@ -13,13 +13,17 @@ import { useRouter } from 'expo-router';
 import ClassCard from '../../../components/card/ClassCard';
 import SearchBar from '../../../components/SearchBar';
 import AppText from '../../../components/AppText';
-import Button from '../../../components/Button';
+import Button from '../../../components/button/Button';
 import TabNavigation from '../../../components/TabNavigation';
-import CustomModal from '../../../components/CustomModal';
+import Dialog from '../../../components/dialog/Dialog';
+import Pagination from '../../../components/Pagination';
 import colors from '../../../constants/colors';
-import { fetchClassesByUser, joinClass } from '../../../features/class/classSlice';
+import {
+  fetchClassesByUser,
+  joinClass,
+} from '../../../features/class/classSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import LoadingOverlay from '../../../components/LoadingOverlay';
+import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
 
 // Hook lọc dữ liệu
 const useFilteredClasses = (classes, status) => {
@@ -33,36 +37,68 @@ const useFilteredClasses = (classes, status) => {
   }, [classes, status]);
 };
 
+// Thêm debounce để tránh gọi API quá nhiều
+const debounce = (func, wait) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
+
 export default function ClassroomScreen() {
+  const dispatch = useDispatch();
+
+  const [successDialogVisible, setSuccessDialogVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [classCode, setClassCode] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [isJoining, setIsJoining] = useState(false);
   // console.log('Tab hiện tại:', selectedStatus);
 
   const { classes } = useSelector((state) => state.classes);
-
-  const dispatch = useDispatch();
-  
   const filteredClasses = useFilteredClasses(classes, selectedStatus);
-  
-  // const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
-  //   (state) => state.filter,
-  // );
-  // useEffect(() => {
-  //   if (
-  //     search !== undefined &&
-  //     currentPage !== undefined &&
-  //     limit !== undefined &&
-  //     sortOrder !== undefined
-  //   ) {
-  //     dispatch(fetchClassesByUser({ search, currentPage, limit, sortOrder }));
-  //   }
-  // }, [search, currentPage, limit, sortOrder]);
+  // console.log(classes);
 
+  const { screens } = useSelector((state) => state.filter);
+  const classScreen = screens.class;
+  const { search, currentPage, limit, totalItems, sortOrder } = classScreen;
+
+  console.log(`Search Class: ${search}
+    Current Page: ${currentPage}
+    Limit: ${limit}
+    Total Items: ${totalItems}
+    Sort Order: ${sortOrder}`);
+
+  // Cập nhật useEffect để theo dõi search với debounce
   useEffect(() => {
-    console.log('Classes:', classes);
-  }, [classes]);
+    const fetchData = debounce(() => {
+      if (
+        search !== undefined &&
+        currentPage !== undefined &&
+        limit !== undefined &&
+        sortOrder !== undefined
+      ) {
+        dispatch(
+          fetchClassesByUser({
+            search,
+            currentPage: 1, // Reset về trang 1 khi tìm kiếm
+            limit,
+            sortOrder,
+          }),
+        );
+      }
+    }, 500); // Đợi 500ms sau khi người dùng ngừng gõ
+
+    fetchData();
+
+    return () => {
+      clearTimeout(fetchData);
+    };
+  }, [search, limit, sortOrder]);
+
+  // useEffect(() => {
+  //   console.log('Classes:', classes);
+  // }, [classes]);
 
   const router = useRouter();
 
@@ -78,29 +114,24 @@ export default function ClassroomScreen() {
 
   // Xử lý sự kiện tham gia lớp
   const handleJoin = useCallback(() => {
-    const class_code = classCode
+    const class_code = classCode;
     console.log('📌 Mã lớp học trước khi gửi:', class_code); // Kiểm tra giá trị classCode
-    
+
     if (!classCode.trim()) {
       alert('⚠️ Vui lòng nhập mã lớp học!');
       return;
     }
 
-    setIsJoining(true);
-
-    dispatch(joinClass({ class_code }))
-      .then((result) => {
-        if (result.meta.requestStatus === 'fulfilled') {
-          alert('🎉 Tham gia lớp học thành công!');
-          setModalVisible(false);
-          setClassCode('');
-        } else {
-          alert('❌ Mã lớp học không hợp lệ hoặc có lỗi xảy ra!');
-        }
-      })
-      .finally(() => {
-        setIsJoining(false);
-      });
+    dispatch(
+      joinClass({
+        class_code: classCode,
+        onSuccess: () => {
+          setClassCode(''); // Reset form
+          setModalVisible(false); // Đóng modal nhập mã
+          setSuccessDialogVisible(true); // Hiển thị dialog thành công
+        },
+      }),
+    );
   }, [classCode, dispatch]);
 
   // Render item cho FlatList
@@ -108,12 +139,14 @@ export default function ClassroomScreen() {
     ({ item }) => (
       <ClassCard
         name={item.name}
+        dayOfWeek={item.dayOfWeek}
+        studyTime={item.studyTime}
         studentCount={item.studentCount}
         lessonCount={item.lessonCount}
         status={item.studentClassStatus}
         onPressJoin={() => {
           console.log('Vào lớp có id:', item.id);
-          
+
           router.push({
             pathname: `/classroom/${item.class_code}/`,
             params: {
@@ -127,19 +160,34 @@ export default function ClassroomScreen() {
     [],
   );
 
+  // Thêm hàm xử lý thay đổi trang
+  const handlePageChange = useCallback(
+    (newPage) => {
+      dispatch(
+        fetchClassesByUser({
+          search,
+          currentPage: newPage,
+          limit,
+          sortOrder,
+        }),
+      );
+    },
+    [search, limit, sortOrder],
+  );
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
-      <LoadingOverlay/>
+      <LoadingOverlay />
       <View style={styles.container}>
         {/* Header */}
         <AppText style={styles.header}>Lớp của bạn</AppText>
 
         {/* Ô tìm kiếm và các nút bên cạnh */}
         <View style={styles.row}>
-          <SearchBar />
+          <SearchBar placeholder="Tìm kiếm lớp học..." screen="class" />
 
           {/* Nút tham gia lớp học */}
           <Button
@@ -151,7 +199,7 @@ export default function ClassroomScreen() {
               setModalVisible(true);
             }}
           />
-          <Button
+          {/* <Button
             iconComponent={
               <Image
                 source={require('../../../assets/icons/filter-icon.png')}
@@ -160,7 +208,7 @@ export default function ClassroomScreen() {
             }
             style={[styles.button, { backgroundColor: colors.sky.white }]}
             onPress={() => console.log('Filter Clicked!')}
-          />
+          /> */}
         </View>
 
         {/* Navigation Bar */}
@@ -180,15 +228,26 @@ export default function ClassroomScreen() {
           ListEmptyComponent={
             <AppText style={styles.emptyText}>Không có lớp nào</AppText>
           }
+          ListFooterComponent={
+            filteredClasses.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(totalItems / limit)}
+                onPageChange={handlePageChange}
+              />
+            )
+          }
           renderItem={renderClassItem}
           showsVerticalScrollIndicator={false}
         />
 
         {/* Modal nhập mã lớp học */}
-        <CustomModal
+        {/* Modal nhập mã lớp học */}
+        <Dialog
           visible={modalVisible}
           title="Nhập mã lớp học"
           onClose={() => setModalVisible(false)}
+          type="custom"
           actions={[
             {
               text: 'Hủy',
@@ -199,18 +258,27 @@ export default function ClassroomScreen() {
             {
               text: 'Tham gia',
               onPress: handleJoin,
-              style: styles.modalButton,
+              styles: styles.modalButton,
             },
           ]}
         >
           <TextInput
-            style={styles.input}
-            placeholder="Nhập mã..."
             value={classCode}
             onChangeText={setClassCode}
+            placeholder="Nhập mã lớp học"
+            style={styles.input}
           />
-        </CustomModal>
+        </Dialog>
       </View>
+
+      {/* Dialog thông báo thành công */}
+      <Dialog
+        visible={successDialogVisible}
+        title="Bạn đã tham gia lớp học thành công"
+        message="Vui lòng chờ giáo viên phê duyệt"
+        type="alert"
+        onClose={() => setSuccessDialogVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }

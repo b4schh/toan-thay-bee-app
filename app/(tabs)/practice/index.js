@@ -14,12 +14,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import ExamCard from '../../../components/card/ExamCard';
 import SearchBar from '../../../components/SearchBar';
 import AppText from '../../../components/AppText';
-import Button from '../../../components/Button';
+import Button from '../../../components/button/Button';
 import TabNavigation from '../../../components/TabNavigation';
-import CustomModal from '../../../components/CustomModal';
+import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
+import Pagination from '../../../components/Pagination';
 import colors from '../../../constants/colors';
 import { fetchPublicExams } from '../../../features/exam/examSlice';
-import LoadingOverlay from '../../../components/LoadingOverlay';
 
 const useFilteredExam = (exams, grade) => {
   return useMemo(() => {
@@ -28,28 +28,61 @@ const useFilteredExam = (exams, grade) => {
   }, [exams, grade]);
 };
 
-export default function PracticeScreen() {
-  const { loading } = useSelector((state) => state.states);
+// Thêm hàm debounce ở đầu file
+const debounce = (func, wait) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
 
-  useEffect(() => {
-    console.log('Loading:', loading);
-  }, [loading]);
+export default function PracticeScreen() {
+  const router = useRouter();
+  const dispatch = useDispatch();
 
   const [selectedGrade, setSelectedGrade] = useState('all');
-  const router = useRouter();
 
+  const { loading } = useSelector((state) => state.states);
   const { exams } = useSelector((state) => state.exams);
+  const { screens } = useSelector((state) => state.filter);
+  const examScreen = screens.exam;
+  const { search, currentPage, limit, totalItems, sortOrder } = examScreen;
 
-  const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
-    (state) => state.filter,
-  );
-  const dispatch = useDispatch();
+  console.log(`Search Exam: ${search}
+    Current Page: ${currentPage}
+    Limit: ${limit}
+    Total Items: ${totalItems}
+    Sort Order: ${sortOrder}`);
 
   const filteredExam = useFilteredExam(exams, selectedGrade);
 
+  // Thêm useEffect với debounce để xử lý tìm kiếm
   useEffect(() => {
-    dispatch(fetchPublicExams({ search, currentPage, limit, sortOrder }));
-  }, [dispatch]);
+    const fetchData = debounce(() => {
+      if (
+        search !== undefined &&
+        currentPage !== undefined &&
+        limit !== undefined &&
+        sortOrder !== undefined
+      ) {
+        dispatch(
+          fetchPublicExams({
+            search,
+            currentPage: 1, // Reset về trang 1 khi tìm kiếm
+            limit,
+            sortOrder,
+          }),
+        );
+      }
+    }, 500); // Đợi 500ms sau khi người dùng ngừng gõ
+
+    fetchData();
+
+    return () => {
+      clearTimeout(fetchData);
+    };
+  }, [search, limit, sortOrder]);
 
   useEffect(() => {
     console.log('Exams:', exams);
@@ -87,13 +120,27 @@ export default function PracticeScreen() {
     [],
   );
 
+  // Thêm hàm xử lý thay đổi trang
+  const handlePageChange = useCallback(
+    (newPage) => {
+      dispatch(
+        fetchPublicExams({
+          search,
+          currentPage: newPage,
+          limit,
+          sortOrder,
+        }),
+      );
+    },
+    [search, limit, sortOrder],
+  );
   return (
     <View style={styles.container}>
       {/* Header */}
       <AppText style={styles.header}>Luyện đề</AppText>
 
       <View style={styles.row}>
-        <SearchBar />
+        <SearchBar placeholder="Tìm kiếm đề thi..." screen="exam" />
 
         {/* Nút filter */}
         <Button
@@ -123,6 +170,17 @@ export default function PracticeScreen() {
         columnWrapperStyle={styles.classRow}
         ListEmptyComponent={
           <AppText style={styles.emptyText}>Không có đề thi nào</AppText>
+        }
+        ListFooterComponent={
+          filteredExam.length > 0 && (
+            <View style={styles.paginationContainer}>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(totalItems / limit)}
+                onPageChange={handlePageChange}
+              />
+            </View>
+          )
         }
         renderItem={renderExamItem}
         showsVerticalScrollIndicator={false}

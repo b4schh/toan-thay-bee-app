@@ -1,11 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  ScrollView,
+  Animated,
+} from 'react-native';
 import { useSelector } from 'react-redux';
-import colors from '../constants/colors';
+import colors from '../../constants/colors';
 import Feather from '@expo/vector-icons/Feather';
-import AppText from './AppText';
-import Button from './Button';
-import CustomModal from './CustomModal';
+import AppText from '../AppText';
+import Button from '../button/Button';
+import Dialog from '../dialog/Dialog';
 import { useRouter } from 'expo-router';
 
 export default function ExamOverviewOverlay({
@@ -15,15 +22,38 @@ export default function ExamOverviewOverlay({
   currentQuestionIndex,
   onSelectQuestion,
   onClose,
+  visible,
 }) {
   const [isModalVisible, setModalVisible] = useState(false);
   const router = useRouter();
+  const slideAnim = useRef(new Animated.Value(Dimensions.get('window').width))
+    .current;
+
+  useEffect(() => {
+    if (visible) {
+      // Slide in from right
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 65,
+        friction: 11,
+      }).start();
+    } else {
+      // Slide out to right
+      Animated.spring(slideAnim, {
+        toValue: Dimensions.get('window').width,
+        useNativeDriver: true,
+        tension: 65,
+        friction: 11,
+      }).start();
+    }
+  }, [visible]);
 
   // Lấy thời gian từ Redux store
-  const { timeLeft } = useSelector(state => state.exams);
+  const { timeLeft } = useSelector((state) => state.exams);
 
   const handleLeave = () => {
-    router.replace('home/'); // Thay 'Home' bằng tên màn hình bạn muốn chuyển đến
+    router.replace('practice/'); // Thay 'Home' bằng tên màn hình bạn muốn chuyển đến
   };
 
   const handleSubmit = () => {
@@ -36,7 +66,8 @@ export default function ExamOverviewOverlay({
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
     return `${hrs.toString().padStart(2, '0')}:${mins
-      .toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      .toString()
+      .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const screenWidth = Dimensions.get('window').width;
@@ -98,7 +129,15 @@ export default function ExamOverviewOverlay({
   };
 
   return (
-    <View style={styles.overlay}>
+    <Animated.View
+      style={[
+        styles.overlay,
+        {
+          transform: [{ translateX: slideAnim }],
+        },
+      ]}
+    >
+      {/* Fixed Header */}
       <View style={styles.headerContainer}>
         <AppText style={styles.title}>TIẾN ĐỘ LÀM BÀI</AppText>
         <AppText style={styles.timer}>⏳ {formatTime(timeLeft)}</AppText>
@@ -107,117 +146,140 @@ export default function ExamOverviewOverlay({
         </TouchableOpacity>
       </View>
 
-      {sections.map((section, sIndex) => (
-        <View key={section.type} style={styles.sectionContainer}>
-          <AppText style={styles.sectionTitle}>{section.title}:</AppText>
-          <View style={styles.questionsRow}>
-            {section.questions.map((q, qIndex) => {
-              const bgColor = getQuestionStatusColor(q, sIndex, qIndex);
-              const questionNumber = getQuestionNumber(sIndex, qIndex);
-              return (
-                <TouchableOpacity
-                  key={q.id}
-                  style={[
-                    styles.questionBox,
-                    {
-                      width: boxSize,
-                      height: boxSize,
-                      backgroundColor: bgColor,
-                    },
-                  ]}
-                  onPress={() => onSelectQuestion(sIndex, qIndex)}
-                >
-                  <AppText style={{ fontFamily: 'Inter-Medium' }}>
-                    {questionNumber}
-                  </AppText>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+      {/* Scrollable Content */}
+      <ScrollView
+        style={styles.scrollContent}
+        showsVerticalScrollIndicator={true}
+      >
+        {/* Fixed Bottom Buttons */}
+        <View style={styles.bottomButtons}>
+          <Button
+            text="Rời khỏi"
+            style={[styles.button, { backgroundColor: colors.danger }]}
+            onPress={() => setModalVisible(true)}
+          />
+          <Button text="Nộp bài" style={styles.button} />
         </View>
-      ))}
+        {sections.map((section, sIndex) => (
+          <View key={section.type} style={styles.sectionContainer}>
+            <AppText style={styles.sectionTitle}>{section.title}:</AppText>
+            <View style={styles.questionsRow}>
+              {section.questions.map((q, qIndex) => {
+                const bgColor = getQuestionStatusColor(q, sIndex, qIndex);
+                const questionNumber = getQuestionNumber(sIndex, qIndex);
+                return (
+                  <TouchableOpacity
+                    key={q.id}
+                    style={[
+                      styles.questionBox,
+                      {
+                        width: boxSize,
+                        height: boxSize,
+                        backgroundColor: bgColor,
+                      },
+                    ]}
+                    onPress={() => onSelectQuestion(sIndex, qIndex)}
+                  >
+                    <AppText style={{ fontFamily: 'Inter-Medium' }}>
+                      {questionNumber}
+                    </AppText>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        ))}
 
-      {/* Chú thích màu sắc với số liệu */}
-      <View style={styles.legendContainer}>
-        <View style={styles.legendItem}>
-          <View
-            style={[styles.legendColor, { backgroundColor: colors.success }]}
-          >
-            <AppText style={styles.legendNumber}>{stats.done}</AppText>
+        {/* Chú thích màu sắc với số liệu */}
+        <View style={styles.legendContainer}>
+          <View style={styles.legendItem}>
+            <View
+              style={[styles.legendColor, { backgroundColor: colors.success }]}
+            >
+              <AppText style={styles.legendNumber}>{stats.done}</AppText>
+            </View>
+            <AppText style={{ fontFamily: 'Inter-Medium' }}>Đã làm</AppText>
           </View>
-          <AppText style={{ fontFamily: 'Inter-Medium' }}>Đã làm</AppText>
+          <View style={styles.legendItem}>
+            <View
+              style={[styles.legendColor, { backgroundColor: colors.warning }]}
+            >
+              <AppText style={styles.legendNumber}>{stats.inProgress}</AppText>
+            </View>
+            <AppText style={{ fontFamily: 'Inter-Medium' }}>Đang làm</AppText>
+          </View>
+          <View style={styles.legendItem}>
+            <View
+              style={[
+                styles.legendColor,
+                { backgroundColor: colors.sky.white },
+              ]}
+            >
+              <AppText style={styles.legendNumber}>{stats.notDone}</AppText>
+            </View>
+            <AppText style={{ fontFamily: 'Inter-Medium' }}>Chưa làm</AppText>
+          </View>
         </View>
-        <View style={styles.legendItem}>
-          <View
-            style={[styles.legendColor, { backgroundColor: colors.warning }]}
-          >
-            <AppText style={styles.legendNumber}>{stats.inProgress}</AppText>
-          </View>
-          <AppText style={{ fontFamily: 'Inter-Medium' }}>Đang làm</AppText>
-        </View>
-        <View style={styles.legendItem}>
-          <View
-            style={[styles.legendColor, { backgroundColor: colors.sky.white }]}
-          >
-            <AppText style={styles.legendNumber}>{stats.notDone}</AppText>
-          </View>
-          <AppText style={{ fontFamily: 'Inter-Medium' }}>Chưa làm</AppText>
-        </View>
-        {/* <View style={styles.legendItem}>
-          <View
-            style={[styles.legendColor, { backgroundColor: colors.sky.base }]}
-          >
-            <AppText style={styles.legendNumber}>{stats.notSaved}</AppText>
-          </View>
-          <AppText style={{ fontFamily: 'Inter-Medium' }}>Chưa lưu</AppText>
-        </View> */}
-      </View>
-
-      <View style={styles.bottomButtons}>
-        <Button
-          text="Rời khỏi"
-          style={[styles.button, { backgroundColor: colors.danger }]}
-          onPress={() => setModalVisible(true)}
-        />
-        <Button text="Nộp bài" style={styles.button} />
-      </View>
+      </ScrollView>
 
       {/* Modal xác nhận */}
-      <CustomModal
+      <Dialog
         visible={isModalVisible}
         title="Bạn muốn thoát?"
+        type="custom"
         onClose={() => setModalVisible(false)}
         actions={[
           {
             text: 'Hủy bỏ',
             onPress: () => setModalVisible(false),
-            style: { backgroundColor: colors.sky.base },
+            style: {
+              backgroundColor: colors.sky.base,
+              flex: 1,
+            },
+            textStyle: {
+              color: colors.sky.white,
+            },
           },
           {
             text: 'Chắc chắn',
             onPress: handleLeave,
-            style: { backgroundColor: colors.danger },
+            style: {
+              backgroundColor: colors.danger,
+              flex: 1,
+            },
+            textStyle: {
+              color: colors.sky.white,
+            },
           },
         ]}
       >
-        <AppText>Quá trình làm bài của bạn sẽ bị hủy bỏ</AppText>
-      </CustomModal>
-    </View>
+        <AppText style={styles.modalMessage}>
+          Quá trình làm bài của bạn sẽ bị hủy bỏ
+        </AppText>
+      </Dialog>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   overlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
     width: '100%',
     height: '100%',
     backgroundColor: '#fff',
-    padding: 20,
+    zIndex: 1000,
   },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    padding: 20,
+    paddingBottom: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.sky.lighter,
   },
   timer: {
     fontSize: 18,
@@ -229,6 +291,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: 'Inter-Bold',
   },
+  scrollContent: {
+    flex: 1,
+    padding: 20,
+  },
   sectionContainer: {
     marginBottom: 16,
   },
@@ -239,8 +305,6 @@ const styles = StyleSheet.create({
   },
   questionsRow: { flexDirection: 'row', flexWrap: 'wrap' },
   questionBox: {
-    // width: boxSize,
-    // height: boxSize,
     marginRight: 10,
     marginBottom: 8,
     borderRadius: 4,
@@ -276,11 +340,21 @@ const styles = StyleSheet.create({
   bottomButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 30,
+    padding: 20,
+    paddingTop: 12,
     gap: 12,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: colors.sky.lighter,
   },
   button: {
     flex: 1,
   },
   buttonText: { color: '#fff', fontWeight: 'bold' },
+  modalMessage: {
+    textAlign: 'center',
+    color: colors.ink.dark,
+    fontFamily: 'Inter-Medium',
+    fontSize: 16,
+  },
 });

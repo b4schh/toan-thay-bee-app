@@ -1,42 +1,68 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import ClassCard from '../../../components/card/ClassCard';
 import ScrollableCard from '../../../components/ScrollableCard';
-import Button from '../../../components/Button';
+import Button from '../../../components/button/Button';
 import AppText from '../../../components/AppText';
 import TabNavigation from '../../../components/TabNavigation';
-import LoadingOverlay from '../../../components/LoadingOverlay';
+import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
 import colors from '../../../constants/colors';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchClassesByUser } from '../../../features/class/classSlice';
 import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
-  
   const router = useRouter();
   const dispatch = useDispatch();
 
+  const [selectedTab, setSelectedTab] = useState('pending_assignments');
   const { user } = useSelector((state) => state.auth);
   const { classes } = useSelector((state) => state.classes);
+  const { loading } = useSelector((state) => state.states);
+  // const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
+  //   (state) => state.filter,
+  // );
 
-  const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
-    (state) => state.filter,
-  );
+  // useEffect(() => {
+  //   if (
+  //     search !== undefined &&
+  //     currentPage !== undefined &&
+  //     limit !== undefined &&
+  //     sortOrder !== undefined
+  //   ) {
+  //     dispatch(fetchClassesByUser({ search, currentPage, limit, sortOrder }));
+  //   }
+  // }, [search, currentPage, limit, sortOrder]);
 
   useEffect(() => {
-    if (
-      search !== undefined &&
-      currentPage !== undefined &&
-      limit !== undefined &&
-      sortOrder !== undefined
-    ) {
-      dispatch(fetchClassesByUser({ search, currentPage, limit, sortOrder }));
+      dispatch(fetchClassesByUser());
+  }, [dispatch]);
+
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    if (user) {
+      dispatch(fetchClassesByUser());
+    } else {
+      router.replace('/login');
     }
-  }, [search, currentPage, limit, sortOrder]);
+    setRefreshing(false);
+  }, [dispatch]);
+
+  // Lọc ra các lớp đã tham gia
+  const filteredClasses = useMemo(() => {
+    if (!Array.isArray(classes)) return [];
+
+    return classes.filter(
+      (item) => item && item.studentClassStatus === 'JS', // Fix typo: studenrClassStatus -> studentClassStatus
+    );
+  }, [classes]);
 
   useEffect(() => console.log('📌 Danh sách lớp học:', classes), [classes]);
-
-  const [selectedTab, setSelectedTab] = useState('pending_assignments');
+  useEffect(
+    () => console.log('📌 Danh sách lớp học đã tham gia:', filteredClasses),
+    [filteredClasses],
+  );
 
   const TabContent = useMemo(
     () => ({
@@ -54,38 +80,19 @@ export default function HomeScreen() {
     [selectedTab],
   );
 
-  const mockClasses = [
-    {
-      id: '1',
-      name: 'Lớp React',
-      dayOfWeek: 'Thứ 2',
-      studyTime: ' 8:00 - 10:00',
-      sessions: 12,
-      membersCount: 30,
-    },
-    {
-      id: '2',
-      name: 'Lớp NodeJS',
-      dayOfWeek: 'Thứ 3',
-      studyTime: ' 9:00 - 11:00',
-      sessions: 10,
-      membersCount: 25,
-    },
-  ];
-
   const renderClassItem = useCallback(({ item }) => {
     console.log('📌 Render lớp học:', item);
     return (
       <ClassCard
-        imageSource={item.imageSource}
         name={item.name}
-        time={item.dayOfWeek + item.studyTime}
+        dayOfWeek={item.dayOfWeek}
+        studyTime={item.studyTime}
         lessonCount={item.lessonCount}
         studentCount={item.studentCount}
         onPressJoin={() => {
           console.log('Vào lớp có id:', item.id);
 
-          router.push({
+          router.replace({
             pathname: `/classroom/${item.class_code}/`,
             params: {
               id: item.id,
@@ -97,7 +104,6 @@ export default function HomeScreen() {
   }, []);
   return (
     <View style={styles.container}>
-
       {/* Button */}
       <View style={styles.buttonContainer}>
         <Button
@@ -133,21 +139,40 @@ export default function HomeScreen() {
       </View>
 
       {/* Nội dung có thể scroll */}
-      <ScrollableCard>
+      <ScrollableCard
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
         {/* Body */}
         <View style={styles.card}>
           <View style={styles.section}>
             <AppText style={styles.title}>Lớp học gần đây</AppText>
             <View>
-              <FlatList
-                data={classes}
-                renderItem={renderClassItem}
-                keyExtractor={(item) => item.id}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 16 }}
-                pagingEnabled={false}
-              />
+              {!loading ? (
+                Array.isArray(classes) && classes.length > 0 ? (
+                  <FlatList
+                    data={filteredClasses}
+                    renderItem={renderClassItem}
+                    keyExtractor={(item) => item.id}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ gap: 16 }}
+                    pagingEnabled={false}
+                  />
+                ) : (
+                  <AppText style={styles.emptyText}>
+                    Chưa có lớp học nào
+                  </AppText>
+                )
+              ) : (
+                <AppText style={styles.loadingText}>Đang tải lớp học</AppText>
+              )}
             </View>
           </View>
 
@@ -171,93 +196,12 @@ export default function HomeScreen() {
               {TabContent[selectedTab] || (
                 <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
               )}
-              {/* {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )}
-              {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Không có dữ liệu</AppText>
-              )} */}
             </View>
           </View>
         </View>
       </ScrollableCard>
 
-      <LoadingOverlay/>
+      <LoadingOverlay />
     </View>
   );
 }
@@ -292,6 +236,18 @@ const styles = StyleSheet.create({
   headerText: {
     fontFamily: 'Inter-Bold',
     color: colors.sky.white,
+  },
+  loadingText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 18,
+    textAlign: 'center',
+    color: colors.ink.darkest,
+  },
+  emptyText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 18,
+    textAlign: 'center',
+    color: colors.ink.darkest,
   },
   card: {
     flexGrow: 1,

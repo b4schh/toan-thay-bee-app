@@ -2,9 +2,9 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import * as ClassAPI from '../../services/classApi';
 import { apiHandler } from '../../utils/apiHandler';
 import {
-  setCurrentPage,
-  setTotalPages,
-  setTotalItems,
+  setScreenCurrentPage,
+  setScreenTotalPages,
+  setScreenTotalItems,
 } from '../filter/filterSlice';
 
 export const fetchClassesByUser = createAsyncThunk(
@@ -15,9 +15,9 @@ export const fetchClassesByUser = createAsyncThunk(
       ClassAPI.getAllClassesByUser,
       { search, currentPage, limit, sortOrder },
       (data) => {
-        dispatch(setCurrentPage(data.currentPage));
-        dispatch(setTotalPages(data.totalPages));
-        dispatch(setTotalItems(data.totalItems));
+        dispatch(setScreenCurrentPage({ screen: 'class', page: data.currentPage }));
+        dispatch(setScreenTotalPages({ screen: 'class', totalPages: data.totalPages }));
+        dispatch(setScreenTotalItems({ screen: 'class', totalItems: data.totalItems }));
       },
       true,
       false,
@@ -69,16 +69,21 @@ export const fetchDataForLearning = createAsyncThunk(
 
 export const joinClass = createAsyncThunk(
   'classes/joinClass',
-  async ({ class_code }, { dispatch, getState }) => {
+  async ({ class_code, onSuccess }, { dispatch, getState }) => {
     return await apiHandler(
       dispatch,
       ClassAPI.joinClassByCode,
       { class_code },
       () => {
-        dispatch(fetchClassesByUser(getState().filter)); // Load lại danh sách lớp học
+        if (onSuccess) {
+          onSuccess();
+        }
+        const { screens } = getState().filter;
+        const { search, currentPage, limit, sortOrder } = screens.class;
+        dispatch(fetchClassesByUser({ search, currentPage, limit, sortOrder }));
       },
-      false,
-      false
+      true,
+      true
     );
   }
 );
@@ -131,9 +136,9 @@ const classSlice = createSlice({
       // .addCase(joinClass.pending, (state) => {
       //   state.isJoining = true;
       // })
-      .addCase(joinClass.fulfilled, (state) => {
-        state.classDetail.userStatus === 'JS'
-      })
+      // .addCase(joinClass.fulfilled, (state) => {
+      //   state.classDetail.userStatus === 'JS'
+      // })
   },
 });
 
