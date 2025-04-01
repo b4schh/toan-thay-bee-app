@@ -15,28 +15,16 @@ export default function ExamOverviewOverlay({
   currentQuestionIndex,
   onSelectQuestion,
   onClose,
+  remainingTime,
+  handleSubmit,
+  saveQuestion,
+  errorQuestion
 }) {
   const [isModalVisible, setModalVisible] = useState(false);
   const router = useRouter();
 
-  // Lấy thời gian từ Redux store
-  const { timeLeft } = useSelector(state => state.exams);
-
   const handleLeave = () => {
     router.replace('home/'); // Thay 'Home' bằng tên màn hình bạn muốn chuyển đến
-  };
-
-  const handleSubmit = () => {
-    alert('Hết giờ! Bài thi đã được nộp tự động.');
-    router.replace('home/');
-  };
-
-  const formatTime = (seconds) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hrs.toString().padStart(2, '0')}:${mins
-      .toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const screenWidth = Dimensions.get('window').width;
@@ -45,15 +33,8 @@ export default function ExamOverviewOverlay({
 
   // Hàm kiểm tra trạng thái "đã làm" thực tế của câu hỏi
   const isQuestionDone = (q) => {
-    if (q.typeOfQuestion === 'TN') {
-      return !!answers[q.id]; // Có đáp án được chọn
-    } else if (q.typeOfQuestion === 'DS') {
-      return q.statements.every((statement) =>
-        answers.hasOwnProperty(statement.id),
-      ); // Tất cả statement đều có đáp án
-    } else if (q.typeOfQuestion === 'TLN') {
-      const answer = answers[q.id];
-      return answer && typeof answer === 'string' && answer.trim().length > 0; // Có dữ liệu không rỗng
+    if (saveQuestion.has(q.id)) {
+      return true; // Đã làm
     }
     return false;
   };
@@ -74,6 +55,7 @@ export default function ExamOverviewOverlay({
   const stats = sections.reduce(
     (acc, section, sIndex) => {
       section.questions.forEach((q, qIndex) => {
+        // console.log('Question:', q.id);
         const isDone = isQuestionDone(q);
         const isCurrent =
           sIndex === currentSectionIndex && qIndex === currentQuestionIndex;
@@ -101,7 +83,7 @@ export default function ExamOverviewOverlay({
     <View style={styles.overlay}>
       <View style={styles.headerContainer}>
         <AppText style={styles.title}>TIẾN ĐỘ LÀM BÀI</AppText>
-        <AppText style={styles.timer}>⏳ {formatTime(timeLeft)}</AppText>
+        <AppText style={styles.timer}>⏳ {remainingTime}</AppText>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <Feather name="x" size={24} color="black" />
         </TouchableOpacity>
@@ -159,7 +141,7 @@ export default function ExamOverviewOverlay({
           <View
             style={[styles.legendColor, { backgroundColor: colors.sky.white }]}
           >
-            <AppText style={styles.legendNumber}>{stats.notDone}</AppText>
+            <AppText style={styles.legendNumber}>{errorQuestion.size}</AppText>
           </View>
           <AppText style={{ fontFamily: 'Inter-Medium' }}>Chưa làm</AppText>
         </View>
@@ -179,7 +161,7 @@ export default function ExamOverviewOverlay({
           style={[styles.button, { backgroundColor: colors.danger }]}
           onPress={() => setModalVisible(true)}
         />
-        <Button text="Nộp bài" style={styles.button} />
+        <Button text="Nộp bài" style={styles.button} onPress={handleSubmit} />
       </View>
 
       {/* Modal xác nhận */}
