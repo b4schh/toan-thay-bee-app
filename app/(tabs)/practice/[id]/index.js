@@ -75,7 +75,6 @@ export default function ExamDetailScreen() {
               pathname: `/exam/${id}/do-exam`,
               params: {
                 name: name,
-                testDuration: testDuration
               },
             });
           }}
