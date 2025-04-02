@@ -13,58 +13,132 @@ import { useRouter } from 'expo-router';
 import ClassCard from '../../../components/card/ClassCard';
 import SearchBar from '../../../components/SearchBar';
 import AppText from '../../../components/AppText';
-import Button from '../../../components/Button';
+import Button from '../../../components/button/Button';
 import TabNavigation from '../../../components/TabNavigation';
-import CustomModal from '../../../components/CustomModal';
+import Dialog from '../../../components/dialog/Dialog';
+import Pagination from '../../../components/Pagination';
+import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
 import colors from '../../../constants/colors';
-import { fetchClassesByUser, joinClass } from '../../../features/class/classSlice';
+import {
+  fetchClassesByUser,
+  joinClass,
+} from '../../../features/class/classSlice';
+import {
+  setScreenTotalItems,
+  setScreenCurrentPage,
+} from '../../../features/filter/filterSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import LoadingOverlay from '../../../components/LoadingOverlay';
 
-// Hook lọc dữ liệu
-const useFilteredClasses = (classes, status) => {
+// Hook lọc dữ liệu và phân trang
+const useFilteredClasses = (classes, status, search, currentPage, limit) => {
   return useMemo(() => {
-    if (status === 'all') return classes;
-    return classes.filter((item) =>
-      status === 'joined'
-        ? item.studentClassStatus === 'JS'
-        : item.studentClassStatus === 'WS',
-    );
-  }, [classes, status]);
+    // 1. Lọc theo status
+    let filteredData =
+      status === 'all'
+        ? classes
+        : classes.filter((item) =>
+            status === 'joined'
+              ? item.studentClassStatus === 'JS'
+              : item.studentClassStatus === 'WS',
+          );
+
+    // 2. Lọc theo search
+    if (search) {
+      filteredData = filteredData.filter((item) =>
+        item.name.toLowerCase().includes(search.toLowerCase()),
+      );
+    }
+
+    // 3. Tính toán phân trang
+    const totalItems = filteredData.length;
+    const totalPages = Math.ceil(totalItems / limit);
+    const startIndex = (currentPage - 1) * limit;
+    const paginatedData = filteredData.slice(startIndex, startIndex + limit);
+
+    return {
+      paginatedClasses: paginatedData,
+      totalItems,
+      totalPages,
+    };
+  }, [classes, status, search, currentPage, limit]);
 };
 
+// Thêm component EmptyView
+const EmptyView = ({ onRefresh, isLoading, message }) => (
+  <View style={styles.emptyContainer}>
+    <AppText style={styles.emptyText}>
+      {isLoading ? 'Đang tải...' : message}
+    </AppText>
+    {!isLoading && (
+      <Button
+        text="Tải lại"
+        onPress={onRefresh}
+        style={styles.refreshButton}
+        loading={isLoading}
+      />
+    )}
+  </View>
+);
+
 export default function ClassroomScreen() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  const [successDialogVisible, setSuccessDialogVisible] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [classCode, setClassCode] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [isJoining, setIsJoining] = useState(false);
-  // console.log('Tab hiện tại:', selectedStatus);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const { classes } = useSelector((state) => state.classes);
+  // const filteredClasses = useFilteredClasses(classes, selectedStatus);
+  const { screens } = useSelector((state) => state.filter);
+  const classScreen = screens.class;
+  const { search, currentPage, limit } = classScreen;
 
-  const dispatch = useDispatch();
-  
-  const filteredClasses = useFilteredClasses(classes, selectedStatus);
-  
-  // const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
-  //   (state) => state.filter,
-  // );
-  // useEffect(() => {
-  //   if (
-  //     search !== undefined &&
-  //     currentPage !== undefined &&
-  //     limit !== undefined &&
-  //     sortOrder !== undefined
-  //   ) {
-  //     dispatch(fetchClassesByUser({ search, currentPage, limit, sortOrder }));
-  //   }
-  // }, [search, currentPage, limit, sortOrder]);
+  // Sử dụng hook đã sửa
+  const { paginatedClasses, totalItems, totalPages } = useFilteredClasses(
+    classes,
+    selectedStatus,
+    search,
+    currentPage,
+    limit,
+  );
+
+  console.log(`Search Class: ${search}
+    Current Page: ${currentPage}
+    Limit: ${limit}
+    Total Items: ${totalItems}`);
 
   useEffect(() => {
-    console.log('Classes:', classes);
-  }, [classes]);
+    dispatch(
+      fetchClassesByUser({
+        search,
+        currentPage: 1,
+        limit,
+      }),
+    );
+  }, []);
+  // Thêm hàm refresh data
+  const handleRefresh = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      dispatch(
+        fetchClassesByUser({
+          search,
+          currentPage,
+          limit,
+        }),
+      );
+    } catch (err) {
+      setError('Không thể tải dữ liệu. Vui lòng thử lại.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [search, currentPage, limit]);
 
-  const router = useRouter();
 
   // Cấu hình tabs
   const tabs = useMemo(
@@ -78,29 +152,24 @@ export default function ClassroomScreen() {
 
   // Xử lý sự kiện tham gia lớp
   const handleJoin = useCallback(() => {
-    const class_code = classCode
+    const class_code = classCode;
     console.log('📌 Mã lớp học trước khi gửi:', class_code); // Kiểm tra giá trị classCode
-    
+
     if (!classCode.trim()) {
       alert('⚠️ Vui lòng nhập mã lớp học!');
       return;
     }
 
-    setIsJoining(true);
-
-    dispatch(joinClass({ class_code }))
-      .then((result) => {
-        if (result.meta.requestStatus === 'fulfilled') {
-          alert('🎉 Tham gia lớp học thành công!');
-          setModalVisible(false);
-          setClassCode('');
-        } else {
-          alert('❌ Mã lớp học không hợp lệ hoặc có lỗi xảy ra!');
-        }
-      })
-      .finally(() => {
-        setIsJoining(false);
-      });
+    dispatch(
+      joinClass({
+        class_code: classCode,
+        onSuccess: () => {
+          setClassCode(''); // Reset form
+          setModalVisible(false); // Đóng modal nhập mã
+          setSuccessDialogVisible(true); // Hiển thị dialog thành công
+        },
+      }),
+    );
   }, [classCode, dispatch]);
 
   // Render item cho FlatList
@@ -108,12 +177,14 @@ export default function ClassroomScreen() {
     ({ item }) => (
       <ClassCard
         name={item.name}
+        dayOfWeek={item.dayOfWeek}
+        studyTime={item.studyTime}
         studentCount={item.studentCount}
         lessonCount={item.lessonCount}
         status={item.studentClassStatus}
         onPressJoin={() => {
           console.log('Vào lớp có id:', item.id);
-          
+
           router.push({
             pathname: `/classroom/${item.class_code}/`,
             params: {
@@ -127,19 +198,45 @@ export default function ClassroomScreen() {
     [],
   );
 
+  // Cập nhật lại handlePageChange
+  const handlePageChange = useCallback(
+    (newPage) => {
+      if (newPage === currentPage) return;
+      if (newPage < 1 || newPage > totalPages) return;
+
+      dispatch(
+        setScreenCurrentPage({
+          screen: 'class',
+          page: newPage,
+        }),
+      );
+    },
+    [currentPage, totalPages],
+  );
+
+  // Thêm useEffect để cập nhật totalItems khi filtered data thay đổi
+  useEffect(() => {
+    dispatch(
+      setScreenTotalItems({
+        screen: 'class',
+        totalItems,
+      }),
+    );
+  }, [totalItems]);
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
-      <LoadingOverlay/>
+      <LoadingOverlay />
       <View style={styles.container}>
         {/* Header */}
         <AppText style={styles.header}>Lớp của bạn</AppText>
 
         {/* Ô tìm kiếm và các nút bên cạnh */}
         <View style={styles.row}>
-          <SearchBar />
+          <SearchBar placeholder="Tìm kiếm lớp học..." screen="class" />
 
           {/* Nút tham gia lớp học */}
           <Button
@@ -151,44 +248,57 @@ export default function ClassroomScreen() {
               setModalVisible(true);
             }}
           />
-          <Button
-            iconComponent={
-              <Image
-                source={require('../../../assets/icons/filter-icon.png')}
-                style={{ width: 24, height: 24 }}
-              />
-            }
-            style={[styles.button, { backgroundColor: colors.sky.white }]}
-            onPress={() => console.log('Filter Clicked!')}
-          />
         </View>
 
-        {/* Navigation Bar */}
-        <TabNavigation
-          tabs={tabs}
-          selectedTab={selectedStatus}
-          onTabPress={setSelectedStatus}
-        />
+        {/* Hiển thị lỗi nếu có */}
+        {
+          <>
+            {/* Navigation Bar */}
+            <TabNavigation
+              tabs={tabs}
+              selectedTab={selectedStatus}
+              onTabPress={setSelectedStatus}
+            />
 
-        {/* Danh sách lớp học dạng lưới */}
-        <FlatList
-          data={filteredClasses}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
-          contentContainerStyle={styles.classList}
-          columnWrapperStyle={styles.classRow}
-          ListEmptyComponent={
-            <AppText style={styles.emptyText}>Không có lớp nào</AppText>
-          }
-          renderItem={renderClassItem}
-          showsVerticalScrollIndicator={false}
-        />
+            {/* Danh sách lớp học dạng lưới */}
+            <FlatList
+              data={paginatedClasses}
+              keyExtractor={(item) => item.id.toString()}
+              numColumns={2}
+              contentContainerStyle={styles.classList}
+              columnWrapperStyle={styles.classRow}
+              ListEmptyComponent={
+                <EmptyView
+                  onRefresh={handleRefresh}
+                  isLoading={isLoading}
+                  message={
+                    search ? 'Không tìm thấy lớp học' : 'Chưa có lớp học nào'
+                  }
+                />
+              }
+              ListFooterComponent={
+                paginatedClasses.length > 0 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                )
+              }
+              renderItem={renderClassItem}
+              showsVerticalScrollIndicator={false}
+              refreshing={isLoading}
+              onRefresh={handleRefresh}
+            />
+          </>
+        }
 
         {/* Modal nhập mã lớp học */}
-        <CustomModal
+        <Dialog
           visible={modalVisible}
           title="Nhập mã lớp học"
           onClose={() => setModalVisible(false)}
+          type="custom"
           actions={[
             {
               text: 'Hủy',
@@ -199,18 +309,27 @@ export default function ClassroomScreen() {
             {
               text: 'Tham gia',
               onPress: handleJoin,
-              style: styles.modalButton,
+              styles: styles.modalButton,
             },
           ]}
         >
           <TextInput
-            style={styles.input}
-            placeholder="Nhập mã..."
             value={classCode}
             onChangeText={setClassCode}
+            placeholder="Nhập mã lớp học"
+            style={styles.input}
           />
-        </CustomModal>
+        </Dialog>
       </View>
+
+      {/* Dialog thông báo thành công */}
+      <Dialog
+        visible={successDialogVisible}
+        title="Bạn đã tham gia lớp học thành công"
+        message="Vui lòng chờ giáo viên phê duyệt"
+        type="alert"
+        onClose={() => setSuccessDialogVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -281,8 +400,31 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 10,
   },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    marginTop: 20,
+  },
   emptyText: {
     textAlign: 'center',
-    marginTop: 20,
+    marginBottom: 10,
+    color: colors.error,
+  },
+  refreshButton: {
+    width: 120,
+    marginTop: 10,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: colors.error,
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });

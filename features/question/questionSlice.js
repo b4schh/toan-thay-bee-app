@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import * as questionApi from '../../services/questionApi';
 import {
-  setCurrentPage,
-  setTotalPages,
-  setTotalItems,
+  setScreenCurrentPage,
+  setScreenTotalPages,
+  setScreenTotalItems,
 } from '../filter/filterSlice';
 import { apiHandler } from '../../utils/apiHandler';
 import { setExam } from '../exam/examSlice';
@@ -16,9 +16,9 @@ export const fetchQuestions = createAsyncThunk(
       questionApi.getAllQuestionAPI,
       { search, currentPage, limit, sortOrder },
       (data) => {
-        dispatch(setCurrentPage(data.currentPage));
-        dispatch(setTotalPages(data.totalPages));
-        dispatch(setTotalItems(data.totalItems));
+        dispatch(setScreenCurrentPage({ screen: 'question', page: data.currentPage }));
+        dispatch(setScreenTotalPages({ screen: 'question', totalPages: data.totalPages }));
+        dispatch(setScreenTotalItems({ screen: 'question', totalItems: data.totalItems }));
       },
       true,
       false,
@@ -34,9 +34,9 @@ export const fetchExamQuestions = createAsyncThunk(
       questionApi.getExamQuestionsAPI,
       { id, search, currentPage, limit, sortOrder },
       (data) => {
-        dispatch(setCurrentPage(data.currentPage));
-        dispatch(setTotalPages(data.totalPages));
-        dispatch(setTotalItems(data.totalItems));
+        dispatch(setScreenCurrentPage({ screen: 'question', page: data.currentPage }));
+        dispatch(setScreenTotalPages({ screen: 'question', totalPages: data.totalPages }));
+        dispatch(setScreenTotalItems({ screen: 'question', totalItems: data.totalItems }));
         dispatch(setExam(data.exam));
       },
       true,

@@ -1,61 +1,93 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-    currentPage: 1,  // Trang hiện tại
-    totalPages: 1,   // Tổng số trang
-    totalItems: 0,   // Tổng số mục
-    limit: 10,       // Giới hạn số mục trên mỗi trang
-    search: "",      // Chuỗi tìm kiếm
-    sortOrder: "desc", // Sắp xếp tăng dần hoặc giảm dần
-    isAddView: false,
-    isFilterView: false,
+  screens: {
+    exam: {
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0,
+      limit: 10,
+      search: '',
+      sortOrder: 'desc',
+    },
+    class: {
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0,
+      limit: 10,
+      search: '',
+      sortOrder: 'desc',
+    },
+    // Thêm các màn hình khác nếu cần
+  },
+  isAddView: false,
+  isFilterView: false,
 };
 
 const filterSlice = createSlice({
-    name: "filter",
-    initialState,
-    reducers: {
-        // ✅ Cập nhật trang hiện tại
-        setCurrentPage: (state, action) => {
-            state.currentPage = action.payload;
-        },
-
-        // ✅ Cập nhật tổng số trang
-        setTotalPages: (state, action) => {
-            state.totalPages = action.payload;
-        },
-
-        // ✅ Cập nhật tổng số mục
-        setTotalItems: (state, action) => {
-            state.totalItems = action.payload;
-        },
-
-        // ✅ Cập nhật giới hạn số mục trên mỗi trang
-        setLimit: (state, action) => {
-            state.limit = action.payload;
-        },
-
-        // ✅ Cập nhật giá trị tìm kiếm
-        setSearch: (state, action) => {
-            state.search = action.payload || ""; // ✅ Nếu không có giá trị, đặt thành ""
-        },
-
-        setSortOrder: (state) => {
-            state.sortOrder = state.sortOrder === "asc" ? "desc" : "asc";
-        },
-
-        setIsAddView: (state, action) => {
-            state.isAddView = action.payload;   
-        },
-
-        setIsFilterView: (state, action) => {
-            state.isFilterView = action.payload;
-        },
-
-        // ✅ Reset toàn bộ bộ lọc về trạng thái ban đầu
-        resetFilters: () => initialState,
+  name: 'filter',
+  initialState,
+  reducers: {
+    setScreenSearch: (state, action) => {
+      const { screen, search } = action.payload;
+      state.screens[screen].search = search.trim();
+      state.screens[screen].currentPage = 1;
     },
+
+    setScreenCurrentPage: (state, action) => {
+      const { screen, page } = action.payload;
+      state.screens[screen].currentPage = page;
+    },
+
+    setScreenTotalPages: (state, action) => {
+      const { screen, totalPages } = action.payload;
+      state.screens[screen].totalPages = totalPages;
+    },
+
+    setScreenTotalItems: (state, action) => {
+      const { screen, totalItems } = action.payload;
+      state.screens[screen].totalItems = totalItems;
+    },
+
+    setScreenLimit: (state, action) => {
+      const { screen, limit } = action.payload;
+      state.screens[screen].limit = limit;
+      state.screens[screen].currentPage = 1;
+    },
+
+    setScreenSortOrder: (state, action) => {
+      const { screen } = action.payload;
+      state.screens[screen].sortOrder = state.screens[screen].sortOrder === 'asc' ? 'desc' : 'asc';
+      state.screens[screen].currentPage = 1;
+    },
+
+    setIsAddView: (state, action) => {
+      state.isAddView = action.payload;
+    },
+
+    setIsFilterView: (state, action) => {
+      state.isFilterView = action.payload;
+    },
+
+    resetScreenFilters: (state, action) => {
+      const { screen } = action.payload;
+      state.screens[screen] = {
+        ...initialState.screens[screen]
+      };
+    },
+  },
 });
 
-export const { setCurrentPage, setTotalPages, setTotalItems, setLimit, setSearch, setSortOrder, setIsAddView, setIsFilterView, resetFilters } = filterSlice.actions;
+export const {
+  setScreenSearch,
+  setScreenCurrentPage,
+  setScreenTotalPages,
+  setScreenTotalItems,
+  setScreenLimit,
+  setScreenSortOrder,
+  setIsAddView,
+  setIsFilterView,
+  resetScreenFilters,
+} = filterSlice.actions;
+
 export default filterSlice.reducer;

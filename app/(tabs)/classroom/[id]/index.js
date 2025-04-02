@@ -4,44 +4,41 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import ScrollableCard from '../../../../components/ScrollableCard';
 import colors from '../../../../constants/colors';
 import AppText from '../../../../components/AppText';
-import Button from '../../../../components/Button';
+import Button from '../../../../components/button/Button';
 import Slideshow from '../../../../components/Slideshow';
 import LessonDropdown from '../../../../components/lesson/LessonDropdown';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 import { Feather } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchLessonLearningItemByClassId } from '../../../../features/class/classSlice';
-
-const images = [];
+import LoadingOverlay from '../../../../components/overlay/LoadingOverlay';
 
 export default function ClassroomIntro() {
   const router = useRouter();
   const dispatch = useDispatch();
 
   const class_code = useLocalSearchParams().id;
-  
+
   useEffect(() => {
-    console.log("Class ID:", class_code);
+    console.log('Class ID:', class_code);
 
     if (class_code) {
       dispatch(fetchLessonLearningItemByClassId({ class_code }));
     }
   }, [class_code]);
   const { classDetail } = useSelector((state) => state.classes);
-  
-  // useEffect(() => console.log('Lessons:', classDetail), [classDetail]);
+
+  useEffect(() => console.log('Lessons:', classDetail), [classDetail]);
 
   return (
     <View style={{ flex: 1 }}>
+      <LoadingOverlay/>
+      
       {/* Nút quay lại */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => {
-          if (router.canGoBack()) {
-            router.back(); // Quay lại nếu có lịch sử
-          } else {
-            router.replace('/classroom'); // Nếu không có lịch sử, quay về danh sách lớp học
-          }
+          router.replace('/classroom');
         }}
       >
         <Feather name="arrow-left" size={24} color="white" />
