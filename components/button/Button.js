@@ -1,8 +1,8 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, View, Platform } from 'react-native';
 import * as Icons from '@expo/vector-icons'; // Import tất cả icon libraries từ expo
-import AppText from './AppText';
-import colors from '../constants/colors';
+import AppText from '../AppText';
+import colors from '../../constants/colors';
 
 const Button = ({
   onPress,

@@ -5,7 +5,7 @@ import {
   logoutAPI,
   checkLoginAPI,
 } from '../../services/authApi';
-import { addError } from '../state/stateApiSlice';
+import { setErrorMessage } from '../state/stateApiSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiHandler } from '../../utils/apiHandler';
 
@@ -24,7 +24,7 @@ export const login = createAsyncThunk(
       return user;
     } catch (error) {
       const errorMsg = error.response.status || 'Đăng nhập thất bại';
-      dispatch(addError(errorMsg));
+      dispatch(setErrorMessage(errorMsg));
       return rejectWithValue(errorMsg);
     }
   },
@@ -48,7 +48,7 @@ export const register = createAsyncThunk(
       return user;
     } catch (error) {
       const errorMsg = error.response?.data.message || 'Đăng ký thất bại';
-      dispatch(addError(errorMsg));
+      dispatch(setErrorMessage(errorMsg));
       return rejectWithValue(errorMsg);
     }
   },

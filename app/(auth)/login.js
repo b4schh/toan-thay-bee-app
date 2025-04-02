@@ -12,13 +12,14 @@ import * as Yup from 'yup';
 import { useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 
-import Button from '../../components/Button';
+import Button from '../../components/button/Button';
 import TextInputField from '../../components/input-field/TextInputField';
 import Checkbox from '../../components/Checkbox';
 import AppText from '../../components/AppText';
-import CustomAlert from '../../components/CustomAlert';
-import LoadingOverlay from '../../components/LoadingOverlay';
+import Dialog from '../../components/dialog/Dialog';
+import LoadingOverlay from '../../components/overlay/LoadingOverlay';
 import colors from '../../constants/colors';
+import { setLoading } from '../../features/state/stateApiSlice';
 
 // Import action login được tạo từ authSlice (sử dụng createAsyncThunk)
 import { login } from '../../features/auth/authSlice';
@@ -28,7 +29,7 @@ export default function Login() {
   const router = useRouter();
 
   // Lấy trạng thái auth từ Redux
-  const { user, loading } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
 
   // State cho custom alert
   const [alertVisible, setAlertVisible] = useState(false);
@@ -51,8 +52,9 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
-      <CustomAlert
+      <Dialog
         visible={alertVisible}
+        type="alert"
         title={alertTitle}
         message={alertMessage}
         onClose={() => setAlertVisible(false)}
@@ -75,6 +77,7 @@ export default function Login() {
           validationSchema={LoginSchema}
           onSubmit={async (values, { setSubmitting }) => {
             try {
+              dispatch(setLoading(true));
               // Tạo payload mới không chứa trường rememberMe
               const payload = {
                 username: values.username,
@@ -96,6 +99,7 @@ export default function Login() {
               console.error('Đăng nhập thất bại, Status =', error);
             } finally {
               setSubmitting(false);
+              dispatch(setLoading(false));
             }
           }}
           validateOnBlur={false}
@@ -183,7 +187,7 @@ export default function Login() {
                 text="Đăng nhập"
                 onPress={handleSubmit}
                 style={styles.button}
-                disabled={isSubmitting || loading}
+                disabled={isSubmitting}
               />
 
               <View style={styles.row}>
@@ -207,7 +211,6 @@ export default function Login() {
         </Formik>
       </View>
 
-      {loading && <LoadingOverlay />}
       <LoadingOverlay/>
     </View>
   );

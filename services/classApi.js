@@ -6,7 +6,7 @@ export const getAllClassesByUser = async (
 ) => {
   return api.get('/v1/user/class/joined', {
     params: {
-      search,
+      search: search.trim(),
       page: currentPage,
       limit,
       sortOrder,

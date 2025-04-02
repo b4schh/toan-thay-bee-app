@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { store } from '../redux/store';
 import * as SplashScreen from 'expo-splash-screen';
@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { setRouter } from '../services/RouterService';
 import { checkLogin } from '../features/auth/authSlice';
+import { View } from 'react-native';
 
 // Ngăn splash screen tự động ẩn
 SplashScreen.preventAutoHideAsync();
@@ -29,48 +30,68 @@ export default function RootLayout() {
 }
 
 function AppContent() {
-  // const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const [isReady, setIsReady] = useState(false);
-  const [appRendered, setAppRendered] = useState(false);
+  const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
-    async function loadAssets() {
+    async function prepare() {
       try {
-        await loadFonts();
-        console.log('Fonts loaded successfully!');
+        // Giữ splash screen cho đến khi mọi thứ sẵn sàng
+        await SplashScreen.preventAutoHideAsync();
+
+        // Load fonts và các tài nguyên khác
+        const fontsLoaded = await loadFonts();
+        if (!fontsLoaded) {
+          throw new Error('Không thể load fonts');
+        }
+
+        // Thêm delay nhỏ để đảm bảo animations mượt mà
+        await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (e) {
-        console.warn('Lỗi khi tải assets:', e);
+        console.warn('Error loading app resources:', e);
       } finally {
-        setIsReady(true);
+        setAppIsReady(true);
       }
     }
-    loadAssets();
+
+    prepare();
   }, []);
 
-  useEffect(() => {
-    setAppRendered(true); // Đánh dấu rằng App đã render xong
-  }, []);
-
-  // Chỉ ẩn SplashScreen sau khi component render xong
-  useEffect(() => {
-    if (isReady && appRendered) {
-      SplashScreen.hideAsync();
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady) {
+      await SplashScreen.hideAsync();
     }
-  }, [isReady, appRendered]);
+  }, [appIsReady]);
+
+  if (!appIsReady) {
+    return null;
+  }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {user ? (
-        <>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </>
-      ) : (
-        <>
-          <Stack.Screen name="index" options={{ title: 'Trang chủ' }} />
-          <Stack.Screen name="(auth)/login" options={{ title: 'Đăng nhập' }} />
-        </>
-      )}
-    </Stack>
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <Stack screenOptions={{ headerShown: false }}>
+        {user ? (
+          <>
+            <Stack.Screen
+              name="(tabs)"
+              options={{
+                headerShown: false,
+                // Prevent going back to auth screens
+                gestureEnabled: false,
+                // Disable Android back button
+                headerBackVisible: false,
+                // Prevent horizontal swipe gesture
+                gestureDirection: 'horizontal',
+              }}
+            />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)/login" />
+          </>
+        )}
+      </Stack>
+    </View>
   );
 }

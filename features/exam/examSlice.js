@@ -1,27 +1,45 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import * as examApi from "../../services/examApi";
-import { setCurrentPage, setTotalPages, setTotalItems } from "../filter/filterSlice";
+import {
+    setScreenCurrentPage,
+    setScreenTotalPages,
+    setScreenTotalItems,
+  } from '../filter/filterSlice';
 import { apiHandler } from "../../utils/apiHandler";
 
 export const fetchExams = createAsyncThunk(
     "exams/fetchExams",
     async ({ search, currentPage, limit, sortOrder }, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.getAllExamAPI, { search, currentPage, limit, sortOrder }, (data) => {
-            dispatch(setCurrentPage(data.currentPage));
-            dispatch(setTotalPages(data.totalPages));
-            dispatch(setTotalItems(data.totalItems));
-        }, true, false);
+        return await apiHandler(
+            dispatch, 
+            examApi.getAllExamAPI, 
+            { search, currentPage, limit, sortOrder }, 
+            (data) => {
+                dispatch(setScreenCurrentPage({ screen: 'exam', page: data.currentPage }));
+                dispatch(setScreenTotalPages({ screen: 'exam', totalPages: data.totalPages }));
+                dispatch(setScreenTotalItems({ screen: 'exam', totalItems: data.totalItems }));
+            }, 
+            true, 
+            false
+        );
     }
 );
 
 export const fetchPublicExams = createAsyncThunk(
     "exams/fetchPublicExams",
     async ({ search, currentPage, limit, sortOrder }, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.getAllPublicExamAPI, { search, currentPage, limit, sortOrder }, (data) => {
-            dispatch(setCurrentPage(data.currentPage));
-            dispatch(setTotalPages(data.totalPages));
-            dispatch(setTotalItems(data.totalItems));
-        }, true, false);
+        return await apiHandler(
+            dispatch, 
+            examApi.getAllPublicExamAPI, 
+            { search, currentPage, limit, sortOrder }, 
+            (data) => {
+                dispatch(setScreenCurrentPage({ screen: 'exam', page: data.currentPage }));
+                dispatch(setScreenTotalPages({ screen: 'exam', totalPages: data.totalPages }));
+                dispatch(setScreenTotalItems({ screen: 'exam', totalItems: data.totalItems }));
+            }, 
+            false,
+            true
+        );
     }
 );
 
@@ -87,26 +105,26 @@ const examSlice = createSlice({
         setExam: (state, action) => {
             state.exam = action.payload;
         },
-        initializeTimer: (state, action) => {
-            state.timeLeft = action.payload;
-            state.initialDuration = action.payload;
-            state.isTimerRunning = true;
-        },
-        decrementTimer: (state) => {
-            if (state.timeLeft > 0 && state.isTimerRunning) {
-                state.timeLeft -= 1;
-            }
-        },
-        pauseTimer: (state) => {
-            state.isTimerRunning = false;
-        },
-        resumeTimer: (state) => {
-            state.isTimerRunning = true;
-        },
-        resetTimer: (state) => {
-            state.timeLeft = state.initialDuration;
-            state.isTimerRunning = false;
-        },
+        // initializeTimer: (state, action) => {
+        //     state.timeLeft = action.payload;
+        //     state.initialDuration = action.payload;
+        //     state.isTimerRunning = true;
+        // },
+        // decrementTimer: (state) => {
+        //     if (state.timeLeft > 0 && state.isTimerRunning) {
+        //         state.timeLeft -= 1;
+        //     }
+        // },
+        // pauseTimer: (state) => {
+        //     state.isTimerRunning = false;
+        // },
+        // resumeTimer: (state) => {
+        //     state.isTimerRunning = true;
+        // },
+        // resetTimer: (state) => {
+        //     state.timeLeft = state.initialDuration;
+        //     state.isTimerRunning = false;
+        // },
     },
     extraReducers: (builder) => {
         builder
@@ -130,7 +148,7 @@ const examSlice = createSlice({
                 state.exams = [];
             })
             .addCase(fetchPublicExams.fulfilled, (state, action) => {
-                if (action.payload) {
+                if (action.payload?.data) {
                     state.exams = action.payload.data;
                 }
             })
