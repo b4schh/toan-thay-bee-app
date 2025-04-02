@@ -15,18 +15,20 @@ import ExamCard from '../../../components/card/ExamCard';
 import SearchBar from '../../../components/SearchBar';
 import AppText from '../../../components/AppText';
 import Button from '../../../components/button/Button';
-import TabNavigation from '../../../components/TabNavigation';
+import Dialog from '../../../components/dialog/Dialog';
+import Dropdown from '../../../components/dropdown/Dropdown';
 import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
 import Pagination from '../../../components/Pagination';
 import colors from '../../../constants/colors';
 import { fetchPublicExams } from '../../../features/exam/examSlice';
+import { fetchCodesByType } from '../../../features/code/codeSlice';
 
-const useFilteredExam = (exams, grade) => {
-  return useMemo(() => {
-    if (grade === 'all') return exams;
-    return exams.filter((exam) => exam.class === grade.replace('grade_', ''));
-  }, [exams, grade]);
-};
+// const useFilteredExam = (exams, grade) => {
+//   return useMemo(() => {
+//     if (grade === 'all') return exams;
+//     return exams.filter((exam) => exam.class === grade.replace('grade_', ''));
+//   }, [exams, grade]);
+// };
 
 // Thêm hàm debounce ở đầu file
 const debounce = (func, wait) => {
@@ -37,11 +39,29 @@ const debounce = (func, wait) => {
   };
 };
 
+// Thêm component EmptyView
+const EmptyView = ({ onRefresh, isLoading, message }) => (
+  <View style={styles.emptyContainer}>
+    <AppText style={styles.emptyText}>
+      {isLoading ? 'Đang tải...' : message}
+    </AppText>
+    {!isLoading && (
+      <Button
+        text="Tải lại"
+        onPress={onRefresh}
+        style={styles.refreshButton}
+        loading={isLoading}
+      />
+    )}
+  </View>
+);
+
 export default function PracticeScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
 
-  const [selectedGrade, setSelectedGrade] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const { loading } = useSelector((state) => state.states);
   const { exams } = useSelector((state) => state.exams);
@@ -49,13 +69,85 @@ export default function PracticeScreen() {
   const examScreen = screens.exam;
   const { search, currentPage, limit, totalItems, sortOrder } = examScreen;
 
+  // const { code } = useSelector((state) => state.code);
+
+  useEffect;
   console.log(`Search Exam: ${search}
     Current Page: ${currentPage}
     Limit: ${limit}
     Total Items: ${totalItems}
     Sort Order: ${sortOrder}`);
 
-  const filteredExam = useFilteredExam(exams, selectedGrade);
+  // Thêm state và options cho filters
+  const [filterDialogVisible, setFilterDialogVisible] = useState(false);
+  const [filters, setFilters] = useState([]);
+
+  const classOptions = [
+    { code: '10', description: 'Lớp 10' },
+    { code: '11', description: 'Lớp 11' },
+    { code: '12', description: 'Lớp 12' },
+  ];
+
+  const typeOptions = [
+    { code: 'midterm', description: 'Giữa kỳ' },
+    { code: 'final', description: 'Cuối kỳ' },
+    { code: 'practice', description: 'Luyện tập' },
+  ];
+
+  const chapterOptions = [
+    { code: '1', description: 'Chương 1' },
+    { code: '2', description: 'Chương 2' },
+    { code: '3', description: 'Chương 3' },
+    // Thêm các chương khác
+  ];
+
+  // Thêm hàm xử lý áp dụng filter
+  const handleApplyFilters = () => {
+    // TODO: Xử lý logic filter ở đây
+    console.log('Applied filters:', filters);
+    setFilterDialogVisible(false);
+  };
+
+  const handleFilterChange = (code, type) => {
+    if (!code) {
+      // Remove filter if code is empty
+      setFilters(filters.filter((f) => f.type !== type));
+      return;
+    }
+
+    // Check if filter type already exists
+    const filterIndex = filters.findIndex((f) => f.type === type);
+
+    if (filterIndex >= 0) {
+      // Update existing filter
+      const newFilters = [...filters];
+      newFilters[filterIndex] = { type, code };
+      setFilters(newFilters);
+    } else {
+      // Add new filter
+      setFilters([...filters, { type, code }]);
+    }
+  };
+
+  // Thêm hàm refresh data
+  const handleRefresh = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      dispatch(
+        fetchPublicExams({
+          search,
+          currentPage: 1, // Reset về trang 1 khi tìm kiếm
+          limit,
+          sortOrder,
+        }),
+      );
+    } catch (err) {
+      setError('Không thể tải dữ liệu. Vui lòng thử lại.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [search, currentPage, limit]);
 
   // Thêm useEffect với debounce để xử lý tìm kiếm
   useEffect(() => {
@@ -87,16 +179,6 @@ export default function PracticeScreen() {
   useEffect(() => {
     console.log('Exams:', exams);
   }, [exams]);
-
-  const tabs = useMemo(
-    () => [
-      { id: 'all', label: 'Tất cả' },
-      { id: 'grade_10', label: 'Lớp 10' },
-      { id: 'grade_11', label: 'Lớp 11' },
-      { id: 'grade_12', label: 'Lớp 12' },
-    ],
-    [],
-  );
 
   const renderExamItem = useCallback(
     ({ item }) => (
@@ -138,7 +220,6 @@ export default function PracticeScreen() {
     <View style={styles.container}>
       {/* Header */}
       <AppText style={styles.header}>Luyện đề</AppText>
-
       <View style={styles.row}>
         <SearchBar placeholder="Tìm kiếm đề thi..." screen="exam" />
 
@@ -151,28 +232,75 @@ export default function PracticeScreen() {
             />
           }
           style={styles.button}
-          onPress={() => console.log('Filter Clicked!')}
+          onPress={() => setFilterDialogVisible(true)}
         />
       </View>
 
-      <TabNavigation
-        tabs={tabs}
-        selectedTab={selectedGrade}
-        onTabPress={setSelectedGrade}
-      />
+      <Dialog
+        visible={filterDialogVisible}
+        title="Bộ lọc"
+        onClose={() => setFilterDialogVisible(false)}
+        actions={[
+          {
+            text: 'Đặt lại',
+            onPress: () => setFilters([]),
+            style: styles.resetButton,
+            textStyle: styles.resetButtonText,
+          },
+          {
+            text: 'Áp dụng',
+            onPress: handleApplyFilters,
+            style: styles.applyButton,
+          },
+        ]}
+      >
+        <View style={styles.filterContent}>
+          <Dropdown
+            label="Lớp"
+            options={classOptions}
+            value={
+              filters.find((filter) => filter.type === 'class')?.code || ''
+            }
+            onChange={(code) => handleFilterChange(code, 'class')}
+            placeholder="Chọn lớp"
+          />
+          <Dropdown
+            label="Loại đề thi"
+            options={typeOptions}
+            value={
+              filters.find((filter) => filter.type === 'typeOfExam')?.code || ''
+            }
+            onChange={(code) => handleFilterChange(code, 'typeOfExam')}
+            placeholder="Chọn loại đề thi"
+          />
+          <Dropdown
+            label="Chương"
+            options={chapterOptions}
+            value={
+              filters.find((filter) => filter.type === 'chapter')?.code || ''
+            }
+            onChange={(code) => handleFilterChange(code, 'chapter')}
+            placeholder="Chọn chương"
+          />
+        </View>
+      </Dialog>
 
       {/* Danh sách lớp học dạng lưới */}
       <FlatList
-        data={filteredExam}
+        data={exams}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}
         contentContainerStyle={styles.classList}
         columnWrapperStyle={styles.classRow}
         ListEmptyComponent={
-          <AppText style={styles.emptyText}>Không có đề thi nào</AppText>
+          <EmptyView
+            onRefresh={handleRefresh}
+            isLoading={isLoading}
+            message={search ? 'Không tìm thấy đề thi' : 'Chưa có đề thi nào'}
+          />
         }
         ListFooterComponent={
-          filteredExam.length > 0 && (
+          exams.length > 0 && (
             <View style={styles.paginationContainer}>
               <Pagination
                 currentPage={currentPage}
@@ -184,8 +312,9 @@ export default function PracticeScreen() {
         }
         renderItem={renderExamItem}
         showsVerticalScrollIndicator={false}
+        refreshing={isLoading}
+        onRefresh={handleRefresh}
       />
-
       {/* Overlay loading mờ (hiển thị nếu loading=true) */}
       {loading && <LoadingOverlay />}
     </View>
@@ -224,5 +353,21 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: 'center',
     marginTop: 20,
+  },
+  filterContent: {
+    width: '100%',
+    gap: 10,
+  },
+  resetButton: {
+    backgroundColor: colors.sky.white,
+    borderWidth: 1,
+    borderColor: colors.primary.default,
+    flex: 1,
+  },
+  resetButtonText: {
+    color: colors.primary,
+  },
+  applyButton: {
+    flex: 1,
   },
 });

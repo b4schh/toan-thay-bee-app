@@ -23,11 +23,17 @@ export default function ExamOverviewOverlay({
   onSelectQuestion,
   onClose,
   visible,
+  remainingTime,
+  handleSubmit,
+  saveQuestion,
+  errorQuestion,
 }) {
-  const [isModalVisible, setModalVisible] = useState(false);
+  const [isCancelModalVisible, setCancelModalVisible] = useState(false);
+  const [isSubmitModalVisible, setSubmitModalVisible] = useState(false);
   const router = useRouter();
-  const slideAnim = useRef(new Animated.Value(Dimensions.get('window').width))
-    .current;
+  const slideAnim = useRef(
+    new Animated.Value(Dimensions.get('window').width),
+  ).current;
 
   useEffect(() => {
     if (visible) {
@@ -49,25 +55,8 @@ export default function ExamOverviewOverlay({
     }
   }, [visible]);
 
-  // Lấy thời gian từ Redux store
-  const { timeLeft } = useSelector((state) => state.exams);
-
   const handleLeave = () => {
     router.replace('practice/'); // Thay 'Home' bằng tên màn hình bạn muốn chuyển đến
-  };
-
-  const handleSubmit = () => {
-    alert('Hết giờ! Bài thi đã được nộp tự động.');
-    router.replace('home/');
-  };
-
-  const formatTime = (seconds) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hrs.toString().padStart(2, '0')}:${mins
-      .toString()
-      .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const screenWidth = Dimensions.get('window').width;
@@ -76,15 +65,8 @@ export default function ExamOverviewOverlay({
 
   // Hàm kiểm tra trạng thái "đã làm" thực tế của câu hỏi
   const isQuestionDone = (q) => {
-    if (q.typeOfQuestion === 'TN') {
-      return !!answers[q.id]; // Có đáp án được chọn
-    } else if (q.typeOfQuestion === 'DS') {
-      return q.statements.every((statement) =>
-        answers.hasOwnProperty(statement.id),
-      ); // Tất cả statement đều có đáp án
-    } else if (q.typeOfQuestion === 'TLN') {
-      const answer = answers[q.id];
-      return answer && typeof answer === 'string' && answer.trim().length > 0; // Có dữ liệu không rỗng
+    if (saveQuestion.has(q.id)) {
+      return true; // Đã làm
     }
     return false;
   };
@@ -105,6 +87,7 @@ export default function ExamOverviewOverlay({
   const stats = sections.reduce(
     (acc, section, sIndex) => {
       section.questions.forEach((q, qIndex) => {
+        // console.log('Question:', q.id);
         const isDone = isQuestionDone(q);
         const isCurrent =
           sIndex === currentSectionIndex && qIndex === currentQuestionIndex;
@@ -140,7 +123,7 @@ export default function ExamOverviewOverlay({
       {/* Fixed Header */}
       <View style={styles.headerContainer}>
         <AppText style={styles.title}>TIẾN ĐỘ LÀM BÀI</AppText>
-        <AppText style={styles.timer}>⏳ {formatTime(timeLeft)}</AppText>
+        <AppText style={styles.timer}>⏳ {remainingTime}</AppText>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <Feather name="x" size={24} color="black" />
         </TouchableOpacity>
@@ -151,15 +134,6 @@ export default function ExamOverviewOverlay({
         style={styles.scrollContent}
         showsVerticalScrollIndicator={true}
       >
-        {/* Fixed Bottom Buttons */}
-        <View style={styles.bottomButtons}>
-          <Button
-            text="Rời khỏi"
-            style={[styles.button, { backgroundColor: colors.danger }]}
-            onPress={() => setModalVisible(true)}
-          />
-          <Button text="Nộp bài" style={styles.button} />
-        </View>
         {sections.map((section, sIndex) => (
           <View key={section.type} style={styles.sectionContainer}>
             <AppText style={styles.sectionTitle}>{section.title}:</AppText>
@@ -220,18 +194,32 @@ export default function ExamOverviewOverlay({
             <AppText style={{ fontFamily: 'Inter-Medium' }}>Chưa làm</AppText>
           </View>
         </View>
+
+        {/* Fixed Bottom Buttons */}
+        <View style={styles.bottomButtons}>
+          <Button
+            text="Rời khỏi"
+            style={[styles.button, { backgroundColor: colors.danger }]}
+            onPress={() => setCancelModalVisible(true)}
+          />
+          <Button
+            text="Nộp bài"
+            style={styles.button}
+            onPress={() => setSubmitModalVisible(true)}
+          />
+        </View>
       </ScrollView>
 
       {/* Modal xác nhận */}
       <Dialog
-        visible={isModalVisible}
+        visible={isCancelModalVisible}
         title="Bạn muốn thoát?"
         type="custom"
-        onClose={() => setModalVisible(false)}
+        onClose={() => setCancelModalVisible(false)}
         actions={[
           {
             text: 'Hủy bỏ',
-            onPress: () => setModalVisible(false),
+            onPress: () => setCancelModalVisible(false),
             style: {
               backgroundColor: colors.sky.base,
               flex: 1,
@@ -255,6 +243,42 @@ export default function ExamOverviewOverlay({
       >
         <AppText style={styles.modalMessage}>
           Quá trình làm bài của bạn sẽ bị hủy bỏ
+        </AppText>
+      </Dialog>
+
+      {/* Thêm Dialog xác nhận nộp bài */}
+      <Dialog
+        visible={isSubmitModalVisible}
+        title="Xác nhận nộp bài"
+        type="custom"
+        onClose={() => setSubmitModalVisible(false)}
+        actions={[
+          {
+            text: 'Hủy',
+            onPress: () => setSubmitModalVisible(false),
+            style: {
+              backgroundColor: colors.sky.base,
+              flex: 1,
+            },
+            textStyle: {
+              color: colors.sky.white,
+            },
+          },
+          {
+            text: 'Nộp bài',
+            onPress: handleSubmit,
+            style: {
+              backgroundColor: colors.success,
+              flex: 1,
+            },
+            textStyle: {
+              color: colors.sky.white,
+            },
+          },
+        ]}
+      >
+        <AppText style={styles.modalMessage}>
+          Bạn có chắc chắn muốn nộp bài?
         </AppText>
       </Dialog>
     </Animated.View>

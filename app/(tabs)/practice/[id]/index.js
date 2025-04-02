@@ -1,4 +1,4 @@
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import colors from '../../../../constants/colors';
@@ -15,8 +15,16 @@ export default function ExamDetailScreen() {
     isDone,
     testDuration,
     passRate,
-    deadline = null,
   } = useLocalSearchParams();
+
+  const examHistory = {
+    examName: 'Đề thi Toán học',
+    history: [
+      { attempt: 1, score: 85, duration: '45', submitTime: '08:30' },
+      { attempt: 2, score: 90, duration: '40', submitTime: '09:40' },
+      { attempt: 3, score: 88, duration: '35', submitTime: '10:35' },
+    ],
+  };
 
   const router = useRouter();
   const dispatch = useDispatch();
@@ -28,9 +36,9 @@ export default function ExamDetailScreen() {
           style={styles.backButton}
           onPress={() => {
             if (router.canGoBack()) {
-              router.back(); // Quay lại nếu có lịch sử
+              router.replace('/practice'); // Quay lại nếu có lịch sử
             } else {
-              router.replace('/classroom'); // Nếu không có lịch sử, quay về danh sách lớp học
+              router.replace('/practice'); // Nếu không có lịch sử, quay về danh sách lớp học
             }
           }}
         >
@@ -38,6 +46,7 @@ export default function ExamDetailScreen() {
         </TouchableOpacity>
         <AppText style={styles.headerText}>{name}</AppText>
       </View>
+
       <View style={styles.infoCard}>
         <AppText style={styles.nameCard}>{name}</AppText>
         <View style={styles.bodyTextContainer}>
@@ -52,7 +61,7 @@ export default function ExamDetailScreen() {
           <View style={styles.rowText}>
             <AppText style={styles.bodyText}>Trạng thái</AppText>
             <AppText style={styles.bodyText}>
-              {isDone ? 'Chưa làm' : 'Đã làm'}
+              {isDone ? 'Đã làm' : 'Chưa làm'}
             </AppText>
           </View>
           <View style={styles.rowText}>
@@ -75,11 +84,34 @@ export default function ExamDetailScreen() {
               pathname: `/exam/${id}/do-exam`,
               params: {
                 name: name,
-                testDuration: testDuration
               },
             });
           }}
         />
+      </View>
+
+      <AppText style={{fontSize: 20, fontFamily: 'Inter-Medium'}}>Lịch sử làm bài</AppText>
+      <View style={styles.tableContainer}>
+        <View style={styles.tableBody}>
+          <View style={[styles.row, styles.headerRow]}>
+            <AppText style={styles.headerCell}>Lần</AppText>
+            <AppText style={styles.headerCell}>Điểm</AppText>
+            <AppText style={styles.headerCell}>Thời gian làm</AppText>
+            <AppText style={styles.headerCell}>Thời gian nộp</AppText>
+          </View>
+          {isDone ? (<FlatList
+            data={examHistory.history}
+            keyExtractor={(item) => item.attempt.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.row}>
+                <AppText style={styles.cell}>{item.attempt}</AppText>
+                <AppText style={styles.cell}>{item.score}</AppText>
+                <AppText style={styles.cell}>{item.duration}</AppText>
+                <AppText style={styles.cell}>{item.submitTime}</AppText>
+              </View>
+            )}
+          />) : (<AppText>Không có lịch sử làm bài</AppText>)}
+        </View>
       </View>
     </View>
   );
@@ -129,5 +161,35 @@ const styles = StyleSheet.create({
   bodyText: {
     color: colors.ink.darker,
     fontFamily: 'Inter-Medium',
+  },
+  tableContainer: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 12
+  },
+  tableBody: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    overflow: "hidden",
+  },
+  row: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+    padding: 10,
+  },
+  headerRow: {
+    backgroundColor: "#f2f2f2",
+  },
+  headerCell: {
+    flex: 1,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  cell: {
+    flex: 1,
+    textAlign: "center",
   },
 });

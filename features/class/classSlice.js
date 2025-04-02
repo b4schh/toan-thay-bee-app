@@ -14,14 +14,33 @@ export const fetchClassesByUser = createAsyncThunk(
       dispatch,
       ClassAPI.getAllClassesByUser,
       { search, currentPage, limit, sortOrder },
-      (data) => {
-        dispatch(setScreenCurrentPage({ screen: 'class', page: data.currentPage }));
-        dispatch(setScreenTotalPages({ screen: 'class', totalPages: data.totalPages }));
-        dispatch(setScreenTotalItems({ screen: 'class', totalItems: data.totalItems }));
+      () => {
+        // dispatch(
+        //   setScreenCurrentPage({ screen: 'class', page: data.currentPage }),
+        // );
+        // dispatch(
+        //   setScreenTotalPages({ screen: 'class', totalPages: data.totalPages }),
+        // );
+        // dispatch(
+        //   setScreenTotalItems({ screen: 'class', totalItems: data.totalItems }),
+        // );
       },
       true,
       false,
     );
+  },
+);
+
+// Hàm này dùng trong HomeScreen để chỉ lấy ra các lớp đã join
+export const fetchJoinedClasses = createAsyncThunk(
+  'class/fetchJoinedClasses',
+  async () => {
+    try {
+      const response = await api.get('/v1/user/class/joined'); // endpoint mới
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   },
 );
 
@@ -83,9 +102,9 @@ export const joinClass = createAsyncThunk(
         dispatch(fetchClassesByUser({ search, currentPage, limit, sortOrder }));
       },
       true,
-      true
+      true,
     );
-  }
+  },
 );
 
 const initialState = {
@@ -139,6 +158,17 @@ const classSlice = createSlice({
       // .addCase(joinClass.fulfilled, (state) => {
       //   state.classDetail.userStatus === 'JS'
       // })
+      // ...existing extra reducers
+      .addCase(fetchJoinedClasses.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchJoinedClasses.fulfilled, (state, action) => {
+        state.joinedClasses = action.payload.data;
+        state.loading = false;
+      })
+      .addCase(fetchJoinedClasses.rejected, (state) => {
+        state.loading = false;
+      });
   },
 });
 

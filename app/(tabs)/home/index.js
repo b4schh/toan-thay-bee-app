@@ -19,24 +19,19 @@ export default function HomeScreen() {
   const { user } = useSelector((state) => state.auth);
   const { classes } = useSelector((state) => state.classes);
   const { loading } = useSelector((state) => state.states);
-  // const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
-  //   (state) => state.filter,
-  // );
-
-  // useEffect(() => {
-  //   if (
-  //     search !== undefined &&
-  //     currentPage !== undefined &&
-  //     limit !== undefined &&
-  //     sortOrder !== undefined
-  //   ) {
-  //     dispatch(fetchClassesByUser({ search, currentPage, limit, sortOrder }));
-  //   }
-  // }, [search, currentPage, limit, sortOrder]);
+  const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
+    (state) => state.filter,
+  );
 
   useEffect(() => {
-      dispatch(fetchClassesByUser());
-  }, [dispatch]);
+      dispatch(
+        fetchClassesByUser({
+          search,
+          currentPage: 1,
+          limit,
+        }),
+      );
+    }, []);
 
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
@@ -152,7 +147,7 @@ export default function HomeScreen() {
         {/* Body */}
         <View style={styles.card}>
           <View style={styles.section}>
-            <AppText style={styles.title}>Lớp học gần đây</AppText>
+            <AppText style={styles.title}>Truy cập nhanh</AppText>
             <View>
               {!loading ? (
                 Array.isArray(classes) && classes.length > 0 ? (

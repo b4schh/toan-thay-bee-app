@@ -105,26 +105,26 @@ const examSlice = createSlice({
         setExam: (state, action) => {
             state.exam = action.payload;
         },
-        initializeTimer: (state, action) => {
-            state.timeLeft = action.payload;
-            state.initialDuration = action.payload;
-            state.isTimerRunning = true;
-        },
-        decrementTimer: (state) => {
-            if (state.timeLeft > 0 && state.isTimerRunning) {
-                state.timeLeft -= 1;
-            }
-        },
-        pauseTimer: (state) => {
-            state.isTimerRunning = false;
-        },
-        resumeTimer: (state) => {
-            state.isTimerRunning = true;
-        },
-        resetTimer: (state) => {
-            state.timeLeft = state.initialDuration;
-            state.isTimerRunning = false;
-        },
+        // initializeTimer: (state, action) => {
+        //     state.timeLeft = action.payload;
+        //     state.initialDuration = action.payload;
+        //     state.isTimerRunning = true;
+        // },
+        // decrementTimer: (state) => {
+        //     if (state.timeLeft > 0 && state.isTimerRunning) {
+        //         state.timeLeft -= 1;
+        //     }
+        // },
+        // pauseTimer: (state) => {
+        //     state.isTimerRunning = false;
+        // },
+        // resumeTimer: (state) => {
+        //     state.isTimerRunning = true;
+        // },
+        // resetTimer: (state) => {
+        //     state.timeLeft = state.initialDuration;
+        //     state.isTimerRunning = false;
+        // },
     },
     extraReducers: (builder) => {
         builder

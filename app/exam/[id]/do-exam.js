@@ -11,75 +11,108 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchPublicQuestionsByExamId } from '../../../features/question/questionSlice';
-import {
-  initializeTimer,
-  decrementTimer,
-} from '../../../features/exam/examSlice';
-import { setAnswer } from '../../../features/answer/answerSlice';
 import LatexRenderer from '../../../components/latex/LatexRenderer';
 import AppText from '../../../components/AppText';
 import Button from '../../../components/button/Button';
 import ExamOverviewOverlay from '../../../components/overlay/ExamOverviewOverlay';
-import Timer from '../../../components/Timer';
 import colors from '../../../constants/colors';
+import socket from '../../../services/socket';
+import { fetchAnswersByAttempt } from '../../../features/answer/answerSlice';
 
 export default function DoExamScreen() {
   const router = useRouter();
-  const { id, name, testDuration, sectionIndexParam, questionIndexParam } =
-    useLocalSearchParams();
-  console.log('Thoi gian lam bai:', testDuration);
-
+  const { id } = useLocalSearchParams();
   const dispatch = useDispatch();
-
-  // Fetch dữ liệu khi component mount
-  useEffect(() => {
-    dispatch(fetchPublicQuestionsByExamId(id));
-  }, [dispatch, id]);
-
-  // Lấy danh sách câu hỏi từ Redux store
+  const { user } = useSelector((state) => state.auth);
   const { questions } = useSelector((state) => state.questions);
-  // Lấy state answers từ Redux thay vì local state
   const { answers } = useSelector((state) => state.answers);
+  const { exam } = useSelector((state) => state.exams);
+  const [isStarted, setIsStarted] = useState(false);
+  const [isOverviewVisible, setIsOverviewVisible] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(0);
+  const [attemptId, setAttemptId] = useState(null);
+  const [answerTN, setAnswerTN] = useState([]);
+  const [answerTLN, setAnswerTLN] = useState([]);
+  const [dsAnswers, setDsAnswers] = useState({});
 
-  // Phân loại câu hỏi theo typeOfQuestion
-  const tnQuestions = questions
-    ? questions.filter((q) => q.typeOfQuestion === 'TN')
-    : [];
-  const dsQuestions = questions
-    ? questions.filter((q) => q.typeOfQuestion === 'DS')
-    : [];
-  const tlnQuestions = questions
-    ? questions.filter((q) => q.typeOfQuestion === 'TLN')
-    : [];
+  const [saveQuestion, setSaveQuestion] = useState(new Set());
+  const [errorQuestion, setErrorQuestion] = useState(new Set());
 
-  // useEffect(() => console.log('Trac nghiem', tnQuestions), [tnQuestions]);
-  // useEffect(() => console.log('Dung sai', dsQuestions), [dsQuestions]);
-  // useEffect(() => console.log('Tra loi ngan', tlnQuestions), [tlnQuestions]);
+  const tnQuestions = questions?.filter((q) => q.typeOfQuestion === 'TN') || [];
+  const dsQuestions = questions?.filter((q) => q.typeOfQuestion === 'DS') || [];
+  const tlnQuestions =
+    questions?.filter((q) => q.typeOfQuestion === 'TLN') || [];
+  const [tlnInput, setTlnInput] = useState('');
 
-  // Tạo danh sách các phần và câu hỏi
   const sections = [
     { type: 'TN', questions: tnQuestions, title: 'Phần Trắc Nghiệm' },
     { type: 'DS', questions: dsQuestions, title: 'Phần Đúng Sai' },
     { type: 'TLN', questions: tlnQuestions, title: 'Phần Trả Lời Ngắn' },
   ].filter((section) => section.questions.length > 0); // Lọc các phần có câu hỏi
 
-  // State quản lý câu hỏi hiện tại
-  // Dùng param nếu có, nếu không thì mặc định 0
-  const [currentSectionIndex, setCurrentSectionIndex] = useState(
-    sectionIndexParam ? Number(sectionIndexParam) : 0,
-  );
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(
-    questionIndexParam ? Number(questionIndexParam) : 0,
-  );
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  const [isOverviewVisible, setIsOverviewVisible] = useState(false); // State để hiển thị overlay
+  const currentSection = sections[currentSectionIndex] || { questions: [] };
+  const currentQuestion = currentSection.questions[currentQuestionIndex] || {};
 
-  // Log để kiểm tra dữ liệu (có thể xóa sau khi debug xong)
-  // useEffect(() => {
-  //   console.log('Ket qua', answers);
-  // }, [answers]);
+  const isFirstQuestion =
+    currentSectionIndex === 0 && currentQuestionIndex === 0;
 
-  // Tính số thứ tự câu hỏi
+  const isLastQuestion =
+    currentSectionIndex === sections.length - 1 &&
+    currentQuestionIndex === currentSection.questions.length - 1;
+
+  const goToPrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex((prev) => prev - 1);
+    } else if (currentSectionIndex > 0) {
+      const prevSectionIndex = currentSectionIndex - 1;
+      const prevSection = sections[prevSectionIndex];
+      setCurrentSectionIndex(prevSectionIndex);
+      setCurrentQuestionIndex(prevSection.questions.length - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (currentQuestionIndex < currentSection.questions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+    } else if (currentSectionIndex < sections.length - 1) {
+      setCurrentSectionIndex((prev) => prev + 1);
+      setCurrentQuestionIndex(0);
+    }
+  };
+
+  const formatTime = (seconds) => {
+    const min = String(Math.floor(seconds / 60)).padStart(2, '0');
+    const sec = String(seconds % 60).padStart(2, '0');
+    return `${min}:${sec}`;
+  };
+
+  const addQuestion = (questionId) => {
+    setSaveQuestion((prev) => new Set(prev).add(Number(questionId)));
+  };
+
+  const addErrorQuestion = (questionId) => {
+    setErrorQuestion((prev) => new Set(prev).add(Number(questionId)));
+  };
+
+  const removeQuestion = (questionId) => {
+    setSaveQuestion((prev) => {
+      const updated = new Set(prev);
+      updated.delete(questionId);
+      return updated;
+    });
+  };
+
+  const removeErrorQuestion = (questionId) => {
+    setErrorQuestion((prev) => {
+      const updated = new Set(prev);
+      updated.delete(questionId);
+      return updated;
+    });
+  };
+
   const getQuestionNumber = () => {
     let count = 0;
     for (let i = 0; i < currentSectionIndex; i++) {
@@ -88,238 +121,477 @@ export default function DoExamScreen() {
     return count + currentQuestionIndex + 1;
   };
 
+  const handleAutoSubmit = () => {
+    if (!attemptId && !exam?.testDuration) return;
+    setSaveQuestion(new Set());
+    setErrorQuestion(new Set());
+    socket.emit('submit_exam', { attemptId });
+  };
+
+  const handleSubmit = () => {
+    if (!attemptId) return;
+    socket.emit('submit_exam', { attemptId });
+  };
+
+  const handleStartExam = () => {
+    if (!socket.connected) {
+      socket.connect();
+
+      socket.once('connect', () => {
+        console.log('✅ Socket connected');
+        socket.emit('join_exam', {
+          studentId: user.id,
+          examId: id,
+        });
+      });
+
+      setTimeout(() => {
+        if (!socket.connected) {
+          alert('Lỗi', 'Không thể kết nối socket.');
+        }
+      }, 5000);
+    } else {
+      socket.emit('join_exam', { studentId: user.id, examId: id });
+    }
+  };
+
+  const handleSelectAnswerTN = (questionId, statementId, type) => {
+    const payload = {
+      attemptId,
+      questionId,
+      answerContent: statementId,
+      studentId: user.id, // nếu cần xác định user
+      type,
+      examId: id,
+      name: user.lastName + ' ' + user.firstName,
+    };
+    const newAnswer = {
+      questionId,
+      answerContent: statementId,
+      typeOfQuestion: type,
+    };
+    setAnswerTN((prev) => {
+      const filtered = prev.filter((a) => a.questionId !== questionId);
+      return [...filtered, newAnswer];
+    });
+
+    socket.emit('select_answer', payload);
+  };
+
+  const handleSelectAnswerDS = (questionId, statementId, selectedAnswer) => {
+    setDsAnswers((prev) => {
+      const currentAnswers = prev[questionId] || [];
+
+      const existing = currentAnswers.find(
+        (ans) => ans.statementId === statementId,
+      );
+
+      // 🔁 Nếu đáp án đã giống thì không gửi lại
+      if (existing && existing.answer === selectedAnswer) {
+        return prev;
+      }
+
+      const updatedAnswers = currentAnswers.map((ans) =>
+        ans.statementId === statementId
+          ? { ...ans, answer: selectedAnswer }
+          : ans,
+      );
+
+      // Nếu chưa có statement này
+      if (!existing) {
+        updatedAnswers.push({ statementId, answer: selectedAnswer });
+      }
+
+      const newState = {
+        ...prev,
+        [questionId]: updatedAnswers,
+      };
+
+      // ✨ Gửi toàn bộ lên server
+      socket.emit('select_answer', {
+        questionId,
+        answerContent: newState[questionId],
+        studentId: user.id,
+        attemptId,
+        type: 'DS',
+        examId: id,
+        name: user.lastName + ' ' + user.firstName,
+      });
+
+      return newState;
+    });
+  };
+
   const handleSelectQuestion = (sectionIndex, questionIndex) => {
     setCurrentSectionIndex(sectionIndex);
     setCurrentQuestionIndex(questionIndex);
     setIsOverviewVisible(false); // Đóng overlay sau khi chọn câu hỏi
   };
 
-  // Lấy timeLeft từ Redux store
-  const { timeLeft, isTimerRunning } = useSelector((state) => state.exams);
+  const handleSelectAnswerTLN = (questionId, answerContent, type) => {
+    const trimmed = answerContent?.trim(); // Xóa khoảng trắng đầu và cuối
 
-  // Tự động nộp bài khi hết giờ
+    if (!trimmed) return; // Nếu không có nội dung thì không gửi
+
+    // Kiểm tra nếu nội dung giống với trước đó thì không cần gửi
+    const existing = answerTLN.find((a) => a.questionId === questionId);
+    if (existing?.answerContent === trimmed) return;
+
+    // Cập nhật local state
+    const newAnswer = {
+      questionId,
+      answerContent: trimmed,
+      typeOfQuestion: type,
+    };
+    setAnswerTLN((prev) => {
+      const filtered = prev.filter((a) => a.questionId !== questionId);
+      return [...filtered, newAnswer];
+    });
+
+    // Emit socket
+    const payload = {
+      attemptId,
+      questionId,
+      answerContent: trimmed,
+      studentId: user.id,
+      type,
+      examId: id,
+      name: user.lastName + ' ' + user.firstName,
+    };
+    socket.emit('select_answer', payload);
+  };
+
   useEffect(() => {
-    if (timeLeft === 0 && isTimerRunning) {
-      alert('Hết giờ! Bài thi đã được nộp tự động.');
-      router.replace('home/');
+    const defaultValue =
+      answerTLN.find((a) => a.questionId === currentQuestion.id)
+        ?.answerContent || '';
+    setTlnInput(defaultValue);
+  }, [currentQuestion.id]);
+
+  useEffect(() => {
+    if (answers) {
+      setAnswerTN(answers.filter((answer) => answer.typeOfQuestion === 'TN'));
+      setAnswerTLN(answers.filter((answer) => answer.typeOfQuestion === 'TLN'));
+
+      const dsAnswers = {};
+      answers.forEach((answer) => {
+        if (answer.typeOfQuestion === 'DS' && answer.answerContent) {
+          try {
+            if (!answer.answerContent) return;
+            const parsed = JSON.parse(answer.answerContent);
+            dsAnswers[answer.questionId] = parsed;
+          } catch (err) {
+            console.error('Lỗi parse DS answerContent:', err);
+          }
+        }
+      });
+      setDsAnswers(dsAnswers);
     }
-  }, [timeLeft, isTimerRunning]);
+  }, [answers]);
 
-  // --- Sửa hàm xử lý chọn đáp án: sử dụng dispatch để cập nhật Redux ---
-  // Xử lý chọn đáp án cho TN
-  const handleSelectAnswer = (statementId) => {
-    dispatch(
-      setAnswer({ questionId: currentQuestion.id, answerValue: statementId }),
-    );
-  };
+  useEffect(() => {
+    answerTN?.map((answer) => {
+      if (answer.answerContent) {
+        addQuestion(answer.questionId);
+      }
+    });
+    answerTLN?.map((answer) => {
+      if (answer.answerContent) {
+        addQuestion(answer.questionId);
+      }
+    });
+    Object.keys(dsAnswers)?.forEach((questionId) => {
+      const answers = dsAnswers[questionId];
+      if (answers.length === 4) {
+        addQuestion(questionId);
+      }
+    });
+  }, [answerTN, answerTLN, dsAnswers]);
 
-  // Xử lý chọn Đúng/Sai cho DS
-  const handleSelectTrueFalse = (statementId, value) => {
-    dispatch(setAnswer({ statementId, answerValue: value }));
-  };
-  // Xử lý nhập đáp án cho TLN
-  const handleInputAnswer = (text) => {
-    dispatch(setAnswer({ questionId: currentQuestion.id, answerValue: text }));
-  };
+  useEffect(() => {
+    if (remainingTime <= 0) return handleAutoSubmit();
+    const interval = setInterval(() => {
+      setRemainingTime((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleAutoSubmit();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [remainingTime]);
 
-  // Điều hướng câu hỏi
-  const goToPrevious = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-    } else if (currentSectionIndex > 0) {
-      setCurrentSectionIndex(currentSectionIndex - 1);
-      setCurrentQuestionIndex(
-        sections[currentSectionIndex - 1].questions.length - 1,
-      );
+  useEffect(() => {
+    socket.once('exam_started', ({ attemptId, startTime }) => {
+      try {
+        if (exam?.testDuration && startTime) {
+          const start = new Date(startTime);
+          const now = new Date();
+          const elapsedSeconds = Math.floor((now - start) / 1000);
+          const totalSeconds = exam.testDuration * 60;
+          const remaining = Math.max(totalSeconds - elapsedSeconds, 0);
+          setRemainingTime(remaining);
+        }
+      } catch (err) {
+        console.error('Lỗi khi tính toán thời gian còn lại:', err);
+      }
+      if (attemptId) {
+        dispatch(fetchAnswersByAttempt(attemptId));
+      }
+      setIsStarted(true);
+      if (id) {
+        dispatch(fetchPublicQuestionsByExamId(id));
+      }
+      setAttemptId(attemptId);
+    });
+    return () => {
+      socket.off('exam_started');
+    };
+  }, []);
+
+  useEffect(() => {
+    socket.on('exam_submitted', ({ message }) => {
+      console.log('Bài thi đã được nộp:', message);
+      alert(message);
+      setSaveQuestion(new Set());
+      setErrorQuestion(new Set());
+      router.replace(`/exam/${id}/result`);
+    });
+    if (isStarted) {
+      socket.on('submit_error', ({ message }) => {
+        alert(message);
+      });
     }
-  };
 
-  const goToNext = () => {
-    if (currentQuestionIndex < currentSection.questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else if (currentSectionIndex < sections.length - 1) {
-      setCurrentSectionIndex(currentSectionIndex + 1);
-      setCurrentQuestionIndex(0);
-    }
-  };
+    socket.on('answer_saved', ({ questionId }) => {
+      addQuestion(questionId);
+      removeErrorQuestion(questionId);
+    });
 
-  // Kiểm tra điều kiện biên
-  const isFirstQuestion =
-    currentSectionIndex === 0 && currentQuestionIndex === 0;
-  const currentSection = sections[currentSectionIndex] || {
-    questions: [],
-    title: '',
-  };
-  const currentQuestion = currentSection.questions[currentQuestionIndex] || {
-    id: '',
-    content: '',
-    statements: [],
-  };
-  const isLastQuestion =
-    sections.length > 0 &&
-    currentSectionIndex === sections.length - 1 &&
-    currentQuestionIndex === currentSection.questions.length - 1;
+    socket.on('answer_error', ({ questionId, message }) => {
+      addErrorQuestion(questionId);
+      removeQuestion(questionId);
+    });
+
+    return () => {
+      socket.off('answer_saved');
+      socket.off('answer_error');
+      socket.off('exam_submitted');
+      socket.off('submit_error');
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log('Đã lưu câu hỏi:', Array.from(saveQuestion));
+    console.log('Đã lưu câu hỏi lỗi:', Array.from(errorQuestion));
+  }, [saveQuestion, errorQuestion]);
 
   return (
-    <View style={{ flex: 1 }}>
-      {/* Nút chuyển sang trang ExamOverview */}
-      <ScrollView style={styles.container}>
-        {!questions || questions.length === 0 ? (
-          <AppText>Đang tải câu hỏi...</AppText>
-        ) : (
-          <>
-            <View style={styles.headerContainer}>
-              {/* Tên đề */}
-              <AppText
-                style={styles.examName}
-                numberOfLines={2}
-                ellipsizeMode="tail"
-              >
-                {name.toUpperCase()}
-              </AppText>
-              <Timer duration={testDuration} style={styles.timer} />
-              <Button
-                icon="menu"
-                iconLibrary="Feather"
-                iconColor={colors.ink.darkest}
-                style={[
-                  {
-                    width: 'auto',
-                    height: 'auto',
-                    backgroundColor: 'transparent',
-                    marginTop: 3,
-                  },
-                ]}
-                onPress={() => setIsOverviewVisible(true)} // Mở overlay
-              />
+    <View style={styles.mainContainer}>
+      {!isStarted ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <Text style={{ fontSize: 20, marginBottom: 10 }}>
+            Bạn sẵn sàng bắt đầu bài thi?
+          </Text>
+          <Button
+            text="Bắt đầu làm bài"
+            onPress={handleStartExam}
+            style={{ width: '80%' }}
+          />
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={{ paddingBottom: 50 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Tên đề, thời gian, menu icon */}
+          <View style={styles.headerContainer}>
+            <AppText
+              style={styles.examName}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {exam?.name.toUpperCase()}
+            </AppText>
+            <Text style={styles.timer}>{formatTime(remainingTime)} phút</Text>
+            <Button
+              icon="menu"
+              iconLibrary="Feather"
+              iconColor={colors.ink.darkest}
+              style={[
+                {
+                  width: 'auto',
+                  height: 'auto',
+                  backgroundColor: 'transparent',
+                  marginTop: 3,
+                },
+              ]}
+              onPress={() => setIsOverviewVisible(true)} // Mở overlay
+            />
+          </View>
+
+          {/* Button chuyển câu */}
+          <View style={styles.navigationContainer}>
+            <Button
+              text="Câu trước"
+              style={[
+                styles.navButton,
+                isFirstQuestion && styles.disabledButton,
+              ]}
+              onPress={goToPrevious}
+              disabled={isFirstQuestion}
+            />
+            <Button
+              text="Câu tiếp theo"
+              style={[
+                styles.navButton,
+                isLastQuestion && styles.disabledButton,
+              ]}
+              onPress={goToNext}
+              disabled={isLastQuestion}
+            />
+          </View>
+
+          {/* Nội dung chính */}
+          <AppText style={styles.sectionTitle}>{currentSection?.title}</AppText>
+          <AppText style={styles.questionNumber}>
+            Câu {getQuestionNumber()} (ID {currentQuestion?.id}):
+          </AppText>
+          <AppText style={styles.questionContent}>
+            <Text>{currentQuestion?.content}</Text>/
+            {/* <LatexRenderer text={currentQuestion.content} /> */}
+          </AppText>
+          {currentSection?.type === 'TN' && (
+            <View>
+              {currentQuestion?.statements?.map((statement) => (
+                <TouchableOpacity
+                  key={statement.id}
+                  style={styles.optionContainer}
+                  onPress={() =>
+                    handleSelectAnswerTN(
+                      currentQuestion.id,
+                      statement.id,
+                      currentSection.type,
+                    )
+                  }
+                >
+                  <View style={styles.radioCircle}>
+                    {answerTN?.find(
+                      (answer) => answer.questionId === currentQuestion.id,
+                    )?.answerContent == statement.id && (
+                      <View style={styles.selectedCircle} />
+                    )}
+                  </View>
+                  <AppText style={styles.optionText}>
+                    {statement.content}
+                  </AppText>
+                </TouchableOpacity>
+              ))}
             </View>
+          )}
 
-            {/* Nút điều hướng */}
-            <View style={styles.navigationContainer}>
-              <Button
-                text="Câu trước"
-                style={[
-                  styles.navButton,
-                  isFirstQuestion && styles.disabledButton,
-                ]}
-                onPress={goToPrevious}
-                disabled={isFirstQuestion}
-              />
-              <Button
-                text="Câu tiếp theo"
-                style={[
-                  styles.navButton,
-                  isLastQuestion && styles.disabledButton,
-                ]}
-                onPress={goToNext}
-                disabled={isLastQuestion}
-              />
-            </View>
+          {currentSection.type === 'DS' && (
+            <View style={styles.dsContainer}>
+              {currentQuestion.statements.map((statement, index) => {
+                const currentAnswer =
+                  dsAnswers[currentQuestion.id]?.find(
+                    (a) => a.statementId === statement.id,
+                  ) || {};
 
-            {/* Hiển thị tên phần */}
-            <AppText style={styles.sectionTitle}>
-              {currentSection.title}
-            </AppText>
-            {/* Hiển thị số thứ tự câu */}
-            <AppText style={styles.questionNumber}>
-              Câu {getQuestionNumber()} (ID {currentQuestion.id}):
-            </AppText>
-            {/* Hiển thị đề bài */}
-            <AppText style={styles.questionContent}>
-              <Text>{currentQuestion.content}</Text>/
-            </AppText>
-
-            {/* Hiển thị tùy theo loại câu hỏi */}
-            {currentSection.type === 'TN' && (
-              <View>
-                {currentQuestion.statements.map((statement) => (
-                  <TouchableOpacity
-                    key={statement.id}
-                    style={styles.optionContainer}
-                    onPress={() => handleSelectAnswer(statement.id)}
-                  >
-                    <View style={styles.radioCircle}>
-                      {answers[currentQuestion.id] === statement.id && (
-                        <View style={styles.selectedCircle} />
-                      )}
-                    </View>
-                    <AppText style={styles.optionText}>
-                      {statement.content}
-                    </AppText>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-
-            {currentSection.type === 'DS' && (
-              <View style={styles.dsContainer}>
-                {currentQuestion.statements.map((statement, index) => (
+                return (
                   <View key={statement.id} style={styles.trueFalseContainer}>
-                    <AppText
-                      style={styles.statementText}
-                    >{`${index + 1}. ${statement.content}`}</AppText>
+                    <AppText style={styles.statementText}>
+                      {`${index + 1}. ${statement.content}`}
+                    </AppText>
                     <View style={styles.trueFalseButtons}>
                       <Button
                         text="Đúng"
                         textStyle={[
-                          answers[statement.id] !== true && styles.buttonText,
+                          currentAnswer.answer !== true && styles.buttonText,
                         ]}
                         style={[
                           styles.trueFalseButton,
-                          answers[statement.id] === true &&
+                          currentAnswer.answer === true &&
                             styles.selectedButton,
                         ]}
                         onPress={() =>
-                          handleSelectTrueFalse(statement.id, true)
+                          handleSelectAnswerDS(
+                            currentQuestion.id,
+                            statement.id,
+                            true,
+                          )
                         }
                       />
                       <Button
                         text="Sai"
                         textStyle={[
-                          answers[statement.id] !== false && styles.buttonText,
+                          currentAnswer.answer !== false && styles.buttonText,
                         ]}
                         style={[
                           styles.trueFalseButton,
-                          answers[statement.id] === false &&
+                          currentAnswer.answer === false &&
                             styles.selectedButton,
                         ]}
                         onPress={() =>
-                          handleSelectTrueFalse(statement.id, false)
+                          handleSelectAnswerDS(
+                            currentQuestion.id,
+                            statement.id,
+                            false,
+                          )
                         }
                       />
                     </View>
                   </View>
-                ))}
-              </View>
-            )}
+                );
+              })}
+            </View>
+          )}
+          {currentSection.type === 'TLN' && (
+            <TextInput
+              style={styles.input}
+              placeholder="Nhập đáp án"
+              value={tlnInput}
+              onChangeText={(text) => {
+                setTlnInput(text); // cập nhật state
+              }}
+              onBlur={() => {
+                handleSelectAnswerTLN(
+                  currentQuestion.id,
+                  tlnInput,
+                  currentSection.type,
+                );
+              }}
+            />
+          )}
+        </ScrollView>
+      )}
 
-            {currentSection.type === 'TLN' && (
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập đáp án"
-                value={answers[currentQuestion.id] || ''}
-                onChangeText={handleInputAnswer}
-              />
-            )}
-          </>
-        )}
-      </ScrollView>
-
-      {/* ExamOverviewOverlay */}
       <ExamOverviewOverlay
         visible={isOverviewVisible}
         sections={sections}
         answers={answers}
+        remainingTime={formatTime(remainingTime)}
         currentSectionIndex={currentSectionIndex}
         currentQuestionIndex={currentQuestionIndex}
         onSelectQuestion={handleSelectQuestion}
         onClose={() => setIsOverviewVisible(false)}
+        handleSubmit={handleSubmit}
+        saveQuestion={saveQuestion}
+        errorQuestion={errorQuestion} // Truyền vào danh sách câu hỏi đã lưu
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+    // justifyContent: 'center',
+    // alignItems: 'center'
+  },
   container: {
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -337,6 +609,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: colors.ink.darkest,
     textAlign: 'left',
+    lineHeight: 30,
   },
   navigationContainer: {
     flexDirection: 'row',
@@ -417,6 +690,9 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: colors.ink.darker,
+  },
+  timer: {
+    fontSize: 16,
   },
   input: {
     borderWidth: 1,
