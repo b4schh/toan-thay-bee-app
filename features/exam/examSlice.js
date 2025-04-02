@@ -28,49 +28,22 @@ export const fetchPublicExams = createAsyncThunk(
 export const fetchExamById = createAsyncThunk(
     "exams/fetchExamById",
     async (id, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.getExamByIdAPI, id, () => { }, true, false);
+        return await apiHandler(dispatch, examApi.getExamById, id, () => { }, true, false);
     }
 );
 
 export const fetchPublicExamById = createAsyncThunk(
     "exams/fetchPublicExamById",
-    async (id, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.getExamPublic, id, () => { }, true, false);
+    async (data, { dispatch }) => {
+        return await apiHandler(dispatch, examApi.getExamPublic, data, () => { }, true, false);
     }
 );
 
-export const putExam = createAsyncThunk(
-    "exams/putExam",
-    async ({ examId, examData }, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.putExamAPI, { examId, examData }, () => { }, true, false);
-    }
-);
-
-export const putImageExam = createAsyncThunk(
-    "exams/putImageExam",
-    async ({ examId, examImage }, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.putImageExamAPI, { examId, examImage }, () => { }, true, false);
-    }
-);
-
-export const postExam = createAsyncThunk(
-    "exams/postExam",
-    async ({ examData, examImage, questions, questionImages, statementImages }, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.postExamAPI, { examData, examImage, questions, questionImages, statementImages }, () => { }, true, false);
-    }
-);
 
 export const saveExamForUser = createAsyncThunk(
     "exams/saveExamForUser",
     async ({ examId }, { dispatch }) => {
         return await apiHandler(dispatch, examApi.saveExamForUserAPI, { examId }, () => { }, true, false);
-    }
-);
-
-export const deleteExam = createAsyncThunk(
-    "exams/deleteExam",
-    async (id, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.deleteExamAPI, id, () => { }, true, false);
     }
 );
 

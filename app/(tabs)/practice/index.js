@@ -19,7 +19,8 @@ import TabNavigation from '../../../components/TabNavigation';
 import CustomModal from '../../../components/CustomModal';
 import colors from '../../../constants/colors';
 import { fetchPublicExams } from '../../../features/exam/examSlice';
-import LoadingOverlay from '../../../components/LoadingOverlay';
+import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
+
 
 const useFilteredExam = (exams, grade) => {
   return useMemo(() => {

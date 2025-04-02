@@ -17,7 +17,7 @@ import TextInputField from '../../components/input-field/TextInputField';
 import Checkbox from '../../components/Checkbox';
 import AppText from '../../components/AppText';
 import CustomAlert from '../../components/CustomAlert';
-import LoadingOverlay from '../../components/LoadingOverlay';
+import LoadingOverlay from '../../components/overlay/LoadingOverlay';
 import colors from '../../constants/colors';
 
 // Import action login được tạo từ authSlice (sử dụng createAsyncThunk)

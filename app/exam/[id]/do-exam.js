@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
@@ -16,7 +17,7 @@ import { setAnswer } from '../../../features/answer/answerSlice';
 import LatexRenderer from '../../../components/latex/LatexRenderer';
 import AppText from '../../../components/AppText';
 import Button from '../../../components/Button';
-import ExamOverviewOverlay from '../../../components/ExamOverviewOverlay';
+import ExamOverviewOverlay from '../../../components/overlay/ExamOverviewOverlay';
 import Timer from '../../../components/Timer';
 import colors from '../../../constants/colors';
 import socket from '../../../services/socket';
@@ -158,6 +159,11 @@ export default function DoExamScreen() {
     } else {
       socket.emit("join_exam", { studentId: user.id, examId: id });
     }
+
+    socket.once("exam_error", ({ message }) => {
+      Alert.alert("Lỗi", message);
+      router.replace('home/');
+  });
   };
 
   const handleSelectAnswerTN = (questionId, statementId, type) => {
@@ -364,14 +370,13 @@ export default function DoExamScreen() {
       alert(message);
       setSaveQuestion(new Set());
       setErrorQuestion(new Set());
-      router.replace('home/');
+      router.replace(`/exam/${attemptId}/result`);
     });
     if (isStarted) {
       socket.on("submit_error", ({ message }) => {
         alert(message);
       });
     }
-
 
     socket.on("answer_saved", ({ questionId }) => {
       addQuestion(questionId);

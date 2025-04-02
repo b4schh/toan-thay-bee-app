@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { useSelector } from 'react-redux';
-import colors from '../constants/colors';
+import colors from '../../constants/colors';
 import Feather from '@expo/vector-icons/Feather';
-import AppText from './AppText';
-import Button from './Button';
-import CustomModal from './CustomModal';
+import AppText from '../AppText';
+import Button from '../Button';
+import CustomModal from '../CustomModal';
 import { useRouter } from 'expo-router';
 
 export default function ExamOverviewOverlay({

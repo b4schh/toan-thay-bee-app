@@ -19,7 +19,8 @@ import CustomModal from '../../../components/CustomModal';
 import colors from '../../../constants/colors';
 import { fetchClassesByUser, joinClass } from '../../../features/class/classSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import LoadingOverlay from '../../../components/LoadingOverlay';
+import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
+
 
 // Hook lọc dữ liệu
 const useFilteredClasses = (classes, status) => {

@@ -6,6 +6,7 @@ import examReducer from '../features/exam/examSlice';
 import questionReducer from '../features/question/questionSlice';
 import answerReducer from '../features/answer/answerSlice';
 import stateReducer from '../features/state/stateApiSlice';
+import attemptReducer from '../features/attempt/attemptSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,5 +17,6 @@ export const store = configureStore({
     answers: answerReducer,
     filter: filterReducer,
     states: stateReducer,
+    attempts: attemptReducer,
   },
 });

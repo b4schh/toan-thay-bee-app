@@ -5,7 +5,7 @@ import applyRequestInterceptor from './requestInterceptor';
 import applyResponseInterceptor from './responseInterceptor';
 
 // Sử dụng biến môi trường hoặc đặt baseURL mặc định phù hợp với backend của bạn
-const baseURL = 'http://192.168.147.164:3000/api';
+const baseURL = 'http://192.168.0.106:3000/api';
 
 const api = axios.create({
   baseURL,

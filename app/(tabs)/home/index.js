@@ -5,7 +5,8 @@ import ScrollableCard from '../../../components/ScrollableCard';
 import Button from '../../../components/Button';
 import AppText from '../../../components/AppText';
 import TabNavigation from '../../../components/TabNavigation';
-import LoadingOverlay from '../../../components/LoadingOverlay';
+import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
+
 import colors from '../../../constants/colors';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchClassesByUser } from '../../../features/class/classSlice';

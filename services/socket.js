@@ -1,7 +1,7 @@
 // socket.js
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = 'http://192.168.147.164:3000'; // IP backend máy bạn
+const SOCKET_URL = 'http://192.168.0.106:3000'; // IP backend máy bạn
 
 const socket = io(SOCKET_URL, {
     transports: ['websocket'], // Quan trọng trên React Native
