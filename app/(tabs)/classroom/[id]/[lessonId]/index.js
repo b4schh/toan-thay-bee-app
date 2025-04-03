@@ -22,8 +22,6 @@ const LessonDetail = () => {
   const [openSection, setOpenSection] = useState(null);
   const lesson = classDetail.lessons.find((lesson) => lesson.id == lessonId);
 
-  // console.log("Chi tiet lop:", lesson.learningItems);
-
   const router = useRouter();
   const toggleItem = (id) => {
     setOpenItems((prev) =>

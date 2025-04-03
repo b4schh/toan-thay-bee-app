@@ -1,125 +1,159 @@
-import { View, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Linking,
+  TouchableOpacity,
+  FlatList,
+  ScrollView,
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import colors from '../../../../constants/colors';
 import AppText from '../../../../components/AppText';
 import Button from '../../../../components/button/Button';
-import { useDispatch } from 'react-redux';
-import { fetchPublicQuestionsByExamId } from '../../../../features/question/questionSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchPublicExamById } from '../../../../features/exam/examSlice';
+import { useEffect } from 'react';
+import { fetchAttemptByStudentId } from '../../../../features/attempt/attemptSlice';
 
 export default function ExamDetailScreen() {
-  const {
-    id,
-    name,
-    createdAt,
-    isDone,
-    testDuration,
-    passRate,
-  } = useLocalSearchParams();
-
-  const examHistory = {
-    examName: 'Đề thi Toán học',
-    history: [
-      { attempt: 1, score: 85, duration: '45', submitTime: '08:30' },
-      { attempt: 2, score: 90, duration: '40', submitTime: '09:40' },
-      { attempt: 3, score: 88, duration: '35', submitTime: '10:35' },
-    ],
-  };
+  const { id } = useLocalSearchParams();
+  const { exam } = useSelector((state) => state.exams);
 
   const router = useRouter();
   const dispatch = useDispatch();
 
+  const { attempts } = useSelector((state) => state.attempts);
+
+  useEffect(() => {
+    if (!exam) return;
+    dispatch(fetchAttemptByStudentId({ examId: exam?.id }));
+  }, [dispatch, exam]);
+
+  useEffect(() => {
+    if (!id) return;
+    dispatch(fetchPublicExamById({ id }));
+  }, [dispatch, id]);
+
+  useEffect(() => {
+    console.log('exam', exam);
+  }, [exam]);
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => {
-            if (router.canGoBack()) {
-              router.replace('/practice'); // Quay lại nếu có lịch sử
-            } else {
-              router.replace('/practice'); // Nếu không có lịch sử, quay về danh sách lớp học
-            }
-          }}
+          onPress={() => router.replace('/practice')}
         >
           <Feather name="arrow-left" size={20} color={colors.ink.darkest} />
         </TouchableOpacity>
-        <AppText style={styles.headerText}>{name}</AppText>
+        <AppText style={styles.headerText}>{exam?.name}</AppText>
       </View>
 
       <View style={styles.infoCard}>
-        <AppText style={styles.nameCard}>{name}</AppText>
+        <AppText style={styles.nameCard}>{exam?.name}</AppText>
         <View style={styles.bodyTextContainer}>
           <View style={styles.rowText}>
             <AppText style={styles.bodyText}>Ngày đăng</AppText>
-            <AppText style={styles.bodyText}>{createdAt}</AppText>
-          </View>
-          <View style={styles.rowText}>
-            <AppText style={styles.bodyText}>Hạn chót</AppText>
-            <AppText style={styles.bodyText}>Không có</AppText>
+            <AppText style={styles.bodyText}>
+              {new Date(exam?.createdAt).toLocaleDateString('vi-VN')}
+            </AppText>
           </View>
           <View style={styles.rowText}>
             <AppText style={styles.bodyText}>Trạng thái</AppText>
             <AppText style={styles.bodyText}>
-              {isDone ? 'Đã làm' : 'Chưa làm'}
+              {exam?.isDone ? 'Đã làm' : 'Chưa làm'}
             </AppText>
           </View>
           <View style={styles.rowText}>
             <AppText style={styles.bodyText}>Thời gian làm bài</AppText>
             <AppText style={styles.bodyText}>
-              {testDuration ? `${testDuration} phút` : 'Không có'}
+              {exam?.testDuration ? `${exam?.testDuration} phút` : 'Không có'}
             </AppText>
           </View>
           <View style={styles.rowText}>
             <AppText style={styles.bodyText}>Tỉ lệ đạt</AppText>
             <AppText style={styles.bodyText}>
-              {passRate ? `${passRate}%` : 'Không có'}
+              {exam?.passRate ? `${exam?.passRate}%` : 'Không có'}
             </AppText>
           </View>
+
+          {exam?.isDone && (
+            <View style={styles.rowText}>
+              <AppText style={styles.bodyText}>Link lời giải</AppText>
+              {exam?.solutionUrl ? (
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(exam?.solutionUrl)}
+                >
+                  <AppText
+                    style={[
+                      styles.bodyText,
+                      { color: 'blue', textDecorationLine: 'underline' },
+                    ]}
+                  >
+                    Bấm vào đây để xem
+                  </AppText>
+                </TouchableOpacity>
+              ) : (
+                <AppText style={styles.bodyText}>Không có</AppText>
+              )}
+            </View>
+          )}
         </View>
         <Button
           text={'Bắt đầu làm bài'}
           onPress={() => {
             router.push({
               pathname: `/exam/${id}/do-exam`,
-              params: {
-                name: name,
-              },
             });
           }}
         />
       </View>
 
-      <AppText style={{fontSize: 20, fontFamily: 'Inter-Medium'}}>Lịch sử làm bài</AppText>
+      <AppText style={{ fontSize: 20, fontFamily: 'Inter-Medium' }}>
+        Lịch sử làm bài
+      </AppText>
       <View style={styles.tableContainer}>
         <View style={styles.tableBody}>
           <View style={[styles.row, styles.headerRow]}>
-            <AppText style={styles.headerCell}>Lần</AppText>
-            <AppText style={styles.headerCell}>Điểm</AppText>
-            <AppText style={styles.headerCell}>Thời gian làm</AppText>
-            <AppText style={styles.headerCell}>Thời gian nộp</AppText>
+            <AppText style={[styles.headerCell, styles.idCell]}>#</AppText>
+            <AppText style={[styles.headerCell, styles.contentCell]}>Điểm</AppText>
+            <AppText style={[styles.headerCell, styles.contentCell]}>Thời gian làm</AppText>
+            <AppText style={[styles.headerCell, styles.contentCell]}>Thời gian nộp</AppText>
           </View>
-          {isDone ? (<FlatList
-            data={examHistory.history}
-            keyExtractor={(item) => item.attempt.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.row}>
-                <AppText style={styles.cell}>{item.attempt}</AppText>
-                <AppText style={styles.cell}>{item.score}</AppText>
-                <AppText style={styles.cell}>{item.duration}</AppText>
-                <AppText style={styles.cell}>{item.submitTime}</AppText>
-              </View>
-            )}
-          />) : (<AppText>Không có lịch sử làm bài</AppText>)}
+          {exam?.isDone ? (
+            <FlatList
+              data={attempts}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push(`/exam/${item.id}/result`);
+                  }}
+                >
+                  <View style={styles.row}>
+                    <AppText style={[styles.cell, styles.idCell]}>{item.id}</AppText>
+                    <AppText style={[styles.cell, styles.contentCell]}>{item.score}</AppText>
+                    <AppText style={[styles.cell, styles.contentCell]}>{item.duration}</AppText>
+                    <AppText style={[styles.cell, styles.contentCell]}>
+                      {new Date(item.endTime).toLocaleString('vi-VN')}
+                    </AppText>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          ) : (
+            <AppText style={{textAlign: 'center', marginVertical: 8}}>Không có lịch sử làm bài</AppText>
+          )}
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: colors.sky.lightest,
     padding: 20,
     gap: 10,
@@ -162,34 +196,41 @@ const styles = StyleSheet.create({
     color: colors.ink.darker,
     fontFamily: 'Inter-Medium',
   },
+  // Style cho bảng
   tableContainer: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#fff",
-    borderRadius: 12
+    padding: 12,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginTop: 12,
   },
   tableBody: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: '#ccc',
     borderRadius: 5,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   row: {
-    flexDirection: "row",
+    flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: '#ccc',
     padding: 10,
   },
   headerRow: {
-    backgroundColor: "#f2f2f2",
+    backgroundColor: '#f2f2f2',
   },
   headerCell: {
     flex: 1,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   cell: {
     flex: 1,
-    textAlign: "center",
+    textAlign: 'center',
+  },
+  idCell: {
+    flex: 0.5,
+  },
+  contentCell: {
+    flex: 1.5,
   },
 });

@@ -20,21 +20,30 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           pages.push(
             <View key={`ellipsis-${i}`} style={styles.ellipsis}>
               <AppText style={styles.ellipsisText}>...</AppText>
-            </View>
+            </View>,
           );
         }
         pages.push(
           <TouchableOpacity
             key={i}
-            onPress={() => onPageChange(i)}
-            style={[styles.pageButton, currentPage === i && styles.activePageButton]}
+            onPress={() => {
+              if (i == currentPage) return;
+              onPageChange(i);
+            }}
+            style={[
+              styles.pageButton,
+              currentPage === i && styles.activePageButton,
+            ]}
           >
             <AppText
-              style={[styles.pageText, currentPage === i && styles.activePageText]}
+              style={[
+                styles.pageText,
+                currentPage === i && styles.activePageText,
+              ]}
             >
               {i}
             </AppText>
-          </TouchableOpacity>
+          </TouchableOpacity>,
         );
       }
     }
@@ -60,7 +69,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       <TouchableOpacity
         onPress={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        style={[styles.arrowButton, currentPage === totalPages && styles.disabledButton]}
+        style={[
+          styles.arrowButton,
+          currentPage === totalPages && styles.disabledButton,
+        ]}
       >
         <FontAwesomeIcon
           name="chevron-right"

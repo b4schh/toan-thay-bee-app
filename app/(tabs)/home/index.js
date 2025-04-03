@@ -53,12 +53,6 @@ export default function HomeScreen() {
     );
   }, [classes]);
 
-  useEffect(() => console.log('📌 Danh sách lớp học:', classes), [classes]);
-  useEffect(
-    () => console.log('📌 Danh sách lớp học đã tham gia:', filteredClasses),
-    [filteredClasses],
-  );
-
   const TabContent = useMemo(
     () => ({
       // pending_assignments: (
@@ -76,7 +70,6 @@ export default function HomeScreen() {
   );
 
   const renderClassItem = useCallback(({ item }) => {
-    console.log('📌 Render lớp học:', item);
     return (
       <ClassCard
         name={item.name}
@@ -85,8 +78,6 @@ export default function HomeScreen() {
         lessonCount={item.lessonCount}
         studentCount={item.studentCount}
         onPressJoin={() => {
-          console.log('Vào lớp có id:', item.id);
-
           router.replace({
             pathname: `/classroom/${item.class_code}/`,
             params: {
@@ -189,7 +180,7 @@ export default function HomeScreen() {
             {/* Nội dung hiển thị bên dưới */}
             <View style={[styles.contentContainer]}>
               {TabContent[selectedTab] || (
-                <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
+                <AppText style={styles.contentText}>Chưa xử lý</AppText>
               )}
             </View>
           </View>

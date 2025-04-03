@@ -1,14 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import {
-  View,
-  TextInput,
-  Image,
-  StyleSheet,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
-} from 'react-native';
+import { View, Image, StyleSheet, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import ExamCard from '../../../components/card/ExamCard';
@@ -23,36 +14,24 @@ import colors from '../../../constants/colors';
 import { fetchPublicExams } from '../../../features/exam/examSlice';
 import { fetchCodesByType } from '../../../features/code/codeSlice';
 
-// const useFilteredExam = (exams, grade) => {
-//   return useMemo(() => {
-//     if (grade === 'all') return exams;
-//     return exams.filter((exam) => exam.class === grade.replace('grade_', ''));
-//   }, [exams, grade]);
-// };
-
-// Thêm hàm debounce ở đầu file
-const debounce = (func, wait) => {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
-
 // Thêm component EmptyView
-const EmptyView = ({ onRefresh, isLoading, message }) => (
+const EmptyView = ({ onRefresh, isLoading, error, message }) => (
   <View style={styles.emptyContainer}>
     <AppText style={styles.emptyText}>
-      {isLoading ? 'Đang tải...' : message}
+      {isLoading
+        ? 'Đang tải...'
+        : error
+          ? 'Tải dữ liệu không thành công'
+          : message}
     </AppText>
-    {!isLoading && (
-      <Button
-        text="Tải lại"
-        onPress={onRefresh}
-        style={styles.refreshButton}
-        loading={isLoading}
-      />
-    )}
+    {!isLoading &&
+      (error ? (
+        <Button
+          text="Tải lại"
+          onPress={onRefresh}
+          style={styles.refreshButton}
+        />
+      ) : null)}
   </View>
 );
 
@@ -69,67 +48,36 @@ export default function PracticeScreen() {
   const examScreen = screens.exam;
   const { search, currentPage, limit, totalItems, sortOrder } = examScreen;
 
-  // const { code } = useSelector((state) => state.code);
+  const { codes } = useSelector((state) => state.codes);
 
-  useEffect;
-  console.log(`Search Exam: ${search}
-    Current Page: ${currentPage}
-    Limit: ${limit}
-    Total Items: ${totalItems}
-    Sort Order: ${sortOrder}`);
+  useEffect(() => {
+    dispatch(fetchCodesByType(['grade', 'exam type', 'chapter']));
+  }, [dispatch]);
 
   // Thêm state và options cho filters
   const [filterDialogVisible, setFilterDialogVisible] = useState(false);
-  const [filters, setFilters] = useState([]);
-
-  const classOptions = [
-    { code: '10', description: 'Lớp 10' },
-    { code: '11', description: 'Lớp 11' },
-    { code: '12', description: 'Lớp 12' },
-  ];
-
-  const typeOptions = [
-    { code: 'midterm', description: 'Giữa kỳ' },
-    { code: 'final', description: 'Cuối kỳ' },
-    { code: 'practice', description: 'Luyện tập' },
-  ];
-
-  const chapterOptions = [
-    { code: '1', description: 'Chương 1' },
-    { code: '2', description: 'Chương 2' },
-    { code: '3', description: 'Chương 3' },
-    // Thêm các chương khác
-  ];
+  const [classFilters, setClassFilters] = useState(null);
+  const [chapterFilters, setChapterFilters] = useState(null);
+  const [typeOfExamFilters, setTypeOfExamFilters] = useState(null);
 
   // Thêm hàm xử lý áp dụng filter
   const handleApplyFilters = () => {
-    // TODO: Xử lý logic filter ở đây
-    console.log('Applied filters:', filters);
+    dispatch(
+      fetchPublicExams({
+        search,
+        currentPage: 1, // Reset về trang 1 khi tìm kiếm
+        limit,
+        sortOrder,
+        typeOfExam: [typeOfExamFilters],
+        class: classFilters,
+        chapter: [chapterFilters],
+      }),
+    );
     setFilterDialogVisible(false);
   };
 
-  const handleFilterChange = (code, type) => {
-    if (!code) {
-      // Remove filter if code is empty
-      setFilters(filters.filter((f) => f.type !== type));
-      return;
-    }
-
-    // Check if filter type already exists
-    const filterIndex = filters.findIndex((f) => f.type === type);
-
-    if (filterIndex >= 0) {
-      // Update existing filter
-      const newFilters = [...filters];
-      newFilters[filterIndex] = { type, code };
-      setFilters(newFilters);
-    } else {
-      // Add new filter
-      setFilters([...filters, { type, code }]);
-    }
-  };
-
   // Thêm hàm refresh data
+  // Cập nhật hàm handleRefresh
   const handleRefresh = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -137,48 +85,56 @@ export default function PracticeScreen() {
       dispatch(
         fetchPublicExams({
           search,
-          currentPage: 1, // Reset về trang 1 khi tìm kiếm
+          currentPage: 1,
           limit,
           sortOrder,
         }),
       );
     } catch (err) {
-      setError('Không thể tải dữ liệu. Vui lòng thử lại.');
+      setError('Không thể tải dữ liệu');
     } finally {
       setIsLoading(false);
     }
   }, [search, currentPage, limit]);
 
-  // Thêm useEffect với debounce để xử lý tìm kiếm
+  // Thêm useEffect để fetch data lần đầu
+  // useEffect(() => {
+  //   dispatch(
+  //     fetchPublicExams({
+  //       search,
+  //       currentPage: 1, // Reset về trang 1 khi tìm kiếm
+  //       limit,
+  //       sortOrder,
+  //       typeOfExam: [typeOfExamFilters],
+  //       class: classFilters,
+  //       chapter: [chapterFilters],
+  //     }),
+  //   );
+  // }, [search, limit, sortOrder]);
+
+  // Thêm useEffect để fetch data lần đầu
   useEffect(() => {
-    const fetchData = debounce(() => {
-      if (
-        search !== undefined &&
-        currentPage !== undefined &&
-        limit !== undefined &&
-        sortOrder !== undefined
-      ) {
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
         dispatch(
           fetchPublicExams({
             search,
-            currentPage: 1, // Reset về trang 1 khi tìm kiếm
+            currentPage: 1,
             limit,
             sortOrder,
           }),
         );
+      } catch (err) {
+        setError('Không thể tải dữ liệu');
+      } finally {
+        setIsLoading(false);
       }
-    }, 500); // Đợi 500ms sau khi người dùng ngừng gõ
+    };
 
     fetchData();
-
-    return () => {
-      clearTimeout(fetchData);
-    };
-  }, [search, limit, sortOrder]);
-
-  useEffect(() => {
-    console.log('Exams:', exams);
-  }, [exams]);
+  }, []);
 
   const renderExamItem = useCallback(
     ({ item }) => (
@@ -216,6 +172,7 @@ export default function PracticeScreen() {
     },
     [search, limit, sortOrder],
   );
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -243,7 +200,11 @@ export default function PracticeScreen() {
         actions={[
           {
             text: 'Đặt lại',
-            onPress: () => setFilters([]),
+            onPress: () => {
+              setClassFilters(null);
+              setChapterFilters(null);
+              setTypeOfExamFilters(null);
+            },
             style: styles.resetButton,
             textStyle: styles.resetButtonText,
           },
@@ -257,29 +218,23 @@ export default function PracticeScreen() {
         <View style={styles.filterContent}>
           <Dropdown
             label="Lớp"
-            options={classOptions}
-            value={
-              filters.find((filter) => filter.type === 'class')?.code || ''
-            }
-            onChange={(code) => handleFilterChange(code, 'class')}
+            options={codes['grade']}
+            value={classFilters}
+            onChange={(code) => setClassFilters(code)}
             placeholder="Chọn lớp"
           />
           <Dropdown
             label="Loại đề thi"
-            options={typeOptions}
-            value={
-              filters.find((filter) => filter.type === 'typeOfExam')?.code || ''
-            }
-            onChange={(code) => handleFilterChange(code, 'typeOfExam')}
+            options={codes['exam type']}
+            value={typeOfExamFilters}
+            onChange={(code) => setTypeOfExamFilters(code)}
             placeholder="Chọn loại đề thi"
           />
           <Dropdown
             label="Chương"
-            options={chapterOptions}
-            value={
-              filters.find((filter) => filter.type === 'chapter')?.code || ''
-            }
-            onChange={(code) => handleFilterChange(code, 'chapter')}
+            options={codes['chapter']}
+            value={chapterFilters}
+            onChange={(code) => setChapterFilters(code)}
             placeholder="Chọn chương"
           />
         </View>
@@ -296,7 +251,8 @@ export default function PracticeScreen() {
           <EmptyView
             onRefresh={handleRefresh}
             isLoading={isLoading}
-            message={search ? 'Không tìm thấy đề thi' : 'Chưa có đề thi nào'}
+            error={error}
+            message="Không có đề thi"
           />
         }
         ListFooterComponent={
@@ -315,6 +271,7 @@ export default function PracticeScreen() {
         refreshing={isLoading}
         onRefresh={handleRefresh}
       />
+
       {/* Overlay loading mờ (hiển thị nếu loading=true) */}
       {loading && <LoadingOverlay />}
     </View>

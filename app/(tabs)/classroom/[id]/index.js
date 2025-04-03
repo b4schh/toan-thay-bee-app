@@ -20,20 +20,16 @@ export default function ClassroomIntro() {
   const class_code = useLocalSearchParams().id;
 
   useEffect(() => {
-    console.log('Class ID:', class_code);
-
     if (class_code) {
       dispatch(fetchLessonLearningItemByClassId({ class_code }));
     }
   }, [class_code]);
   const { classDetail } = useSelector((state) => state.classes);
-
-  useEffect(() => console.log('Lessons:', classDetail), [classDetail]);
-
+  
   return (
     <View style={{ flex: 1 }}>
-      <LoadingOverlay/>
-      
+      <LoadingOverlay />
+
       {/* Nút quay lại */}
       <TouchableOpacity
         style={styles.backButton}
@@ -45,10 +41,15 @@ export default function ClassroomIntro() {
       </TouchableOpacity>
 
       {/* Slideshow */}
-      <Slideshow images={[]} />
+      <Slideshow
+        images={classDetail?.slide?.slideImages?.map((img) => img.imageUrl)}
+      />
 
       <ScrollableCard contentStyle={styles.contentStyle}>
         <AppText style={styles.title}>{classDetail?.name}</AppText>
+        <AppText style={{ fontSize: 18, fontFamily: 'Inter-Medium' }}>
+          Mã lớp học: {classDetail?.class_code}
+        </AppText>
 
         <View style={styles.membersContainer}>
           <FontAwesomeIcon name="user" size={16} color={colors.sky.dark} />

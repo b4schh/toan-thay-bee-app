@@ -1,6 +1,6 @@
-import React, { useState, memo, useEffect, useCallback, useRef } from "react";
-import { View, TextInput, StyleSheet, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useState, memo, useEffect, useCallback, useRef } from 'react';
+import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { setScreenSearch } from '../features/filter/filterSlice';
 import colors from '../constants/colors';
@@ -25,57 +25,50 @@ const SearchBar = memo(({ placeholder, screen }) => {
     };
   }, []);
 
-  const handleSearch = useCallback((text) => {
-    setSearchText(text);
-    
-    // Clear previous timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    // Set new timeout
-    timeoutRef.current = setTimeout(() => {
-      dispatch(setScreenSearch({
-        screen,
-        search: text
-      }));
-    }, 500);
-  }, [dispatch, screen]);
+  const handleSearch = (text) => setSearchText(text);
 
   const handleClear = useCallback(() => {
     setSearchText('');
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    dispatch(setScreenSearch({
-      screen,
-      search: ''
-    }));
+    dispatch(
+      setScreenSearch({
+        screen,
+        search: '',
+      }),
+    );
   }, [dispatch, screen]);
+
+  const handleBlur = useCallback(() => {
+    dispatch(
+      setScreenSearch({
+        screen,
+        search: searchText.trim(),
+      }),
+    );
+  }, [dispatch, screen, searchText]);
 
   return (
     <View style={styles.container}>
-      <Ionicons 
-        name="search" 
-        size={20} 
-        color={colors.ink.darkest} 
-        style={styles.icon} 
+      <Ionicons
+        name="search"
+        size={20}
+        color={colors.ink.darkest}
+        style={styles.icon}
       />
       <TextInput
         style={styles.input}
         placeholder={placeholder}
         placeholderTextColor={colors.ink.light}
         value={searchText}
-        onChangeText={handleSearch}
+        onChangeText={(text) => handleSearch(text)}
+        onBlur={handleBlur}
         returnKeyType="search"
       />
       {searchText ? (
         <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
-          <Ionicons 
-            name="close-circle" 
-            size={20} 
-            color={colors.ink.light} 
-          />
+          <Ionicons name="close-circle" size={20} color={colors.ink.light} />
         </TouchableOpacity>
       ) : null}
     </View>
@@ -84,9 +77,9 @@ const SearchBar = memo(({ placeholder, screen }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
+    flexDirection: 'row',
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
     height: 44,
     paddingHorizontal: 12,
     borderRadius: 99,
@@ -110,7 +103,7 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 4,
-  }
+  },
 });
 
 // Add display name for debugging

@@ -103,7 +103,7 @@ const ClassCard = ({
               text="Vào học"
               style={[styles.buttonBase, buttonStyle]}
               textStyle={styles.buttonText}
-              onPress={onPressJoin || (() => console.log('Vào học'))}
+              onPress={onPressJoin}
             />
             {variant === 'large' && (
               <View style={styles.membersContainer}>

@@ -1,6 +1,7 @@
 export default {
   primary: '#253F61',
   danger: '#D84A4A',
+  error: '#D84A4A',
   success: '#34ce57',
   warning: '#f9de06',
   ink: {

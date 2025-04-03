@@ -9,11 +9,11 @@ import {
 
 export const fetchClassesByUser = createAsyncThunk(
   'classes/fetchClassesByUser',
-  async ({ search, currentPage, limit, sortOrder }, { dispatch }) => {
+  async ({}, { dispatch }) => {
     return await apiHandler(
       dispatch,
       ClassAPI.getAllClassesByUser,
-      { search, currentPage, limit, sortOrder },
+      {},
       () => {
         // dispatch(
         //   setScreenCurrentPage({ screen: 'class', page: data.currentPage }),
@@ -129,7 +129,6 @@ const classSlice = createSlice({
         state.classes = [];
       })
       .addCase(fetchClassesByUser.fulfilled, (state, action) => {
-        console.log('Data:', action.payload);
         if (action.payload) {
           state.classes = action.payload.data;
         }

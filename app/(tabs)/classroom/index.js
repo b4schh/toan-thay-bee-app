@@ -64,18 +64,17 @@ const useFilteredClasses = (classes, status, search, currentPage, limit) => {
 };
 
 // Thêm component EmptyView
-const EmptyView = ({ onRefresh, isLoading, message }) => (
+const EmptyView = ({ onRefresh, isLoading, error, message }) => (
   <View style={styles.emptyContainer}>
     <AppText style={styles.emptyText}>
-      {isLoading ? 'Đang tải...' : message}
+      {isLoading
+        ? 'Đang tải...'
+        : error
+          ? 'Tải dữ liệu không thành công'
+          : message}
     </AppText>
-    {!isLoading && (
-      <Button
-        text="Tải lại"
-        onPress={onRefresh}
-        style={styles.refreshButton}
-        loading={isLoading}
-      />
+    {!isLoading && error && (
+      <Button text="Tải lại" onPress={onRefresh} style={styles.refreshButton} />
     )}
   </View>
 );
@@ -106,20 +105,38 @@ export default function ClassroomScreen() {
     limit,
   );
 
-  console.log(`Search Class: ${search}
-    Current Page: ${currentPage}
-    Limit: ${limit}
-    Total Items: ${totalItems}`);
+  // useEffect(() => {
+  //   dispatch(
+  //     fetchClassesByUser({
+  //       search,
+  //       currentPage: 1,
+  //       limit,
+  //     }),
+  //   );
+  // }, []);
 
   useEffect(() => {
-    dispatch(
-      fetchClassesByUser({
-        search,
-        currentPage: 1,
-        limit,
-      }),
-    );
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        dispatch(
+          fetchClassesByUser({
+            search,
+            currentPage: 1,
+            limit,
+          }),
+        );
+      } catch (err) {
+        setError('Không thể tải dữ liệu');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
+
   // Thêm hàm refresh data
   const handleRefresh = useCallback(async () => {
     setIsLoading(true);
@@ -139,7 +156,6 @@ export default function ClassroomScreen() {
     }
   }, [search, currentPage, limit]);
 
-
   // Cấu hình tabs
   const tabs = useMemo(
     () => [
@@ -152,9 +168,6 @@ export default function ClassroomScreen() {
 
   // Xử lý sự kiện tham gia lớp
   const handleJoin = useCallback(() => {
-    const class_code = classCode;
-    console.log('📌 Mã lớp học trước khi gửi:', class_code); // Kiểm tra giá trị classCode
-
     if (!classCode.trim()) {
       alert('⚠️ Vui lòng nhập mã lớp học!');
       return;
@@ -183,8 +196,6 @@ export default function ClassroomScreen() {
         lessonCount={item.lessonCount}
         status={item.studentClassStatus}
         onPressJoin={() => {
-          console.log('Vào lớp có id:', item.id);
-
           router.push({
             pathname: `/classroom/${item.class_code}/`,
             params: {
@@ -271,6 +282,7 @@ export default function ClassroomScreen() {
                 <EmptyView
                   onRefresh={handleRefresh}
                   isLoading={isLoading}
+                  error={error}
                   message={
                     search ? 'Không tìm thấy lớp học' : 'Chưa có lớp học nào'
                   }
@@ -278,11 +290,13 @@ export default function ClassroomScreen() {
               }
               ListFooterComponent={
                 paginatedClasses.length > 0 && (
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                  />
+                  <View style={styles.paginationContainer}>
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                    />
+                  </View>
                 )
               }
               renderItem={renderClassItem}
@@ -309,7 +323,7 @@ export default function ClassroomScreen() {
             {
               text: 'Tham gia',
               onPress: handleJoin,
-              styles: styles.modalButton,
+              style: styles.modalButton,
             },
           ]}
         >
@@ -384,6 +398,7 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
+    width: '100%',
   },
   cancelButton: {
     backgroundColor: colors.sky.white,
@@ -410,21 +425,15 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: 'center',
     marginBottom: 10,
-    color: colors.error,
+    fontSize: 16,
+    color: colors.ink.dark,
   },
   refreshButton: {
-    width: 120,
-    marginTop: 10,
+    marginTop: 12,
+    paddingHorizontal: 24,
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    color: colors.error,
-    marginBottom: 10,
-    textAlign: 'center',
+  paginationContainer: {
+    marginTop: 20,
+    marginBottom: 40,
   },
 });

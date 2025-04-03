@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
-  Modal,
+  Image,
   TouchableOpacity,
   TextInput,
   ScrollView,
   StyleSheet,
   Text,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
@@ -30,7 +31,7 @@ export default function DoExamScreen() {
   const [isStarted, setIsStarted] = useState(false);
   const [isOverviewVisible, setIsOverviewVisible] = useState(false);
   const [remainingTime, setRemainingTime] = useState(0);
-  const [attemptId, setAttemptId] = useState(null);
+  const [attemptId1, setAttemptId1] = useState(null);
   const [answerTN, setAnswerTN] = useState([]);
   const [answerTLN, setAnswerTLN] = useState([]);
   const [dsAnswers, setDsAnswers] = useState({});
@@ -62,6 +63,14 @@ export default function DoExamScreen() {
   const isLastQuestion =
     currentSectionIndex === sections.length - 1 &&
     currentQuestionIndex === currentSection.questions.length - 1;
+
+  useEffect(() => {
+    if (!user) {
+      Alert.alert('Lỗi', 'Vui lòng đăng nhập để làm bài');
+      router.replace('/login');
+      return;
+    }
+  }, [user]);
 
   const goToPrevious = () => {
     if (currentQuestionIndex > 0) {
@@ -122,18 +131,24 @@ export default function DoExamScreen() {
   };
 
   const handleAutoSubmit = () => {
-    if (!attemptId && !exam?.testDuration) return;
+    if (!attemptId1 && !exam?.testDuration) return;
     setSaveQuestion(new Set());
     setErrorQuestion(new Set());
-    socket.emit('submit_exam', { attemptId });
+    socket.emit('submit_exam', { attemptId: attemptId1 });
   };
 
   const handleSubmit = () => {
-    if (!attemptId) return;
-    socket.emit('submit_exam', { attemptId });
+    if (!attemptId1) return;
+    socket.emit('submit_exam', { attemptId: attemptId1 });
   };
 
   const handleStartExam = () => {
+    if (!user) {
+      Alert.alert('Lỗi', 'Vui lòng đăng nhập để làm bài');
+      router.replace('/login');
+      return;
+    }
+
     if (!socket.connected) {
       socket.connect();
 
@@ -147,17 +162,22 @@ export default function DoExamScreen() {
 
       setTimeout(() => {
         if (!socket.connected) {
-          alert('Lỗi', 'Không thể kết nối socket.');
+          Alert.alert('Lỗi', 'Không thể kết nối socket.');
         }
       }, 5000);
     } else {
       socket.emit('join_exam', { studentId: user.id, examId: id });
     }
+
+    socket.once('exam_error', ({ message }) => {
+      alert('Lỗi', message);
+      router.replace('/home');
+    });
   };
 
   const handleSelectAnswerTN = (questionId, statementId, type) => {
     const payload = {
-      attemptId,
+      attemptId: attemptId1,
       questionId,
       answerContent: statementId,
       studentId: user.id, // nếu cần xác định user
@@ -212,7 +232,7 @@ export default function DoExamScreen() {
         questionId,
         answerContent: newState[questionId],
         studentId: user.id,
-        attemptId,
+        attemptId: attemptId1,
         type: 'DS',
         examId: id,
         name: user.lastName + ' ' + user.firstName,
@@ -250,7 +270,7 @@ export default function DoExamScreen() {
 
     // Emit socket
     const payload = {
-      attemptId,
+      attemptId: attemptId1,
       questionId,
       answerContent: trimmed,
       studentId: user.id,
@@ -337,6 +357,7 @@ export default function DoExamScreen() {
       } catch (err) {
         console.error('Lỗi khi tính toán thời gian còn lại:', err);
       }
+      setAttemptId1(attemptId);
       if (attemptId) {
         dispatch(fetchAnswersByAttempt(attemptId));
       }
@@ -344,7 +365,6 @@ export default function DoExamScreen() {
       if (id) {
         dispatch(fetchPublicQuestionsByExamId(id));
       }
-      setAttemptId(attemptId);
     });
     return () => {
       socket.off('exam_started');
@@ -357,7 +377,8 @@ export default function DoExamScreen() {
       alert(message);
       setSaveQuestion(new Set());
       setErrorQuestion(new Set());
-      router.replace(`/exam/${id}/result`);
+      // if (!attemptId1) return
+      router.replace(`/exam/${attemptId1}/result`);
     });
     if (isStarted) {
       socket.on('submit_error', ({ message }) => {
@@ -391,7 +412,9 @@ export default function DoExamScreen() {
   return (
     <View style={styles.mainContainer}>
       {!isStarted ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <View
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+        >
           <Text style={{ fontSize: 20, marginBottom: 10 }}>
             Bạn sẵn sàng bắt đầu bài thi?
           </Text>
@@ -464,6 +487,17 @@ export default function DoExamScreen() {
             <Text>{currentQuestion?.content}</Text>/
             {/* <LatexRenderer text={currentQuestion.content} /> */}
           </AppText>
+          {currentQuestion.imageUrl && (
+            <Image
+              source={{ uri: currentQuestion.imageUrl }}
+              style={{
+                width: '100%',
+                height: 180,
+                resizeMode: 'contain',
+                borderRadius: 8,
+              }}
+            />
+          )}
           {currentSection?.type === 'TN' && (
             <View>
               {currentQuestion?.statements?.map((statement) => (

@@ -6,6 +6,7 @@ import {
   Dimensions,
   StyleSheet,
   TouchableOpacity,
+  Text,
 } from 'react-native';
 import AppText from '../AppText';
 import Button from '../button/Button';
@@ -13,13 +14,39 @@ import colors from '../../constants/colors';
 import Feather from '@expo/vector-icons/Feather';
 import Dialog from '../dialog/Dialog';
 import { useRouter } from 'expo-router';
+import { useSelector } from 'react-redux';
 
-export default function ExamResultOverlay({ visible, onClose, examResult }) {
+export default function ExamResultOverlay({
+  visible,
+  onClose,
+  questionTN,
+  questionDS,
+  questionTLN,
+  answersTNTLN,
+  answersDS,
+}) {
   const router = useRouter();
   const [isLeaveModalVisible, setLeaveModalVisible] = useState(false);
   const slideAnim = useRef(
     new Animated.Value(Dimensions.get('window').width),
   ).current;
+
+  const { score, startTime, endTime } = useSelector((state) => state.answers);
+
+  const optionTn = ['A', 'B', 'C', 'D'];
+
+  const getDurationText = () => {
+    if (!startTime || !endTime) return 'Không xác định';
+
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const durationMs = end - start;
+
+    const minutes = Math.floor(durationMs / 60000);
+    const seconds = Math.floor((durationMs % 60000) / 1000);
+
+    return `${minutes} phút ${seconds} giây`;
+  };
 
   useEffect(() => {
     if (visible) {
@@ -61,7 +88,206 @@ export default function ExamResultOverlay({ visible, onClose, examResult }) {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollContent}></ScrollView>
+      <ScrollView style={styles.scrollContent}>
+        <View style={{}}>
+          <View style={styles.topContainer}>
+            <View style={styles.scoreContainer}>
+              <AppText style={styles.score}>
+                {score ? score : 'Không có điểm'}
+              </AppText>
+            </View>
+            <View style={styles.detailContainer}>
+              <AppText style={styles.detail}>
+                Thời gian làm bài: {getDurationText()}
+              </AppText>
+              <AppText style={styles.detail}>
+                Thời gian nộp bài:{' '}
+                {new Date(endTime).toLocaleString('vi-VN', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </AppText>
+            </View>
+          </View>
+
+          <View style={{marginTop: 12}}>
+            <AppText style={{colors: colors.ink.darkest, marginBottom: 12}}>Bài làm</AppText>
+            {/* Header bảng (ẩn cột 1) */}
+            <View style={{ flexDirection: 'row', paddingBottom: 6 }}>
+              <View style={{ width: 30 }} />
+              <AppText style={{ flex: 2, fontWeight: 'bold' }}>Câu</AppText>
+              <AppText style={{ flex: 1.5, fontWeight: 'bold' }}>Chọn</AppText>
+              <AppText style={{ flex: 1.5, fontWeight: 'bold' }}>
+                Đáp án
+              </AppText>
+            </View>
+
+            {questionTN.map((question, index) => {
+              const userAnswerObj = answersTNTLN[question.id]?.answer;
+              const isCorrect = answersTNTLN[question.id]?.result;
+              const order =
+                question.statements.find(
+                  (statement) => statement.id == userAnswerObj,
+                )?.order || 0;
+
+              const userAnswerText =
+                typeof userAnswerObj === 'object'
+                  ? userAnswerObj?.answer
+                  : JSON.parse(userAnswerObj || '{}')?.answer;
+
+              const correctStatement = question.statements.find(
+                (s) => s.isCorrect,
+              );
+              const correctAnswer = correctStatement
+                ? correctStatement.order
+                : '---';
+
+              return (
+                <View
+                  key={question.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderBottomWidth: 1,
+                    borderColor: '#ddd',
+                    paddingVertical: 10,
+                  }}
+                >
+                  {/* Cột 1: Đúng / Sai */}
+                  <View style={{ width: 30, alignItems: 'center' }}>
+                    <AppText style={{ fontSize: 16 }}>
+                      {isCorrect ? '✅' : '❌'}
+                    </AppText>
+                  </View>
+
+                  {/* Cột 2: Nội dung câu hỏi */}
+                  <View style={{ flex: 2, paddingHorizontal: 4 }}>
+                    <AppText numberOfLines={2}>{index + 1}</AppText>
+                  </View>
+
+                  {/* Cột 3: Trả lời */}
+                  <View style={{ flex: 1.5, paddingHorizontal: 4 }}>
+                    <AppText>{optionTn[order - 1] || '---'}</AppText>
+                  </View>
+
+                  {/* Cột 4: Đáp án đúng */}
+                  <View style={{ flex: 1.5, paddingHorizontal: 4 }}>
+                    <AppText>{optionTn[correctAnswer - 1]}</AppText>
+                  </View>
+                </View>
+              );
+            })}
+            {questionDS.map((question, index) => {
+              // Lấy toàn bộ mệnh đề trong 1 câu để tính đúng/sai
+              const userAnswers = question.statements.map(
+                (statement) => answersDS[statement.id],
+              );
+              const correctAnswers = question.statements.map(
+                (s) => s.isCorrect,
+              );
+
+              // Một câu đúng khi tất cả mệnh đề đều đúng
+              const isCorrect =
+                userAnswers.length === correctAnswers.length &&
+                userAnswers.every((ans, i) => ans === correctAnswers[i]);
+
+              // Lấy mảng "Chọn" và "Đáp án" dạng ['Đ', 'S', '-', ...]
+              const userTextArr = question.statements.map((statement) =>
+                answersDS[statement.id] === true
+                  ? 'Đ'
+                  : answersDS[statement.id] === false
+                    ? 'S'
+                    : '-',
+              );
+              const correctTextArr = question.statements.map((s) =>
+                s.isCorrect ? 'Đ' : 'S',
+              );
+
+              return (
+                <View
+                  key={question.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderBottomWidth: 1,
+                    borderColor: '#ddd',
+                    paddingVertical: 10,
+                  }}
+                >
+                  {/* Cột 1: Kết quả ✅ / ❌ */}
+                  <View style={{ width: 30, alignItems: 'center' }}>
+                    <Text style={{ fontSize: 18 }}>
+                      {isCorrect ? '✅' : '❌'}
+                    </Text>
+                  </View>
+
+                  {/* Cột 2: Số câu */}
+                  <View style={{ flex: 1, paddingHorizontal: 4 }}>
+                    <Text style={{ fontWeight: '500' }}>{index + 1}</Text>
+                  </View>
+
+                  {/* Cột 3: Trả lời */}
+                  <View style={{ flex: 2, paddingHorizontal: 4 }}>
+                    <Text style={{ textAlign: 'center' }}>
+                      {userTextArr.join(' ')}
+                    </Text>
+                  </View>
+
+                  {/* Cột 4: Đáp án */}
+                  <View style={{ flex: 2, paddingHorizontal: 4 }}>
+                    <Text style={{ textAlign: 'center' }}>
+                      {correctTextArr.join(' ')}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+            {questionTLN.map((question, index) => {
+              const userAnswerObj =
+                answersTNTLN[question.id]?.answer.replace(/"/g, '') || '---';
+              const isCorrect = answersTNTLN[question.id]?.result;
+
+              return (
+                <View
+                  key={question.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderBottomWidth: 1,
+                    borderColor: '#ddd',
+                    paddingVertical: 10,
+                  }}
+                >
+                  {/* Cột 1: Đúng / Sai */}
+                  <View style={{ width: 30, alignItems: 'center' }}>
+                    <AppText style={{ fontSize: 18 }}>
+                      {isCorrect ? '✅' : '❌'}
+                    </AppText>
+                  </View>
+
+                  {/* Cột 2: Nội dung câu hỏi */}
+                  <View style={{ flex: 2, paddingHorizontal: 4 }}>
+                    <AppText numberOfLines={2}>{index + 1}</AppText>
+                  </View>
+
+                  {/* Cột 3: Trả lời */}
+                  <View style={{ flex: 1.5, paddingHorizontal: 4 }}>
+                    <AppText>{userAnswerObj || '---'}</AppText>
+                  </View>
+
+                  {/* Cột 4: Đáp án đúng */}
+                  <View style={{ flex: 1.5, paddingHorizontal: 4 }}>
+                    <AppText>{question.correctAnswer}</AppText>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      </ScrollView>
 
       <Dialog
         visible={isLeaveModalVisible}
@@ -122,6 +348,39 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: 'Inter-Bold',
-    fontSize: 20
+    fontSize: 20,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+  },
+  topContainer: {
+    // backgroundColor: colors.primary,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#B8BBC2',
+  },
+  scoreContainer: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    backgroundColor: '#4facfe',
+    paddingVertical: 36,
+  },
+  score: {
+    fontSize: 24,
+    fontFamily: 'iCielBCCubano',
+    color: colors.sky.white,
+    textAlign: 'center',
+    elevation: 3,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 6,
+  },
+  detailContainer: {
+    paddingVertical: 28,
+    paddingHorizontal: 24,
+  },
+  detail: {
+    fontFamily: 'Inter-Medium',
+    textAlign: 'center',
   },
 });

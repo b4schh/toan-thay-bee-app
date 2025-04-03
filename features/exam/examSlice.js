@@ -1,185 +1,191 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import * as examApi from "../../services/examApi";
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import * as examApi from '../../services/examApi';
 import {
-    setScreenCurrentPage,
-    setScreenTotalPages,
-    setScreenTotalItems,
-  } from '../filter/filterSlice';
-import { apiHandler } from "../../utils/apiHandler";
+  setScreenCurrentPage,
+  setScreenTotalPages,
+  setScreenTotalItems,
+} from '../filter/filterSlice';
+import { apiHandler } from '../../utils/apiHandler';
 
 export const fetchExams = createAsyncThunk(
-    "exams/fetchExams",
-    async ({ search, currentPage, limit, sortOrder }, { dispatch }) => {
-        return await apiHandler(
-            dispatch, 
-            examApi.getAllExamAPI, 
-            { search, currentPage, limit, sortOrder }, 
-            (data) => {
-                dispatch(setScreenCurrentPage({ screen: 'exam', page: data.currentPage }));
-                dispatch(setScreenTotalPages({ screen: 'exam', totalPages: data.totalPages }));
-                dispatch(setScreenTotalItems({ screen: 'exam', totalItems: data.totalItems }));
-            }, 
-            true, 
-            false
+  'exams/fetchExams',
+  async (data, { dispatch }) => {
+    return await apiHandler(
+      dispatch,
+      examApi.getAllExamAPI,
+      data,
+      (data) => {
+        dispatch(
+          setScreenCurrentPage({ screen: 'exam', page: data.currentPage }),
         );
-    }
+        dispatch(
+          setScreenTotalPages({ screen: 'exam', totalPages: data.totalPages }),
+        );
+        dispatch(
+          setScreenTotalItems({ screen: 'exam', totalItems: data.totalItems }),
+        );
+      },
+      true,
+      false,
+    );
+  },
 );
 
 export const fetchPublicExams = createAsyncThunk(
-    "exams/fetchPublicExams",
-    async ({ search, currentPage, limit, sortOrder }, { dispatch }) => {
-        return await apiHandler(
-            dispatch, 
-            examApi.getAllPublicExamAPI, 
-            { search, currentPage, limit, sortOrder }, 
-            (data) => {
-                dispatch(setScreenCurrentPage({ screen: 'exam', page: data.currentPage }));
-                dispatch(setScreenTotalPages({ screen: 'exam', totalPages: data.totalPages }));
-                dispatch(setScreenTotalItems({ screen: 'exam', totalItems: data.totalItems }));
-            }, 
-            false,
-            true
+  'exams/fetchPublicExams',
+  async (data, { dispatch }) => {
+    return await apiHandler(
+      dispatch,
+      examApi.getAllPublicExamAPI,
+      data,
+      (data) => {
+        dispatch(
+          setScreenCurrentPage({ screen: 'exam', page: data.currentPage }),
         );
-    }
+        dispatch(
+          setScreenTotalPages({ screen: 'exam', totalPages: data.totalPages }),
+        );
+        dispatch(
+          setScreenTotalItems({ screen: 'exam', totalItems: data.totalItems }),
+        );
+      },
+      false,
+      true,
+    );
+  },
 );
 
 export const fetchExamById = createAsyncThunk(
-    "exams/fetchExamById",
-    async (id, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.getExamByIdAPI, id, () => { }, true, false);
-    }
+  'exams/fetchExamById',
+  async (id, { dispatch }) => {
+    return await apiHandler(
+      dispatch,
+      examApi.getExamById,
+      id,
+      () => {},
+      true,
+      false,
+    );
+  },
 );
 
 export const fetchPublicExamById = createAsyncThunk(
-    "exams/fetchPublicExamById",
-    async (id, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.getExamPublic, id, () => { }, true, false);
-    }
-);
-
-export const putExam = createAsyncThunk(
-    "exams/putExam",
-    async ({ examId, examData }, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.putExamAPI, { examId, examData }, () => { }, true, false);
-    }
-);
-
-export const putImageExam = createAsyncThunk(
-    "exams/putImageExam",
-    async ({ examId, examImage }, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.putImageExamAPI, { examId, examImage }, () => { }, true, false);
-    }
-);
-
-export const postExam = createAsyncThunk(
-    "exams/postExam",
-    async ({ examData, examImage, questions, questionImages, statementImages }, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.postExamAPI, { examData, examImage, questions, questionImages, statementImages }, () => { }, true, false);
-    }
+  'exams/fetchPublicExamById',
+  async (data, { dispatch }) => {
+    return await apiHandler(
+      dispatch,
+      examApi.getExamPublic,
+      data,
+      () => {},
+      true,
+      false,
+    );
+  },
 );
 
 export const saveExamForUser = createAsyncThunk(
-    "exams/saveExamForUser",
-    async ({ examId }, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.saveExamForUserAPI, { examId }, () => { }, true, false);
-    }
-);
-
-export const deleteExam = createAsyncThunk(
-    "exams/deleteExam",
-    async (id, { dispatch }) => {
-        return await apiHandler(dispatch, examApi.deleteExamAPI, id, () => { }, true, false);
-    }
+  'exams/saveExamForUser',
+  async ({ examId }, { dispatch }) => {
+    return await apiHandler(
+      dispatch,
+      examApi.saveExamForUserAPI,
+      { examId },
+      () => {},
+      true,
+      false,
+    );
+  },
 );
 
 const examSlice = createSlice({
-    name: "exams",
-    initialState: {
-        exams: [],
-        exam: null,
-        timeLeft: 0,
-        isTimerRunning: false,
-        initialDuration: 0,
+  name: 'exams',
+  initialState: {
+    exams: [],
+    exam: null,
+    timeLeft: 0,
+    isTimerRunning: false,
+    initialDuration: 0,
+  },
+  reducers: {
+    setExam: (state, action) => {
+      state.exam = action.payload;
     },
-    reducers: {
-        setExam: (state, action) => {
-            state.exam = action.payload;
-        },
-        // initializeTimer: (state, action) => {
-        //     state.timeLeft = action.payload;
-        //     state.initialDuration = action.payload;
-        //     state.isTimerRunning = true;
-        // },
-        // decrementTimer: (state) => {
-        //     if (state.timeLeft > 0 && state.isTimerRunning) {
-        //         state.timeLeft -= 1;
-        //     }
-        // },
-        // pauseTimer: (state) => {
-        //     state.isTimerRunning = false;
-        // },
-        // resumeTimer: (state) => {
-        //     state.isTimerRunning = true;
-        // },
-        // resetTimer: (state) => {
-        //     state.timeLeft = state.initialDuration;
-        //     state.isTimerRunning = false;
-        // },
+    initializeTimer: (state, action) => {
+        state.timeLeft = action.payload;
+        state.initialDuration = action.payload;
+        state.isTimerRunning = true;
     },
-    extraReducers: (builder) => {
-        builder
-            .addCase(fetchExams.pending, (state) => {
-                state.exams = [];
-            })
-            .addCase(fetchExams.fulfilled, (state, action) => {
-                if (action.payload) {
-                    state.exams = action.payload.data;
-                }
-            })
-            .addCase(fetchExamById.pending, (state) => {
-                state.exam = null;
-            })
-            .addCase(fetchExamById.fulfilled, (state, action) => {
-                if (action.payload) {
-                    state.exam = action.payload.data;
-                }
-            })
-            .addCase(fetchPublicExams.pending, (state) => {
-                state.exams = [];
-            })
-            .addCase(fetchPublicExams.fulfilled, (state, action) => {
-                if (action.payload?.data) {
-                    state.exams = action.payload.data;
-                }
-            })
-            .addCase(fetchPublicExamById.pending, (state) => {
-                state.exam = null;
-            })
-            .addCase(fetchPublicExamById.fulfilled, (state, action) => {
-                if (action.payload) {
-                    state.exam = action.payload.data;
-                }
-            })
-            .addCase(saveExamForUser.fulfilled, (state, action) => {
-                if (action.payload) {
-                    const { examId, isSave } = action.payload;
-                    if (state.exams) state.exams.map((exam) => {
-                        exam.isSave = exam.id === examId ? isSave : exam.isSave;
-                        return exam;
-                    });
-                    if (state.exam) state.exam.isSave = isSave;
-                }
+    decrementTimer: (state) => {
+        if (state.timeLeft > 0 && state.isTimerRunning) {
+            state.timeLeft -= 1;
+        }
+    },
+    pauseTimer: (state) => {
+        state.isTimerRunning = false;
+    },
+    resumeTimer: (state) => {
+        state.isTimerRunning = true;
+    },
+    resetTimer: (state) => {
+        state.timeLeft = state.initialDuration;
+        state.isTimerRunning = false;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchExams.pending, (state) => {
+        state.exams = [];
+      })
+      .addCase(fetchExams.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.exams = action.payload.data;
+        }
+      })
+      .addCase(fetchExamById.pending, (state) => {
+        state.exam = null;
+      })
+      .addCase(fetchExamById.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.exam = action.payload.data;
+        }
+      })
+      .addCase(fetchPublicExams.pending, (state) => {
+        state.exams = [];
+      })
+      .addCase(fetchPublicExams.fulfilled, (state, action) => {
+        if (action.payload?.data) {
+          state.exams = action.payload.data;
+        }
+      })
+      .addCase(fetchPublicExamById.pending, (state) => {
+        state.exam = null;
+      })
+      .addCase(fetchPublicExamById.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.exam = action.payload.data;
+        }
+      })
+      .addCase(saveExamForUser.fulfilled, (state, action) => {
+        if (action.payload) {
+          const { examId, isSave } = action.payload;
+          if (state.exams)
+            state.exams.map((exam) => {
+              exam.isSave = exam.id === examId ? isSave : exam.isSave;
+              return exam;
             });
-    }
+          if (state.exam) state.exam.isSave = isSave;
+        }
+      });
+  },
 });
 
-export const { 
-    setExam, 
-    initializeTimer, 
-    decrementTimer, 
-    pauseTimer, 
-    resumeTimer, 
-    resetTimer 
+export const {
+  setExam,
+  initializeTimer,
+  decrementTimer,
+  pauseTimer,
+  resumeTimer,
+  resetTimer,
 } = examSlice.actions;
 
 export default examSlice.reducer;

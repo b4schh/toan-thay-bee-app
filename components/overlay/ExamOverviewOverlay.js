@@ -87,7 +87,6 @@ export default function ExamOverviewOverlay({
   const stats = sections.reduce(
     (acc, section, sIndex) => {
       section.questions.forEach((q, qIndex) => {
-        // console.log('Question:', q.id);
         const isDone = isQuestionDone(q);
         const isCurrent =
           sIndex === currentSectionIndex && qIndex === currentQuestionIndex;

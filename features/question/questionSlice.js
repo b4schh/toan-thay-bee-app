@@ -16,9 +16,21 @@ export const fetchQuestions = createAsyncThunk(
       questionApi.getAllQuestionAPI,
       { search, currentPage, limit, sortOrder },
       (data) => {
-        dispatch(setScreenCurrentPage({ screen: 'question', page: data.currentPage }));
-        dispatch(setScreenTotalPages({ screen: 'question', totalPages: data.totalPages }));
-        dispatch(setScreenTotalItems({ screen: 'question', totalItems: data.totalItems }));
+        dispatch(
+          setScreenCurrentPage({ screen: 'question', page: data.currentPage }),
+        );
+        dispatch(
+          setScreenTotalPages({
+            screen: 'question',
+            totalPages: data.totalPages,
+          }),
+        );
+        dispatch(
+          setScreenTotalItems({
+            screen: 'question',
+            totalItems: data.totalItems,
+          }),
+        );
       },
       true,
       false,
@@ -34,9 +46,21 @@ export const fetchExamQuestions = createAsyncThunk(
       questionApi.getExamQuestionsAPI,
       { id, search, currentPage, limit, sortOrder },
       (data) => {
-        dispatch(setScreenCurrentPage({ screen: 'question', page: data.currentPage }));
-        dispatch(setScreenTotalPages({ screen: 'question', totalPages: data.totalPages }));
-        dispatch(setScreenTotalItems({ screen: 'question', totalItems: data.totalItems }));
+        dispatch(
+          setScreenCurrentPage({ screen: 'question', page: data.currentPage }),
+        );
+        dispatch(
+          setScreenTotalPages({
+            screen: 'question',
+            totalPages: data.totalPages,
+          }),
+        );
+        dispatch(
+          setScreenTotalItems({
+            screen: 'question',
+            totalItems: data.totalItems,
+          }),
+        );
         dispatch(setExam(data.exam));
       },
       true,
@@ -75,109 +99,6 @@ export const fetchQuestionById = createAsyncThunk(
   },
 );
 
-export const postQuestion = createAsyncThunk(
-  'questions/postQuestion',
-  async (
-    {
-      questionData,
-      statementOptions,
-      questionImage,
-      solutionImage,
-      statementImages,
-      examId,
-    },
-    { dispatch },
-  ) => {
-    return await apiHandler(
-      dispatch,
-      questionApi.postQuestionAPI,
-      {
-        questionData,
-        statementOptions,
-        questionImage,
-        solutionImage,
-        statementImages,
-        examId,
-      },
-      (data) => {},
-      true,
-      false,
-    );
-  },
-);
-
-export const putQuestion = createAsyncThunk(
-  'questions/putQuestion',
-  async ({ questionId, questionData, statements }, { dispatch }) => {
-    return await apiHandler(
-      dispatch,
-      questionApi.putQuestionAPI,
-      { questionId, questionData, statements },
-      (data) => {},
-      true,
-      false,
-    );
-  },
-);
-
-export const putImageQuestion = createAsyncThunk(
-  'questions/putImageQuestion',
-  async ({ questionId, questionImage }, { dispatch }) => {
-    const response = await apiHandler(
-      dispatch,
-      questionApi.putImageQuestionAPI,
-      { questionId, questionImage },
-      (data) => {},
-      true,
-      false,
-    );
-
-    return response;
-  },
-);
-
-export const putImageSolution = createAsyncThunk(
-  'questions/putImageSolution',
-  async ({ questionId, solutionImage }, { dispatch }) => {
-    return await apiHandler(
-      dispatch,
-      questionApi.putImageSolutionAPI,
-      { questionId, solutionImage },
-      (data) => {},
-      true,
-      false,
-    );
-  },
-);
-
-export const putStatementImage = createAsyncThunk(
-  'questions/putStatementImage',
-  async ({ statementId, statementImage }, { dispatch }) => {
-    return await apiHandler(
-      dispatch,
-      questionApi.putStatementImageAPI,
-      { statementId, statementImage },
-      (data) => {},
-      true,
-      false,
-    );
-  },
-);
-
-export const deleteQuestion = createAsyncThunk(
-  'questions/deleteQuestion',
-  async (questionId, { dispatch }) => {
-    return await apiHandler(
-      dispatch,
-      questionApi.deleteQuestionAPI,
-      questionId,
-      () => {},
-      true,
-      false,
-    );
-  },
-);
-
 const questionSlice = createSlice({
   name: 'questions',
   initialState: {
@@ -193,6 +114,9 @@ const questionSlice = createSlice({
     },
     setQuestion: (state, action) => {
       state.question = action.payload;
+    },
+    setQuestions: (state, action) => {
+      state.questions = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -229,5 +153,5 @@ const questionSlice = createSlice({
   },
 });
 
-export const { setQuestion } = questionSlice.actions;
+export const { setQuestion, setQuestions } = questionSlice.actions;
 export default questionSlice.reducer;
