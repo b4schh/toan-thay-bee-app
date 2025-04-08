@@ -12,10 +12,13 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchPublicQuestionsByExamId } from '../../../features/question/questionSlice';
-import LatexRenderer from '../../../components/latex/LatexRenderer';
-import AppText from '../../../components/AppText';
-import Button from '../../../components/button/Button';
-import ExamOverviewOverlay from '../../../components/overlay/ExamOverviewOverlay';
+import {
+  LatexRenderer,
+  AppText,
+  Button,
+  ExamOverviewOverlay,
+} from '@components/index';
+
 import colors from '../../../constants/colors';
 import socket from '../../../services/socket';
 import { fetchAnswersByAttempt } from '../../../features/answer/answerSlice';
@@ -372,13 +375,13 @@ export default function DoExamScreen() {
   }, []);
 
   useEffect(() => {
-    socket.on('exam_submitted', ({ message }) => {
+    socket.on('exam_submitted', ({ message, attemptId }) => {
       console.log('Bài thi đã được nộp:', message);
       alert(message);
       setSaveQuestion(new Set());
       setErrorQuestion(new Set());
-      // if (!attemptId1) return
-      router.replace(`/exam/${attemptId1}/result`);
+      if (!attemptId) return;
+      router.replace(`/exam/${attemptId}/result`);
     });
     if (isStarted) {
       socket.on('submit_error', ({ message }) => {

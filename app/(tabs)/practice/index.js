@@ -2,14 +2,16 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Image, StyleSheet, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
-import ExamCard from '../../../components/card/ExamCard';
-import SearchBar from '../../../components/SearchBar';
-import AppText from '../../../components/AppText';
-import Button from '../../../components/button/Button';
-import Dialog from '../../../components/dialog/Dialog';
-import Dropdown from '../../../components/dropdown/Dropdown';
-import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
-import Pagination from '../../../components/Pagination';
+import {
+  ExamCard,
+  SearchBar,
+  AppText,
+  Button,
+  Dialog,
+  Dropdown,
+  LoadingOverlay,
+  Pagination,
+} from '@components/index';
 import colors from '../../../constants/colors';
 import { fetchPublicExams } from '../../../features/exam/examSlice';
 import { fetchCodesByType } from '../../../features/code/codeSlice';
@@ -77,7 +79,6 @@ export default function PracticeScreen() {
   };
 
   // Thêm hàm refresh data
-  // Cập nhật hàm handleRefresh
   const handleRefresh = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -96,21 +97,6 @@ export default function PracticeScreen() {
       setIsLoading(false);
     }
   }, [search, currentPage, limit]);
-
-  // Thêm useEffect để fetch data lần đầu
-  // useEffect(() => {
-  //   dispatch(
-  //     fetchPublicExams({
-  //       search,
-  //       currentPage: 1, // Reset về trang 1 khi tìm kiếm
-  //       limit,
-  //       sortOrder,
-  //       typeOfExam: [typeOfExamFilters],
-  //       class: classFilters,
-  //       chapter: [chapterFilters],
-  //     }),
-  //   );
-  // }, [search, limit, sortOrder]);
 
   // Thêm useEffect để fetch data lần đầu
   useEffect(() => {
@@ -134,7 +120,7 @@ export default function PracticeScreen() {
     };
 
     fetchData();
-  }, []);
+  }, [search]);
 
   const renderExamItem = useCallback(
     ({ item }) => (

@@ -105,6 +105,7 @@ const examSlice = createSlice({
     timeLeft: 0,
     isTimerRunning: false,
     initialDuration: 0,
+    examDetail: null,
   },
   reducers: {
     setExam: (state, action) => {
@@ -158,11 +159,11 @@ const examSlice = createSlice({
         }
       })
       .addCase(fetchPublicExamById.pending, (state) => {
-        state.exam = null;
+        state.examDetail = null;
       })
       .addCase(fetchPublicExamById.fulfilled, (state, action) => {
         if (action.payload) {
-          state.exam = action.payload.data;
+          state.examDetail = action.payload.data;
         }
       })
       .addCase(saveExamForUser.fulfilled, (state, action) => {

@@ -10,14 +10,16 @@ import {
   Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import ClassCard from '../../../components/card/ClassCard';
-import SearchBar from '../../../components/SearchBar';
-import AppText from '../../../components/AppText';
-import Button from '../../../components/button/Button';
-import TabNavigation from '../../../components/TabNavigation';
-import Dialog from '../../../components/dialog/Dialog';
-import Pagination from '../../../components/Pagination';
-import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
+import {
+  ClassCard,
+  SearchBar,
+  AppText,
+  Button,
+  TabNavigation,
+  Dialog,
+  Pagination,
+  LoadingOverlay,
+} from '@components/index';
 import colors from '../../../constants/colors';
 import {
   fetchClassesByUser,
@@ -104,16 +106,6 @@ export default function ClassroomScreen() {
     currentPage,
     limit,
   );
-
-  // useEffect(() => {
-  //   dispatch(
-  //     fetchClassesByUser({
-  //       search,
-  //       currentPage: 1,
-  //       limit,
-  //     }),
-  //   );
-  // }, []);
 
   useEffect(() => {
     const fetchData = async () => {

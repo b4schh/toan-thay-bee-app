@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
-import LessonDetails from './LessonDetail';
+import LessonDetail from './LessonDetail';
 import AppText from '../AppText';
 import colors from '../../constants/colors';
 
@@ -25,7 +25,7 @@ export default function LessonDropdown({ lesson }) {
           </AppText>
         </TouchableOpacity>
       </View>
-        {expanded && <LessonDetails lesson={lesson} />}
+        {expanded && <LessonDetail lesson={lesson} />}
     </View>
   );
 }

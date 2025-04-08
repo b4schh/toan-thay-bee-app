@@ -10,12 +10,15 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSelector, useDispatch } from 'react-redux';
-import AppText from '../../../components/AppText';
-import Button from '../../../components/button/Button';
-import ExamResultOverlay from '../../../components/overlay/ExamResultOverlay';
+import {
+  AppText,
+  Button,
+  ExamResultOverlay,
+  LoadingOverlay,
+} from '@components/index';
 import colors from '../../../constants/colors';
 import { fetchQuestionAndAnswersByAttempt } from '../../../features/answer/answerSlice';
-import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
+
 export default function ExamResultScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();

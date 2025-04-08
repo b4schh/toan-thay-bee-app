@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import AppText from '../AppText';
 import Button from '../button/Button';
+import Dialog from '../dialog/Dialog';
 import colors from '../../constants/colors';
 import Feather from '@expo/vector-icons/Feather';
-import Dialog from '../dialog/Dialog';
 import { useRouter } from 'expo-router';
 import { useSelector } from 'react-redux';
 
@@ -93,7 +93,7 @@ export default function ExamResultOverlay({
           <View style={styles.topContainer}>
             <View style={styles.scoreContainer}>
               <AppText style={styles.score}>
-                {score ? score : 'Không có điểm'}
+                {(score || score=='0')  ? score + "/10" : 'Không có điểm'}
               </AppText>
             </View>
             <View style={styles.detailContainer}>
@@ -114,7 +114,7 @@ export default function ExamResultOverlay({
           </View>
 
           <View style={{marginTop: 12}}>
-            <AppText style={{colors: colors.ink.darkest, marginBottom: 12}}>Bài làm</AppText>
+            <AppText style={{fontSize: 18, colors: colors.ink.darkest, marginBottom: 12}}>Bài làm</AppText>
             {/* Header bảng (ẩn cột 1) */}
             <View style={{ flexDirection: 'row', paddingBottom: 6 }}>
               <View style={{ width: 30 }} />
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     paddingVertical: 36,
   },
   score: {
-    fontSize: 24,
+    fontSize: 40,
     fontFamily: 'iCielBCCubano',
     color: colors.sky.white,
     textAlign: 'center',

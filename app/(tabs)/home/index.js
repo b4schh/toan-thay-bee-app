@@ -1,11 +1,13 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
-import ClassCard from '../../../components/card/ClassCard';
-import ScrollableCard from '../../../components/ScrollableCard';
-import Button from '../../../components/button/Button';
-import AppText from '../../../components/AppText';
-import TabNavigation from '../../../components/TabNavigation';
-import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
+import {
+  ClassCard,
+  ScrollableCard,
+  Button,
+  AppText,
+  TabNavigation,
+  LoadingOverlay,
+} from '@components/index';
 import colors from '../../../constants/colors';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchClassesByUser } from '../../../features/class/classSlice';
@@ -24,14 +26,14 @@ export default function HomeScreen() {
   );
 
   useEffect(() => {
-      dispatch(
-        fetchClassesByUser({
-          search,
-          currentPage: 1,
-          limit,
-        }),
-      );
-    }, []);
+    dispatch(
+      fetchClassesByUser({
+        search,
+        currentPage: 1,
+        limit,
+      }),
+    );
+  }, []);
 
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
@@ -68,7 +70,7 @@ export default function HomeScreen() {
     }),
     [selectedTab],
   );
-
+  
   const renderClassItem = useCallback(({ item }) => {
     return (
       <ClassCard

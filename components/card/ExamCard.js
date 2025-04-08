@@ -6,14 +6,7 @@ import AppText from '../AppText';
 import colors from '../../constants/colors';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 
-const ExamCard = ({
-  imageUrl,
-  name,
-  participantsCount,
-  onPress,
-}) => {
-  const router = useRouter();
-
+const ExamCard = ({ imageUrl, name, participantsCount, onPress }) => {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <Image source={{ uri: imageUrl }} style={styles.image} />

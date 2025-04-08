@@ -7,11 +7,6 @@ import colors from '../../constants/colors';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 
-const getRandomColor = () => {
-  const colorPalette = ['#D04848', '#FDE767', '#F3B95F', '#6895D2', '#337357'];
-  return colorPalette[Math.floor(Math.random() * colorPalette.length)];
-};
-
 // Thêm hàm helper để chuyển đổi ngày
 const getFullDayOfWeek = (shortDay) => {
   const dayMapping = {

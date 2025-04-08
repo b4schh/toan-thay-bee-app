@@ -8,6 +8,7 @@ export default function ExamLayout() {
       }}
     >
       <Stack.Screen name="do-exam" />
+      <Stack.Screen name="result" />
     </Stack>
   );
 }

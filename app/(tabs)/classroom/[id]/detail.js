@@ -11,160 +11,76 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDataForLearning } from '../../../../features/class/classSlice';
 import { Feather } from '@expo/vector-icons';
+import {
+  AppText,
+  LessonItem,
+  LoadingOverlay,
+  HeaderWithBackButton,
+  SearchBar,
+} from '@components/index';
 import colors from '../../../../constants/colors';
-import SearchBar from '../../../../components/SearchBar';
-import AppText from '../../../../components/AppText';
 
 const ClassroomDetail = () => {
   const class_code = useLocalSearchParams().id;
   const { classDetail } = useSelector((state) => state.classes);
   const dispatch = useDispatch();
+  const router = useRouter();
 
   useEffect(() => {
     dispatch(fetchDataForLearning({ class_code }));
   }, [dispatch, class_code]);
 
-  const router = useRouter();
+  const handleLessonPress = (lessonId) => {
+    router.push(`/classroom/${class_code}/${lessonId}`);
+  };
 
   return (
-    <ScrollView
-      style={styles.frameParent}
-      contentContainerStyle={styles.frameContainerContent}
-    >
-      <View style={styles.chevronLeftParent}>
-        <TouchableOpacity
-          onPress={() => {
-            router.back();
-          }}
-        >
-          <Feather name="chevron-left" size={24} color="black" />
-        </TouchableOpacity>
-        <AppText style={styles.lpI12a}>{classDetail?.name}</AppText>
-      </View>
+    <View style={styles.container}>
+      <LoadingOverlay />
+      <HeaderWithBackButton
+        title={classDetail?.name || 'Chi tiết lớp học'}
+        onBackPress={() => router.back()}
+      />
 
-      <View style={styles.barsSearchBars}>
+      {/* <View style={styles.searchBar}>
         <SearchBar />
-      </View>
+      </View> */}
 
-      <View style={styles.danhSchBuiHcParent}>
-        <AppText style={[styles.danhSchBui, styles.bui1OClr]}>
-          Danh sách buổi học
-        </AppText>
-        {classDetail?.lessons?.map((lesson, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.parentShadowBox}
-            onPress={() =>
-              router.push(`/classroom/${class_code}/${lesson?.id}`)
-            }
-          >
-            <AppText style={[styles.bui1O, styles.bui1OClr]}>
-              {lesson?.name}
-            </AppText>
-            <AppText style={[styles.trngThi, styles.bui1OClr]}>
-              Trạng thái: Đã hoàn thành
-            </AppText>
-            <View style={styles.viewsProgressBarsFullwid}>
-              <View style={[styles.indicator, styles.indicatorPosition]} />
-            </View>
-          </TouchableOpacity>
-        ))}
+      <AppText style={{ fontSize: 18, fontFamily: 'Inter-Medium' }}>
+        Danh sách buổi học
+      </AppText>
+
+      <View>
+        <ScrollView contentContainerStyle={styles.scrollContainerContent}>
+          {classDetail?.lessons?.map((lesson, index) => (
+            <LessonItem
+              key={index}
+              lesson={lesson}
+              onLessonPress={handleLessonPress}
+            />
+          ))}
+        </ScrollView>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
 export default ClassroomDetail;
 
 const styles = StyleSheet.create({
-  frameContainerContent: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
+  container: {
+    backgroundColor: colors.sky.lightest,
+    flex: 1,
+    padding: 20,
     gap: 16,
   },
-  bui1OClr: {
-    color: '#202325',
+  scrollContainerContent: {
+    flexDirection: 'column',
+    gap: 8,
   },
-  indicatorPosition: {
-    backgroundColor: '#23c16b',
-    left: '0%',
-    bottom: '0%',
-    top: '0%',
-    height: '100%',
-    position: 'absolute',
-  },
-  lpI12a: {
-    color: '#090a0a',
-    width: 280,
-    textAlign: 'left',
-    fontSize: 18,
-    fontFamily: 'Inter-Medium',
-    alignItems: 'center',
-  },
-  chevronLeftParent: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  search: {
-    left: 36,
-    fontSize: 16,
-    lineHeight: 16,
-    fontFamily: 'Inter-Regular',
-    width: 282,
-    color: '#6c7072',
-    textAlign: 'left',
-  },
-  icon: {
-    left: 8,
-    overflow: 'hidden',
-  },
-  barsSearchBars: {
+  searchBar: {
     height: 40,
     borderRadius: 8,
     alignSelf: 'stretch',
-  },
-  danhSchBui: {
-    fontFamily: 'Inter-Medium',
-    fontSize: 18,
-    alignSelf: 'stretch',
-  },
-  bui1O: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-  },
-  trngThi: {
-    fontSize: 12,
-  },
-  indicator: {
-    right: '0%',
-    width: '100%',
-  },
-  viewsProgressBarsFullwid: {
-    borderRadius: 12,
-    backgroundColor: '#e3e5e5',
-    height: 4,
-    overflow: 'hidden',
-    alignSelf: 'stretch',
-  },
-  parentShadowBox: {
-    flex: 1,
-    gap: 10,
-    padding: 12,
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    elevation: 1,
-  },
-  danhSchBuiHcParent: {
-    gap: 8,
-    alignSelf: 'stretch',
-  },
-  frameParent: {
-    backgroundColor: '#f7f9fa',
-    flex: 1,
-    width: '100%',
-    height: '100%',
-    padding: 20,
   },
 });

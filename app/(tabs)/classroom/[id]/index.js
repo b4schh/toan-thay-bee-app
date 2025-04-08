@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import ScrollableCard from '../../../../components/ScrollableCard';
+import {
+  AppText,
+  Button,
+  ScrollableCard,
+  Slideshow,
+  LessonDropdown,
+  LoadingOverlay,
+} from '@components/index';
 import colors from '../../../../constants/colors';
-import AppText from '../../../../components/AppText';
-import Button from '../../../../components/button/Button';
-import Slideshow from '../../../../components/Slideshow';
-import LessonDropdown from '../../../../components/lesson/LessonDropdown';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 import { Feather } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchLessonLearningItemByClassId } from '../../../../features/class/classSlice';
-import LoadingOverlay from '../../../../components/overlay/LoadingOverlay';
 
 export default function ClassroomIntro() {
   const router = useRouter();
@@ -25,7 +27,7 @@ export default function ClassroomIntro() {
     }
   }, [class_code]);
   const { classDetail } = useSelector((state) => state.classes);
-  
+
   return (
     <View style={{ flex: 1 }}>
       <LoadingOverlay />

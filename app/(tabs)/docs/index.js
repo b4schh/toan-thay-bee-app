@@ -1,10 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
-import LatexRenderer from '../../../components/latex/LatexRenderer';
-import MarkdownRenderer from '../../../components/latex/MarkdownRenderer';
+import { LatexRenderer, MarkdownRenderer } from '@components/index';
 import KaTeX from 'react-native-katex';
-
 import Markdown from 'react-native-markdown-display';
-
 import MathJax from 'react-native-mathjax';
 
 const markdown = `

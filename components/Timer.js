@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
         paddingVertical: 4,
         paddingHorizontal: 8,
         borderRadius: 8,
-        backgroundColor: colors.ink.lightest,
+        backgroundColor: colors.sky.lightest,
     },
     timer: {
         fontSize: 16,

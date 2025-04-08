@@ -4,7 +4,7 @@ import * as Icons from '@expo/vector-icons';
 import AppText from '../AppText';
 import colors from '../../constants/colors';
 
-export default LessonDetails = ({ lesson }) => {
+export default LessonDetail = ({ lesson }) => {
   return (
     <View style={styles.content}>
       {lesson.learningItems.map((item, index) => (

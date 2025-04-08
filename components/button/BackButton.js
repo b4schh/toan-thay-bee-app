@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Image, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
 const ChevronLeftIcon = () => {

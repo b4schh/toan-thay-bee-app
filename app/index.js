@@ -2,8 +2,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import Button from '../components/button/Button';
-import colors from '../constants/colors'
+import { Button } from '@components/index';
+import colors from '../constants/colors';
 
 export default function Welcome() {
   const router = useRouter();
@@ -14,18 +14,18 @@ export default function Welcome() {
         Chào mừng đến với ứng dụng!
       </Text>
       <Button
-          text="Bắt đầu"
-          iconColor={colors.primary}
-          style={[styles.button, { }]}
-          // onPress={() => router.push('(auth)/login')}
-          onPress={() => router.push('(tabs)')}
-        />
+        text="Bắt đầu"
+        iconColor={colors.primary}
+        style={[styles.button, {}]}
+        // onPress={() => router.push('(auth)/login')}
+        onPress={() => router.push('(tabs)')}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    width: "50%"
+    width: '50%',
   },
 });
