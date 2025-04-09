@@ -27,13 +27,6 @@ const LessonDetail = () => {
     );
   };
 
-  // const extractYouTubeVideoId = (url) => {
-  //   const regex =
-  //     /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^\?&]+)/;
-  //   const match = url.match(regex);
-  //   return match ? match[1] : null;
-  // };
-
   return (
     <ScrollView
       style={styles.container}

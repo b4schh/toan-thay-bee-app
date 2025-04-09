@@ -1,5 +1,11 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+} from 'react-native';
 import {
   ClassCard,
   ScrollableCard,
@@ -8,6 +14,7 @@ import {
   TabNavigation,
   LoadingOverlay,
 } from '@components/index';
+import { Feather } from '@expo/vector-icons'; // Import tất cả icon libraries từ expo
 import colors from '../../../constants/colors';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchClassesByUser } from '../../../features/class/classSlice';
@@ -17,7 +24,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
 
-  const [selectedTab, setSelectedTab] = useState('pending_assignments');
+  const [selectedTab, setSelectedTab] = useState('unfinished');
   const { user } = useSelector((state) => state.auth);
   const { classes } = useSelector((state) => state.classes);
   const { loading } = useSelector((state) => state.states);
@@ -70,7 +77,7 @@ export default function HomeScreen() {
     }),
     [selectedTab],
   );
-  
+
   const renderClassItem = useCallback(({ item }) => {
     return (
       <ClassCard
@@ -140,7 +147,20 @@ export default function HomeScreen() {
         {/* Body */}
         <View style={styles.card}>
           <View style={styles.section}>
-            <AppText style={styles.title}>Truy cập nhanh</AppText>
+            <View style={styles.sectionHeader}>
+              <AppText style={styles.title}>Truy cập nhanh</AppText>
+              <TouchableOpacity
+                style={styles.viewAllButton}
+                onPress={() => router.replace('/classroom')}
+              >
+                <AppText style={styles.viewAllText}>Xem tất cả</AppText>
+                <Feather
+                  name="arrow-up-right"
+                  size={20}
+                  color={colors.sky.dark}
+                />
+              </TouchableOpacity>
+            </View>
             <View>
               {!loading ? (
                 Array.isArray(classes) && classes.length > 0 ? (
@@ -165,13 +185,25 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.section}>
-            <AppText style={styles.title}>Tổng quan</AppText>
+            <View style={styles.sectionHeader}>
+              <AppText style={styles.title}>Tổng quan</AppText>
+              <TouchableOpacity
+                style={styles.viewAllButton}
+                onPress={() => router.push('/home/home-detail')}
+              >
+                <AppText style={styles.viewAllText}>Xem tất cả</AppText>
+                <Feather
+                  name="arrow-up-right"
+                  size={20}
+                  color={colors.sky.dark}
+                />
+              </TouchableOpacity>
+            </View>
 
             {/* Navigation Bar */}
             <TabNavigation
               tabs={[
-                { id: 'pending_assignments', label: 'Bài tập chưa nộp' },
-                { id: 'unread_documents', label: 'Tài liệu chưa xem' },
+                { id: 'unfinished', label: 'Mục học tập chưa xong' },
                 { id: 'saved_exams', label: 'Đề đã lưu' },
                 { id: 'exam_history', label: 'Lịch sử làm bài' },
               ]}
@@ -241,6 +273,22 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: 12,
     paddingBottom: 128,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  viewAllText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 14,
+    color: colors.sky.dark,
   },
   title: {
     fontFamily: 'Inter-Bold',

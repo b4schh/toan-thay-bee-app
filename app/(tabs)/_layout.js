@@ -42,7 +42,7 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="home/index"
+        name="home"
         options={{
           title: 'Trang chủ',
           tabBarIcon: ({ focused, color, size }) => (
