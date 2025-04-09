@@ -17,6 +17,9 @@ import {
   AppText,
   Button,
   ExamOverviewOverlay,
+  ExamHeader,
+  QuestionContent,
+  QuestionStatements,
 } from '@components/index';
 
 import colors from '../../../constants/colors';
@@ -31,13 +34,22 @@ export default function DoExamScreen() {
   const { questions } = useSelector((state) => state.questions);
   const { answers } = useSelector((state) => state.answers);
   const { exam } = useSelector((state) => state.exams);
+  console.log('Exam 1:', exam);
+  console.log('exam.testDuration 1:', exam?.testDuration);
+  const examRef = useRef(exam);
+
+  // Cập nhật ref mỗi khi exam thay đổi
+  useEffect(() => {
+    examRef.current = exam;
+  }, [exam]);
+
   const [isStarted, setIsStarted] = useState(false);
   const [isOverviewVisible, setIsOverviewVisible] = useState(false);
   const [remainingTime, setRemainingTime] = useState(0);
   const [attemptId1, setAttemptId1] = useState(null);
   const [answerTN, setAnswerTN] = useState([]);
   const [answerTLN, setAnswerTLN] = useState([]);
-  const [dsAnswers, setDsAnswers] = useState({});
+  const [answerDS, setAnswerDS] = useState({});
 
   const [saveQuestion, setSaveQuestion] = useState(new Set());
   const [errorQuestion, setErrorQuestion] = useState(new Set());
@@ -96,9 +108,9 @@ export default function DoExamScreen() {
   };
 
   const formatTime = (seconds) => {
-    const min = String(Math.floor(seconds / 60)).padStart(2, '0');
-    const sec = String(seconds % 60).padStart(2, '0');
-    return `${min}:${sec}`;
+    const min = Math.floor(seconds / 60);
+    const sec = seconds % 60;
+    return `${min} phút ${sec} giây`;
   };
 
   const addQuestion = (questionId) => {
@@ -202,7 +214,7 @@ export default function DoExamScreen() {
   };
 
   const handleSelectAnswerDS = (questionId, statementId, selectedAnswer) => {
-    setDsAnswers((prev) => {
+    setAnswerDS((prev) => {
       const currentAnswers = prev[questionId] || [];
 
       const existing = currentAnswers.find(
@@ -296,19 +308,19 @@ export default function DoExamScreen() {
       setAnswerTN(answers.filter((answer) => answer.typeOfQuestion === 'TN'));
       setAnswerTLN(answers.filter((answer) => answer.typeOfQuestion === 'TLN'));
 
-      const dsAnswers = {};
+      const answerDS = {};
       answers.forEach((answer) => {
         if (answer.typeOfQuestion === 'DS' && answer.answerContent) {
           try {
             if (!answer.answerContent) return;
             const parsed = JSON.parse(answer.answerContent);
-            dsAnswers[answer.questionId] = parsed;
+            answerDS[answer.questionId] = parsed;
           } catch (err) {
             console.error('Lỗi parse DS answerContent:', err);
           }
         }
       });
-      setDsAnswers(dsAnswers);
+      setAnswerDS(answerDS);
     }
   }, [answers]);
 
@@ -323,13 +335,13 @@ export default function DoExamScreen() {
         addQuestion(answer.questionId);
       }
     });
-    Object.keys(dsAnswers)?.forEach((questionId) => {
-      const answers = dsAnswers[questionId];
+    Object.keys(answerDS)?.forEach((questionId) => {
+      const answers = answerDS[questionId];
       if (answers.length === 4) {
         addQuestion(questionId);
       }
     });
-  }, [answerTN, answerTLN, dsAnswers]);
+  }, [answerTN, answerTLN, answerDS]);
 
   useEffect(() => {
     if (remainingTime <= 0) return handleAutoSubmit();
@@ -347,13 +359,19 @@ export default function DoExamScreen() {
   }, [remainingTime]);
 
   useEffect(() => {
+    if (!exam) return;
+
     socket.once('exam_started', ({ attemptId, startTime }) => {
+      const currentExam = examRef.current;
+      console.log('Exam 2:', currentExam);
+      console.log('exam.testDuration 2:', currentExam?.testDuration);
+
       try {
-        if (exam?.testDuration && startTime) {
+        if (currentExam?.testDuration && startTime) {
           const start = new Date(startTime);
           const now = new Date();
           const elapsedSeconds = Math.floor((now - start) / 1000);
-          const totalSeconds = exam.testDuration * 60;
+          const totalSeconds = currentExam.testDuration * 60;
           const remaining = Math.max(totalSeconds - elapsedSeconds, 0);
           setRemainingTime(remaining);
         }
@@ -434,7 +452,7 @@ export default function DoExamScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Tên đề, thời gian, menu icon */}
-          <View style={styles.headerContainer}>
+          {/* <View style={styles.headerContainer}>
             <AppText
               style={styles.examName}
               numberOfLines={2}
@@ -457,7 +475,12 @@ export default function DoExamScreen() {
               ]}
               onPress={() => setIsOverviewVisible(true)} // Mở overlay
             />
-          </View>
+          </View> */}
+          <ExamHeader
+            examName={exam.name}
+            remainingTime={formatTime(remainingTime)}
+            onMenuPress={() => setIsOverviewVisible(true)}
+          />
 
           {/* Button chuyển câu */}
           <View style={styles.navigationContainer}>
@@ -481,128 +504,26 @@ export default function DoExamScreen() {
             />
           </View>
 
-          {/* Nội dung chính */}
-          <AppText style={styles.sectionTitle}>{currentSection?.title}</AppText>
-          <AppText style={styles.questionNumber}>
-            Câu {getQuestionNumber()} (ID {currentQuestion?.id}):
-          </AppText>
-          <AppText style={styles.questionContent}>
-            <Text>{currentQuestion?.content}</Text>/
-            {/* <LatexRenderer text={currentQuestion.content} /> */}
-          </AppText>
-          {currentQuestion.imageUrl && (
-            <Image
-              source={{ uri: currentQuestion.imageUrl }}
-              style={{
-                width: '100%',
-                height: 180,
-                resizeMode: 'contain',
-                borderRadius: 8,
-              }}
-            />
-          )}
-          {currentSection?.type === 'TN' && (
-            <View>
-              {currentQuestion?.statements?.map((statement) => (
-                <TouchableOpacity
-                  key={statement.id}
-                  style={styles.optionContainer}
-                  onPress={() =>
-                    handleSelectAnswerTN(
-                      currentQuestion.id,
-                      statement.id,
-                      currentSection.type,
-                    )
-                  }
-                >
-                  <View style={styles.radioCircle}>
-                    {answerTN?.find(
-                      (answer) => answer.questionId === currentQuestion.id,
-                    )?.answerContent == statement.id && (
-                      <View style={styles.selectedCircle} />
-                    )}
-                  </View>
-                  <AppText style={styles.optionText}>
-                    {statement.content}
-                  </AppText>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-
-          {currentSection.type === 'DS' && (
-            <View style={styles.dsContainer}>
-              {currentQuestion.statements.map((statement, index) => {
-                const currentAnswer =
-                  dsAnswers[currentQuestion.id]?.find(
-                    (a) => a.statementId === statement.id,
-                  ) || {};
-
-                return (
-                  <View key={statement.id} style={styles.trueFalseContainer}>
-                    <AppText style={styles.statementText}>
-                      {`${index + 1}. ${statement.content}`}
-                    </AppText>
-                    <View style={styles.trueFalseButtons}>
-                      <Button
-                        text="Đúng"
-                        textStyle={[
-                          currentAnswer.answer !== true && styles.buttonText,
-                        ]}
-                        style={[
-                          styles.trueFalseButton,
-                          currentAnswer.answer === true &&
-                            styles.selectedButton,
-                        ]}
-                        onPress={() =>
-                          handleSelectAnswerDS(
-                            currentQuestion.id,
-                            statement.id,
-                            true,
-                          )
-                        }
-                      />
-                      <Button
-                        text="Sai"
-                        textStyle={[
-                          currentAnswer.answer !== false && styles.buttonText,
-                        ]}
-                        style={[
-                          styles.trueFalseButton,
-                          currentAnswer.answer === false &&
-                            styles.selectedButton,
-                        ]}
-                        onPress={() =>
-                          handleSelectAnswerDS(
-                            currentQuestion.id,
-                            statement.id,
-                            false,
-                          )
-                        }
-                      />
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-          {currentSection.type === 'TLN' && (
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập đáp án"
-              value={tlnInput}
-              onChangeText={(text) => {
-                setTlnInput(text); // cập nhật state
-              }}
-              onBlur={() => {
-                handleSelectAnswerTLN(
-                  currentQuestion.id,
-                  tlnInput,
-                  currentSection.type,
-                );
-              }}
-            />
-          )}
+          {/* Câu hỏi */}
+          <QuestionContent
+            sectionTitle={currentSection?.title}
+            questionNumber={getQuestionNumber()}
+            questionContent={currentQuestion?.content}
+            questionImage={currentQuestion?.imageUrl}
+          />
+          
+          {/* Lựa chọn */}
+          <QuestionStatements
+            type={currentSection?.type}
+            question={currentQuestion}
+            answerTN={answerTN}
+            answerDS={answerDS}
+            onSelectAnswerTN={handleSelectAnswerTN}
+            onSelectAnswerDS={handleSelectAnswerDS}
+            onSelectAnswerTLN={handleSelectAnswerTLN}
+            tlnInput={tlnInput}
+            setTlnInput={setTlnInput}
+          />
         </ScrollView>
       )}
 
@@ -727,9 +648,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: colors.ink.darker,
-  },
-  timer: {
-    fontSize: 16,
   },
   input: {
     borderWidth: 1,

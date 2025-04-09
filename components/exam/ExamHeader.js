@@ -7,7 +7,7 @@ export default function ExamHeader({ examName, remainingTime, onMenuPress }) {
   return (
     <View style={styles.headerContainer}>
       <Text style={styles.examName}>{examName.toUpperCase()}</Text>
-      <Text style={styles.timer}>{remainingTime} phút</Text>
+      <Text style={styles.timer}>{remainingTime}</Text>
       <Button
         icon="menu"
         iconLibrary="Feather"

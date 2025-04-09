@@ -1,55 +1,36 @@
-import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { LatexRenderer, MarkdownRenderer } from '@components/index';
 import KaTeX from 'react-native-katex';
 import Markdown from 'react-native-markdown-display';
 import MathJax from 'react-native-mathjax';
 
-const markdown = `
-# Công thức toán học trong Markdown
-
-Đây là công thức inline: $E=mc^2$
-
-Đây là công thức block:
-
-$$\int_{a}^{b} x^2 dx$$
-`;
-
-const mathText = '$O x$'; // \\
-const statement = '$$V=\\pi^{2} \\int_{a}^{b} f(x) d x$$.';
-
-const question = `Cho hàm số \( y=f(x) \) liên tục, nhận giá trị dương trên đoạn \( [a ; b] \). Xét hình phẳng \( (H) \) giới hạn bởi đồ thị hàm số \( y=f(x) \), trục hoành và hai đường thẳng \( x=a, x=b \). Khối tròn xoay được tạo thành khi quay hình phẳng \( (H) \) quanh trục \( O x \) có thể tích là:`;
+const statement =
+  'Cho hàm số $y=f(x)$ liên tục, nhận giá trị dương trên đoạn $[a ; b]$. Xét hình phẳng $(H)$ giới hạn bởi đồ thị hàm số $y=f(x)$, trục hoành và hai đường thẳng $x=a, x=b$. Khối tròn xoay được tạo thành khi quay hình phẳng $(H)$ quanh trục $O x$ có thể tích là:';
 
 export default function DocsScreen() {
   return (
-    <SafeAreaView
-      style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-    >
-      <View style={{ padding: 20 }}>
-        <MathJax
-          html={statement}
-          mathJaxOptions={{
-            messageStyle: 'none',
-            extensions: ['tex2jax.js'],
-            jax: ['input/TeX', 'output/HTML-CSS'],
-            tex2jax: {
-              inlineMath: [['$', '$']],
-              displayMath: [['$$', '$$']],
-              processEscapes: true,
-            },
-            TeX: {
-              extensions: ['AMSmath.js', 'AMSsymbols.js'],
-            },
-          }}
-          style={{
-            // width: 100,
-            // backgroundColor: "transparent", // Làm nền trong suốt
-            display: 'inline-block', // Chiều rộng vừa với công thức
-            // alignSelf: "center", // Căn giữa
-          }}
-        />
-        <MarkdownRenderer markdown={markdown} />
-      </View>
-    </SafeAreaView>
+    <View style={{ flex: 1, width: '100%' }}>
+      <MathJax
+        html={statement}
+        mathJaxOptions={{
+          messageStyle: 'none',
+          extensions: ['tex2jax.js'],
+          jax: ['input/TeX', 'output/HTML-CSS'],
+          tex2jax: {
+            inlineMath: [['$', '$']],
+            displayMath: [['$$', '$$']],
+            processEscapes: true,
+          },
+          TeX: {
+            extensions: ['AMSmath.js', 'AMSsymbols.js'],
+          },
+        }}
+        style={{
+          backgroundColor: "transparent", // Làm nền trong suốt
+          display: 'inline-block', // Chiều rộng vừa với công thức
+        }}
+      />
+    </View>
   );
 }
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Text, Image } from 'react-native';
 import AppText from '../AppText';
+import MyMathText from '@components/latex/MyMathText';
 
 export default function QuestionContent({
   sectionTitle,
@@ -11,15 +12,11 @@ export default function QuestionContent({
   return (
     <View>
       <AppText style={styles.sectionTitle}>{sectionTitle}</AppText>
-      <AppText style={styles.questionNumber}>
-        Câu {questionNumber}:
-      </AppText>
-      <AppText style={styles.questionContent}>{questionContent}</AppText>
+      <AppText style={styles.questionNumber}>Câu {questionNumber}:</AppText>
+      <MyMathText statement={questionContent}/>
+      {/* <AppText style={styles.questionContent}>{questionContent}</AppText> */}
       {questionImage && (
-        <Image
-          source={{ uri: questionImage }}
-          style={styles.questionImage}
-        />
+        <Image source={{ uri: questionImage }} style={styles.questionImage} />
       )}
     </View>
   );

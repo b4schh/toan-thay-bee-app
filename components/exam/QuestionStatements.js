@@ -1,11 +1,15 @@
 import React from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import AppText from '../AppText';
+import Button from '../button/Button';
+import colors from 'constants/colors';
+import MyMathText from '@components/latex/MyMathText';
 
 export default function QuestionStatements({
   type,
   question,
-  answers,
+  answerTN,
+  answerDS,
   onSelectAnswerTN,
   onSelectAnswerDS,
   onSelectAnswerTLN,
@@ -15,19 +19,22 @@ export default function QuestionStatements({
   if (type === 'TN') {
     return (
       <View>
-        {question.statements.map((statement) => (
+        {question?.statements?.map((statement) => (
           <TouchableOpacity
             key={statement.id}
             style={styles.optionContainer}
             onPress={() => onSelectAnswerTN(question.id, statement.id, type)}
           >
             <View style={styles.radioCircle}>
-              {answers?.find((answer) => answer.questionId === question.id)
+              {answerTN?.find((answer) => answer.questionId === question.id)
                 ?.answerContent == statement.id && (
                 <View style={styles.selectedCircle} />
               )}
             </View>
-            <AppText style={styles.optionText}>{statement.content}</AppText>
+
+            <MyMathText statement={statement.content} />
+
+            {/* <AppText style={styles.statementText}>{statement.content}</AppText> */}
           </TouchableOpacity>
         ))}
       </View>
@@ -36,20 +43,51 @@ export default function QuestionStatements({
 
   if (type === 'DS') {
     return (
-      <View>
-        {question.statements.map((statement, index) => (
-          <View key={statement.id}>
-            <AppText>{`${index + 1}. ${statement.content}`}</AppText>
-            <View>
-              <TouchableOpacity onPress={() => onSelectAnswerDS(question.id, statement.id, true)}>
-                <AppText>Đúng</AppText>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => onSelectAnswerDS(question.id, statement.id, false)}>
-                <AppText>Sai</AppText>
-              </TouchableOpacity>
+      <View style={styles.dsContainer}>
+        {question?.statements?.map((statement, index) => {
+          const currentAnswer =
+            answerDS[question.id]?.find(
+              (a) => a.statementId === statement.id,
+            ) || {};
+
+          return (
+            <View key={statement.id} style={styles.trueFalseContainer}>
+              <AppText style={styles.statementText}>
+                {`${index + 1}. ${(
+                  <MyMathText statement={statement.content} />
+                )}`}
+              </AppText>
+              <View style={styles.trueFalseButtons}>
+                <Button
+                  text="Đúng"
+                  textStyle={[
+                    currentAnswer.answer !== true && styles.buttonText,
+                  ]}
+                  style={[
+                    styles.trueFalseButton,
+                    currentAnswer.answer === true && styles.selectedButton,
+                  ]}
+                  onPress={() =>
+                    onSelectAnswerDS(question.id, statement.id, true)
+                  }
+                />
+                <Button
+                  text="Sai"
+                  textStyle={[
+                    currentAnswer.answer !== false && styles.buttonText,
+                  ]}
+                  style={[
+                    styles.trueFalseButton,
+                    currentAnswer.answer === false && styles.selectedButton,
+                  ]}
+                  onPress={() =>
+                    onSelectAnswerDS(question.id, statement.id, false)
+                  }
+                />
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
       </View>
     );
   }
@@ -60,8 +98,12 @@ export default function QuestionStatements({
         style={styles.input}
         placeholder="Nhập đáp án"
         value={tlnInput}
-        onChangeText={setTlnInput}
-        onBlur={() => onSelectAnswerTLN(question.id, tlnInput, type)}
+        onChangeText={(text) => {
+          setTlnInput(text); // cập nhật state
+        }}
+        onBlur={() => {
+          onSelectAnswerTLN(question.id, tlnInput, type);
+        }}
       />
     );
   }
@@ -73,6 +115,9 @@ const styles = StyleSheet.create({
   optionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  dsContainer: {
+    gap: 12,
   },
   radioCircle: {
     height: 20,
@@ -90,9 +135,41 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#000',
   },
-  optionText: {
+  input: {
+    borderWidth: 1,
+    borderColor: '#000',
+    padding: 10,
+    marginVertical: 10,
+    fontSize: 16,
+  },
+  dsContainer: {
+    gap: 12,
+  },
+  trueFalseContainer: {
+    gap: 10,
+  },
+  statementText: {
     fontSize: 18,
-    color: '#333',
+    color: colors.ink.darker,
+  },
+  trueFalseButtons: {
+    flexDirection: 'row',
+  },
+  trueFalseButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+    borderWidth: 1,
+    marginRight: 10,
+    borderRadius: 12,
+    backgroundColor: 'transparent',
+  },
+  selectedButton: {
+    backgroundColor: colors.primary,
+  },
+  buttonText: {
+    color: colors.ink.darker,
   },
   input: {
     borderWidth: 1,
