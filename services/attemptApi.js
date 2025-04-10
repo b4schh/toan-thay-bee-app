@@ -23,3 +23,11 @@ export const getAttemptByStudentIdApi = async ({ examId }, token) => {
     },
   });
 };
+
+export const getAttemptCompletedApi = async (_, token) => {
+  return await api.get(`/v1/user/attempt/completed`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

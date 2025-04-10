@@ -9,7 +9,7 @@ import {
 
 export const fetchClassesByUser = createAsyncThunk(
   'classes/fetchClassesByUser',
-  async ({}, { dispatch }) => {
+  async ({ }, { dispatch }) => {
     return await apiHandler(
       dispatch,
       ClassAPI.getAllClassesByUser,
@@ -51,7 +51,7 @@ export const fetchDetailClassByUser = createAsyncThunk(
       dispatch,
       ClassAPI.getDetailClassByUser,
       { class_code },
-      () => {},
+      () => { },
       false,
       false,
     );
@@ -65,7 +65,7 @@ export const fetchLessonLearningItemByClassId = createAsyncThunk(
       dispatch,
       ClassAPI.getLessonLearningItemByClassId,
       { class_code },
-      () => {},
+      () => { },
       false,
       false,
     );
@@ -79,7 +79,7 @@ export const fetchDataForLearning = createAsyncThunk(
       dispatch,
       ClassAPI.getDataForLearning,
       { class_code },
-      () => {},
+      () => { },
       false,
       false,
     );
@@ -107,9 +107,38 @@ export const joinClass = createAsyncThunk(
   },
 );
 
+export const markLearningItem = createAsyncThunk(
+  'classes/markLearningItem',
+  async ({ learningItemId }, { dispatch }) => {
+    return await apiHandler(
+      dispatch,
+      ClassAPI.markLearningItemAPI,
+      { learningItemId },
+      () => { },
+      false,
+      false,
+    );
+  },
+);
+
+export const getUncompletedLearningItem = createAsyncThunk(
+  'classes/getUncompletedLearningItem',
+  async (_, { dispatch }) => {
+    return await apiHandler(
+      dispatch,
+      ClassAPI.getUncompletedLearningItemApi,
+      null,
+      () => { },
+      false,
+      false,
+    );
+  },
+);
+
 const initialState = {
   classes: [],
   classDetail: null,
+  learningItems: [],
 };
 
 const classSlice = createSlice({
@@ -167,6 +196,24 @@ const classSlice = createSlice({
       })
       .addCase(fetchJoinedClasses.rejected, (state) => {
         state.loading = false;
+      })
+      .addCase(markLearningItem.fulfilled, (state, action) => {
+        const { learningItemId, isDone, studyTime } = action.payload.data;
+
+        for (const lesson of state.classDetail?.lessons || []) {
+          const learningItem = lesson.learningItems?.find(item => item.id === learningItemId);
+          if (learningItem) {
+            learningItem.studyStatuses[0].isDone = isDone;
+            learningItem.studyStatuses[0].studyTime = studyTime;
+            break; // tìm thấy rồi thì thoát luôn
+          }
+        }
+      })
+      .addCase(getUncompletedLearningItem.pending, (state) => {
+        state.learningItems = [];
+      })
+      .addCase(getUncompletedLearningItem.fulfilled, (state, action) => {
+        state.learningItems = action.payload.data.map((item) => item.learningItem);
       });
   },
 });

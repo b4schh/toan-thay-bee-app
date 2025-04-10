@@ -38,3 +38,16 @@ export const joinClassByCode = async ({ class_code }, token) => {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
+
+export const markLearningItemAPI = async ({ learningItemId }, token) => {
+  return await api.put(`v1/user/learning-item/${learningItemId}/mark`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export const getUncompletedLearningItemApi = async (_, token) => {
+  console.log('getUncompletedLearningItemApi', token);
+  return await api.get(`/v1/user/learning-item/uncompleted`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}

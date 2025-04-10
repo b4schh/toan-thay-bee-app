@@ -13,11 +13,14 @@ import {
   AppText,
   TabNavigation,
   LoadingOverlay,
+  UnfinishedLearningItem,
+  CompletedTestItem,
 } from '@components/index';
 import { Feather } from '@expo/vector-icons'; // Import tất cả icon libraries từ expo
 import colors from '../../../constants/colors';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchClassesByUser } from '../../../features/class/classSlice';
+import { fetchClassesByUser, getUncompletedLearningItem } from '../../../features/class/classSlice';
+import { fetchAttemptCompleted } from '../../../features/attempt/attemptSlice';
 import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
@@ -26,13 +29,19 @@ export default function HomeScreen() {
 
   const [selectedTab, setSelectedTab] = useState('unfinished');
   const { user } = useSelector((state) => state.auth);
-  const { classes } = useSelector((state) => state.classes);
+  const { classes, learningItems } = useSelector((state) => state.classes);
+  const { attempts } = useSelector((state) => state.attempts);
   const { loading } = useSelector((state) => state.states);
   const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
     (state) => state.filter,
   );
 
   useEffect(() => {
+    console.log(learningItems);
+  }, [learningItems]);
+
+  useEffect(() => {
+    // Fetch classes, uncompleted learning items, and completed tests when component mounts
     dispatch(
       fetchClassesByUser({
         search,
@@ -40,6 +49,8 @@ export default function HomeScreen() {
         limit,
       }),
     );
+    dispatch(getUncompletedLearningItem());
+    dispatch(fetchAttemptCompleted());
   }, []);
 
   const [refreshing, setRefreshing] = useState(false);
@@ -47,6 +58,8 @@ export default function HomeScreen() {
     setRefreshing(true);
     if (user) {
       dispatch(fetchClassesByUser());
+      dispatch(getUncompletedLearningItem());
+      dispatch(fetchAttemptCompleted());
     } else {
       router.replace('/login');
     }
@@ -62,20 +75,56 @@ export default function HomeScreen() {
     );
   }, [classes]);
 
+  // Render functions for list items
+  const renderLearningItem = useCallback(({ item }) => {
+    return <UnfinishedLearningItem item={item} />;
+  }, []);
+
+  const renderCompletedTest = useCallback(({ item }) => {
+    return <CompletedTestItem attempt={item} />;
+  }, []);
+
   const TabContent = useMemo(
     () => ({
-      // pending_assignments: (
-      //   <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
-      // ),
-      // unread_documents: (
-      //   <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
-      // ),
-      // saved_exams: <AppText style={styles.contentText}>📌 Đề đã lưu</AppText>,
-      // exam_history: (
-      //   <AppText style={styles.contentText}>Chưa có dữ liệu</AppText>
-      // ),
+      unfinished: (
+        <View style={styles.tabContentContainer}>
+          {learningItems && learningItems.length > 0 ? (
+            <FlatList
+              data={learningItems}
+              renderItem={renderLearningItem}
+              keyExtractor={(item) => (item && item.id ? item.id.toString() : Math.random().toString())}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.learningItemsList}
+            />
+          ) : (
+            <AppText style={styles.contentText}>
+              Không có mục học tập nào chưa hoàn thành
+            </AppText>
+          )}
+        </View>
+      ),
+      saved_exams: (
+        <AppText style={styles.contentText}>📌 Đề đã lưu</AppText>
+      ),
+      exam_history: (
+        <View style={styles.tabContentContainer}>
+          {attempts && attempts.length > 0 ? (
+            <FlatList
+              data={attempts}
+              renderItem={renderCompletedTest}
+              keyExtractor={(item) => (item && item.id ? item.id.toString() : Math.random().toString())}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.learningItemsList}
+            />
+          ) : (
+            <AppText style={styles.contentText}>
+              Chưa có bài kiểm tra nào đã hoàn thành
+            </AppText>
+          )}
+        </View>
+      ),
     }),
-    [selectedTab],
+    [selectedTab, learningItems, attempts],
   );
 
   const renderClassItem = useCallback(({ item }) => {
@@ -304,10 +353,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.sky.lightest,
   },
+  tabContentContainer: {
+    width: '100%',
+    minHeight: 200,
+    padding: 12,
+  },
+  learningItemsList: {
+    paddingBottom: 16,
+  },
   contentText: {
     fontFamily: 'Inter-Medium',
     fontSize: 18,
     textAlign: 'center',
     color: colors.ink.darkest,
+    padding: 20,
   },
 });
