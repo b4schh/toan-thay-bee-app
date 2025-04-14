@@ -22,7 +22,7 @@ import colors from '../../../../constants/colors';
 
 const ClassroomDetail = () => {
   const class_code = useLocalSearchParams().id;
-  const { classDetail } = useSelector((state) => state.classes);
+  const { dataLearning } = useSelector((state) => state.classes);
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -38,7 +38,7 @@ const ClassroomDetail = () => {
     <View style={styles.container}>
       <LoadingOverlay />
       <HeaderWithBackButton
-        title={classDetail?.name || 'Chi tiết lớp học'}
+        title={dataLearning?.name || 'Chi tiết lớp học'}
         onBackPress={() => router.back()}
       />
 
@@ -52,7 +52,7 @@ const ClassroomDetail = () => {
 
       <View>
         <ScrollView contentContainerStyle={styles.scrollContainerContent}>
-          {classDetail?.lessons?.map((lesson, index) => (
+          {dataLearning?.lessons?.map((lesson, index) => (
             <LessonItem
               key={index}
               lesson={lesson}

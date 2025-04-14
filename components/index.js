@@ -15,6 +15,8 @@ export { default as MyMathText } from './latex/MyMathText';
 export { default as YouTubePlayer } from './learning-item/YouTubePlayer';
 export { default as LearningItem } from './learning-item/LearningItem';
 export { default as LearningItemContent } from './learning-item/LearningItemContent';
+export { default as UnfinishedLearningItem } from './learning-item/UnfinishedLearningItem';
+export { default as CompletedTestItem } from './attempt/CompletedTestItem';
 export { default as LessonDetail } from './lesson/LessonDetail';
 export { default as LessonDropdown } from './lesson/LessonDropdown';
 export { default as LessonItem } from './lesson/LessonItem';

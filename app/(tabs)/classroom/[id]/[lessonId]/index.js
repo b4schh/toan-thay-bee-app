@@ -1,7 +1,7 @@
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   AppText,
   LoadingOverlay,
@@ -14,10 +14,10 @@ import colors from '../../../../../constants/colors';
 const LessonDetail = () => {
   const [openItems, setOpenItems] = useState([]); // ✅ Phải nằm trên cùng, trước khi dùng
   const { lessonId } = useLocalSearchParams();
-  const { classDetail } = useSelector((state) => state.classes);
+  const { dataLearning } = useSelector((state) => state.classes);
   const router = useRouter();
 
-  const lesson = classDetail.lessons.find((lesson) => lesson.id == lessonId);
+  const lesson = dataLearning.lessons.find((lesson) => lesson.id == lessonId);
 
   const toggleItem = (id) => {
     setOpenItems((prev) =>

@@ -25,6 +25,7 @@ import {
 import colors from '../../../constants/colors';
 import socket from '../../../services/socket';
 import { fetchAnswersByAttempt } from '../../../features/answer/answerSlice';
+import { fetchPublicExamById } from '../../../features/exam/examSlice';
 
 export default function DoExamScreen() {
   const router = useRouter();
@@ -33,15 +34,15 @@ export default function DoExamScreen() {
   const { user } = useSelector((state) => state.auth);
   const { questions } = useSelector((state) => state.questions);
   const { answers } = useSelector((state) => state.answers);
-  const { exam } = useSelector((state) => state.exams);
-  console.log('Exam 1:', exam);
-  console.log('exam.testDuration 1:', exam?.testDuration);
-  const examRef = useRef(exam);
+  const { examDetail } = useSelector((state) => state.exams);
+
 
   // Cập nhật ref mỗi khi exam thay đổi
   useEffect(() => {
-    examRef.current = exam;
-  }, [exam]);
+    if (!examDetail || examDetail?.id !== id) {
+      dispatch(fetchPublicExamById({ id }));
+    }
+  }, [dispatch, id]);
 
   const [isStarted, setIsStarted] = useState(false);
   const [isOverviewVisible, setIsOverviewVisible] = useState(false);
@@ -146,7 +147,7 @@ export default function DoExamScreen() {
   };
 
   const handleAutoSubmit = () => {
-    if (!attemptId1 && !exam?.testDuration) return;
+    if (!attemptId1 && !examDetail?.testDuration) return;
     setSaveQuestion(new Set());
     setErrorQuestion(new Set());
     socket.emit('submit_exam', { attemptId: attemptId1 });
@@ -169,6 +170,9 @@ export default function DoExamScreen() {
 
       socket.once('connect', () => {
         console.log('✅ Socket connected');
+
+        // socket.once('exam_started', handleExamStarted);
+
         socket.emit('join_exam', {
           studentId: user.id,
           examId: id,
@@ -188,6 +192,30 @@ export default function DoExamScreen() {
       alert('Lỗi', message);
       router.replace('/home');
     });
+  };
+
+  const handleExamStarted = ({ attemptId, startTime }) => {
+    console.log('📥 Nhận sự kiện exam_started');
+
+    setIsStarted(true);
+    setAttemptId1(attemptId);
+
+    if (examDetail?.testDuration && startTime) {
+      const start = new Date(startTime);
+      const now = new Date();
+      const elapsedSeconds = Math.floor((now - start) / 1000);
+      const totalSeconds = examDetail.testDuration * 60;
+      const remaining = Math.max(totalSeconds - elapsedSeconds, 0);
+      setRemainingTime(remaining);
+    }
+
+    if (attemptId) {
+      dispatch(fetchAnswersByAttempt(attemptId));
+    }
+
+    if (id) {
+      dispatch(fetchPublicQuestionsByExamId(id));
+    }
   };
 
   const handleSelectAnswerTN = (questionId, statementId, type) => {
@@ -359,19 +387,30 @@ export default function DoExamScreen() {
   }, [remainingTime]);
 
   useEffect(() => {
-    if (!exam) return;
+    socket.onAny((event, ...args) => {
+      console.log(`📡 Socket event: ${event}, args`);
+      console.log(args);
+    });
+
+    return () => {
+      socket.offAny();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!examDetail) return;
 
     socket.once('exam_started', ({ attemptId, startTime }) => {
-      const currentExam = examRef.current;
-      console.log('Exam 2:', currentExam);
-      console.log('exam.testDuration 2:', currentExam?.testDuration);
+      console.log('Exam 2:', examDetail);
+      console.log('exam.testDuration 2:', examDetail?.testDuration);
+      setIsStarted(true);
 
       try {
-        if (currentExam?.testDuration && startTime) {
+        if (examDetail?.testDuration && startTime) {
           const start = new Date(startTime);
           const now = new Date();
           const elapsedSeconds = Math.floor((now - start) / 1000);
-          const totalSeconds = currentExam.testDuration * 60;
+          const totalSeconds = examDetail.testDuration * 60;
           const remaining = Math.max(totalSeconds - elapsedSeconds, 0);
           setRemainingTime(remaining);
         }
@@ -382,7 +421,6 @@ export default function DoExamScreen() {
       if (attemptId) {
         dispatch(fetchAnswersByAttempt(attemptId));
       }
-      setIsStarted(true);
       if (id) {
         dispatch(fetchPublicQuestionsByExamId(id));
       }
@@ -477,11 +515,10 @@ export default function DoExamScreen() {
             />
           </View> */}
           <ExamHeader
-            examName={exam.name}
+            examName={examDetail.name}
             remainingTime={formatTime(remainingTime)}
             onMenuPress={() => setIsOverviewVisible(true)}
           />
-
           {/* Button chuyển câu */}
           <View style={styles.navigationContainer}>
             <Button
@@ -511,7 +548,7 @@ export default function DoExamScreen() {
             questionContent={currentQuestion?.content}
             questionImage={currentQuestion?.imageUrl}
           />
-          
+
           {/* Lựa chọn */}
           <QuestionStatements
             type={currentSection?.type}
