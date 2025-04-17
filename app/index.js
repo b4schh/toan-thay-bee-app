@@ -17,8 +17,8 @@ export default function Welcome() {
         text="Bắt đầu"
         iconColor={colors.primary}
         style={[styles.button, {}]}
-        // onPress={() => router.push('(auth)/login')}
-        onPress={() => router.push('(tabs)')}
+        onPress={() => router.push('(auth)/login')}
+        // onPress={() => router.push('(tabs)')}
       />
     </View>
   );

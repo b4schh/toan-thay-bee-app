@@ -28,33 +28,40 @@ const LessonDetail = () => {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={styles.container}>
       <LoadingOverlay />
+
       <HeaderWithBackButton
         title={lesson?.name}
         onBackPress={() => router.back()}
       />
 
-      <AppText style={{ fontSize: 18, fontFamily: 'Inter-Medium' }}>
-        Nội dung buổi học
-      </AppText>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContainerContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <AppText style={{ fontSize: 18, fontFamily: 'Inter-Medium' }}>
+          Nội dung buổi học
+        </AppText>
 
-      <View style={styles.itemsContainer}>
-        {lesson.learningItems.map((item) => {
-          const isOpen = openItems.includes(item.id);
-          return (
-            <View key={item.id}>
-              <LearningItem item={item} isOpen={isOpen} onToggle={toggleItem} />
-              {isOpen && <LearningItemContent item={item} router={router} />}
-            </View>
-          );
-        })}
-      </View>
-    </ScrollView>
+        <View style={styles.itemsContainer}>
+          {lesson.learningItems.map((item) => {
+            const isOpen = openItems.includes(item.id);
+            return (
+              <View key={item.id}>
+                <LearningItem
+                  item={item}
+                  isOpen={isOpen}
+                  onToggle={toggleItem}
+                />
+                {isOpen && <LearningItemContent item={item} router={router} />}
+              </View>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -62,13 +69,15 @@ export default LessonDetail;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.sky.lightest,
     flex: 1,
-    padding: 20,
+    gap: 16,
+    backgroundColor: colors.sky.lightest,
   },
-  contentContainer: {
-    flexDirection: 'column',
-    gap: 10,
+  scrollView: {
+    paddingHorizontal: 20,
+  },
+  scrollContainerContent: {
+    gap: 8,
   },
   itemsContainer: {
     gap: 12,

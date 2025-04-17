@@ -10,7 +10,7 @@ const Button = ({
   icon, // Tên icon
   iconLibrary = 'Ionicons', // Default là Ionicons
   iconSize = 24, // Kích thước icon, mặc định = 24
-  iconColor = colors.sky.white, // Màu icon, mặc định là trắng
+  iconColor, // Màu icon
   iconComponent,
   style, // Custom style của button
   textStyle, // Custom style của text
@@ -18,6 +18,14 @@ const Button = ({
   disabled = false,
   ...props
 }) => {
+  // Xác định màu icon và text dựa trên style của button
+  const isWhiteBackground = style?.backgroundColor === colors.sky.white;
+  const defaultIconColor = isWhiteBackground ? colors.primary : colors.sky.white;
+  const finalIconColor = iconColor || defaultIconColor;
+
+  // Xác định màu text mặc định dựa trên nền
+  const defaultTextStyle = isWhiteBackground ? { color: colors.primary } : { color: colors.sky.white };
+  const finalTextStyle = [styles.text, defaultTextStyle, textStyle];
   // Hàm render icon với khả năng chọn library
   const renderIcon = () => {
     if (iconComponent) {
@@ -30,7 +38,7 @@ const Button = ({
         <IconComponent
           name={icon}
           size={iconSize}
-          color={iconColor}
+          color={finalIconColor}
           style={[styles.icon, iconStyle, text && styles.iconWithText]}
         />
       );
@@ -48,7 +56,7 @@ const Button = ({
     >
       <View style={styles.content}>
         {renderIcon()}
-        {text && <AppText style={[styles.text, textStyle]}>{text}</AppText>}
+        {text && <AppText style={finalTextStyle}>{text}</AppText>}
       </View>
     </TouchableOpacity>
   );
@@ -73,6 +81,7 @@ const styles = StyleSheet.create({
   text: {
     fontFamily: 'Inter-Medium',
     color: colors.sky.white,
+    fontSize: 16,
   },
   icon: {
     // Không set color và size ở đây nữa để prop override

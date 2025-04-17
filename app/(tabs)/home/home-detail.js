@@ -14,15 +14,16 @@ export default function HomeDetailScreen() {
   const router = useRouter();
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <LoadingOverlay />
-      <View style={styles.container}>
-        {/* Header */}
-        <HeaderWithBackButton
-          title="Tổng quan"
-          onBackPress={() => router.back()}
-        />
 
+      {/* Header */}
+      <HeaderWithBackButton
+        title="Tổng quan"
+        onBackPress={() => router.back()}
+      />
+
+      <View style={styles.content}>
         {/* Navigation Bar */}
         <TabNavigation
           tabs={[
@@ -41,14 +42,14 @@ export default function HomeDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    gap: 16,
     backgroundColor: colors.sky.lightest,
-    padding: 20,
-    gap: 10,
-    paddingBottom: 80,
   },
-  header: {
-    fontFamily: 'Inter-Bold',
-    fontSize: 28,
-    color: colors.ink.darkest,
+  content: {
+    flex: 1,
+    backgroundColor: colors.sky.lightest,
+    paddingHorizontal: 20,
+    gap: 10,
+    marginBottom: 80,
   },
 });

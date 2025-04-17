@@ -31,6 +31,20 @@ export const fetchExams = createAsyncThunk(
   },
 );
 
+export const fetchSavedExams = createAsyncThunk(
+  'exams/fetchSavedExams',
+  async (_, { dispatch }) => {
+    return await apiHandler(
+      dispatch,
+      examApi.getSavedExams,
+      null,
+      () => {},
+      true,
+      false,
+    );
+  },
+)
+
 export const fetchPublicExams = createAsyncThunk(
   'exams/fetchPublicExams',
   async (data, { dispatch }) => {
@@ -106,6 +120,7 @@ const examSlice = createSlice({
     isTimerRunning: false,
     initialDuration: 0,
     examDetail: null,
+    examsSaved: [],
   },
   reducers: {
     setExam: (state, action) => {
@@ -140,6 +155,14 @@ const examSlice = createSlice({
       .addCase(fetchExams.fulfilled, (state, action) => {
         if (action.payload) {
           state.exams = action.payload.data;
+        }
+      })
+      .addCase(fetchSavedExams.pending, (state) => {
+        state.examsSaved = [];
+      })
+      .addCase(fetchSavedExams.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.examsSaved = action.payload.data;
         }
       })
       .addCase(fetchExamById.pending, (state) => {

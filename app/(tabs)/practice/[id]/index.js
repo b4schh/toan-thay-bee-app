@@ -44,21 +44,25 @@ export default function ExamDetailScreen() {
         title={examDetail?.name}
         onBackPress={() => router.replace('/practice')}
       />
-
-      <ExamInfoCard
-        examDetail={examDetail}
-        onStartExam={() => router.push(`/exam/${id}/do-exam`)}
-      />
-      <ExamHistory
-        attempts={attempts}
-        onViewResult={(attemptId) => router.push(`/exam/${attemptId}/result`)}
-      />
+      <View style={styles.content}>
+        <ExamInfoCard
+          examDetail={examDetail}
+          onStartExam={() => router.push(`/exam/${id}/do-exam`)}
+        />
+        <ExamHistory
+          attempts={attempts}
+          onViewResult={(attemptId) => router.push(`/exam/${attemptId}/result`)}
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  content: {
     flex: 1,
     backgroundColor: colors.sky.lightest,
     padding: 20,

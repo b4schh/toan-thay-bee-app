@@ -201,7 +201,7 @@ const classSlice = createSlice({
       .addCase(markLearningItem.fulfilled, (state, action) => {
         const { learningItemId, isDone, studyTime } = action.payload.data;
 
-        for (const lesson of state.classDetail?.lessons || []) {
+        for (const lesson of state.dataLearning?.lessons || []) {
           const learningItem = lesson.learningItems?.find(item => item.id === learningItemId);
           if (learningItem) {
             learningItem.studyStatuses[0].isDone = isDone;

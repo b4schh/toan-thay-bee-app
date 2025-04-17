@@ -2,12 +2,10 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   TextInput,
-  Image,
   StyleSheet,
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {

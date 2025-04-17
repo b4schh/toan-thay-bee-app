@@ -61,7 +61,6 @@ export default function TextInputField({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
   },
   label: {
     fontFamily: 'Inter-Medium',
@@ -74,10 +73,11 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 48,
-    borderWidth: 1,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.sky.base,
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     fontSize: 14,
   },
   toggleButton: {

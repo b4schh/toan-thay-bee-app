@@ -37,30 +37,28 @@ const ClassroomDetail = () => {
   return (
     <View style={styles.container}>
       <LoadingOverlay />
+
       <HeaderWithBackButton
         title={dataLearning?.name || 'Chi tiết lớp học'}
         onBackPress={() => router.back()}
       />
 
-      {/* <View style={styles.searchBar}>
-        <SearchBar />
-      </View> */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContainerContent}
+      >
+        <AppText style={{ fontSize: 18, fontFamily: 'Inter-Medium' }}>
+          Danh sách buổi học
+        </AppText>
 
-      <AppText style={{ fontSize: 18, fontFamily: 'Inter-Medium' }}>
-        Danh sách buổi học
-      </AppText>
-
-      <View>
-        <ScrollView contentContainerStyle={styles.scrollContainerContent}>
-          {dataLearning?.lessons?.map((lesson, index) => (
-            <LessonItem
-              key={index}
-              lesson={lesson}
-              onLessonPress={handleLessonPress}
-            />
-          ))}
-        </ScrollView>
-      </View>
+        {dataLearning?.lessons?.map((lesson, index) => (
+          <LessonItem
+            key={index}
+            lesson={lesson}
+            onLessonPress={handleLessonPress}
+          />
+        ))}
+      </ScrollView>
     </View>
   );
 };
@@ -71,11 +69,12 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.sky.lightest,
     flex: 1,
-    padding: 20,
     gap: 16,
   },
+  scrollView: {
+    paddingHorizontal: 20,
+  },
   scrollContainerContent: {
-    flexDirection: 'column',
     gap: 8,
   },
   searchBar: {

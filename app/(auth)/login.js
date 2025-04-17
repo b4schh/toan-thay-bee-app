@@ -45,10 +45,9 @@ export default function Login() {
   // Nếu đã đăng nhập thành công (user !== null), chuyển hướng đến trang chính
   useEffect(() => {
     if (user) {
-      router.replace('/(tabs)');
+      router.replace('/home');
     }
-    // router.replace('/(tabs)');
-  }, [user, router]);
+  }, [user]);
 
   return (
     <View style={styles.container}>
@@ -211,7 +210,7 @@ export default function Login() {
         </Formik>
       </View>
 
-      <LoadingOverlay/>
+      <LoadingOverlay />
     </View>
   );
 }
@@ -244,7 +243,9 @@ const styles = StyleSheet.create({
   form: {
     gap: 16,
   },
-  inputField: {},
+  inputField: {
+    gap: 12,
+  },
   errorSpacing: {
     marginBottom: 0,
   },

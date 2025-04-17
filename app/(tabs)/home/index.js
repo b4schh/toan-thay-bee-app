@@ -15,12 +15,17 @@ import {
   LoadingOverlay,
   UnfinishedLearningItem,
   CompletedTestItem,
+  SavedExamItem,
 } from '@components/index';
 import { Feather } from '@expo/vector-icons'; // Import tất cả icon libraries từ expo
 import colors from '../../../constants/colors';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchClassesByUser, getUncompletedLearningItem } from '../../../features/class/classSlice';
+import {
+  fetchClassesByUser,
+  getUncompletedLearningItem,
+} from '../../../features/class/classSlice';
 import { fetchAttemptCompleted } from '../../../features/attempt/attemptSlice';
+import { fetchSavedExams } from 'features/exam/examSlice';
 import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
@@ -30,8 +35,9 @@ export default function HomeScreen() {
   const [selectedTab, setSelectedTab] = useState('unfinished');
   const { user } = useSelector((state) => state.auth);
   const { classes, learningItems } = useSelector((state) => state.classes);
-  const { attempts } = useSelector((state) => state.attempts);
+  const { completedAttempts } = useSelector((state) => state.attempts);
   const { loading } = useSelector((state) => state.states);
+  const { examsSaved } = useSelector((state) => state.exams);
   const { search, currentPage, limit, totalItems, sortOrder } = useSelector(
     (state) => state.filter,
   );
@@ -51,6 +57,7 @@ export default function HomeScreen() {
     );
     dispatch(getUncompletedLearningItem());
     dispatch(fetchAttemptCompleted());
+    dispatch(fetchSavedExams());
   }, []);
 
   const [refreshing, setRefreshing] = useState(false);
@@ -84,6 +91,10 @@ export default function HomeScreen() {
     return <CompletedTestItem attempt={item} />;
   }, []);
 
+  const renderSavedExam = useCallback(({ item }) => {
+    return <SavedExamItem exam={{ ...item.exam, isDone: item.isDone }} />;
+  }, []);
+
   const TabContent = useMemo(
     () => ({
       unfinished: (
@@ -92,7 +103,9 @@ export default function HomeScreen() {
             <FlatList
               data={learningItems}
               renderItem={renderLearningItem}
-              keyExtractor={(item) => (item && item.id ? item.id.toString() : Math.random().toString())}
+              keyExtractor={(item) =>
+                item && item.id ? item.id.toString() : Math.random().toString()
+              }
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.learningItemsList}
             />
@@ -104,15 +117,33 @@ export default function HomeScreen() {
         </View>
       ),
       saved_exams: (
-        <AppText style={styles.contentText}>📌 Đề đã lưu</AppText>
+        <View style={styles.tabContentContainer}>
+          {examsSaved && examsSaved.length > 0 ? (
+            <FlatList
+              data={examsSaved}
+              renderItem={renderSavedExam}
+              keyExtractor={(item) =>
+                item && item.id ? item.id.toString() : Math.random().toString()
+              }
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.learningItemsList}
+            />
+          ) : (
+            <AppText style={styles.contentText}>
+              Bạn chưa lưu đề thi nào
+            </AppText>
+          )}
+        </View>
       ),
       exam_history: (
         <View style={styles.tabContentContainer}>
-          {attempts && attempts.length > 0 ? (
+          {completedAttempts && completedAttempts.length > 0 ? (
             <FlatList
-              data={attempts}
+              data={completedAttempts}
               renderItem={renderCompletedTest}
-              keyExtractor={(item) => (item && item.id ? item.id.toString() : Math.random().toString())}
+              keyExtractor={(item) =>
+                item && item.id ? item.id.toString() : Math.random().toString()
+              }
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.learningItemsList}
             />
@@ -124,7 +155,7 @@ export default function HomeScreen() {
         </View>
       ),
     }),
-    [selectedTab, learningItems, attempts],
+    [selectedTab, learningItems, completedAttempts, examsSaved],
   );
 
   const renderClassItem = useCallback(({ item }) => {
@@ -356,7 +387,6 @@ const styles = StyleSheet.create({
   tabContentContainer: {
     width: '100%',
     minHeight: 200,
-    padding: 12,
   },
   learningItemsList: {
     paddingBottom: 16,

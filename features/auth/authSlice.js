@@ -4,8 +4,10 @@ import {
   registerAPI,
   logoutAPI,
   checkLoginAPI,
+  updateUserAPI,
+  updateAvatarAPI,
 } from '../../services/authApi';
-import { setErrorMessage } from '../state/stateApiSlice';
+import { setErrorMessage, setSuccessMessage } from '../state/stateApiSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiHandler } from '../../utils/apiHandler';
 
@@ -62,6 +64,38 @@ export const logout = createAsyncThunk(
   },
 );
 
+// Thunk cập nhật thông tin người dùng
+export const updateUser = createAsyncThunk(
+  'auth/updateUser',
+  async (userData, { dispatch }) => {
+    return await apiHandler(
+      dispatch,
+      updateUserAPI,
+      userData,
+      () => {
+        dispatch(setSuccessMessage('Cập nhật thông tin thành công'));
+      },
+      true,
+    );
+  },
+);
+
+// Thunk cập nhật avatar
+export const updateAvatar = createAsyncThunk(
+  'auth/updateAvatar',
+  async (avatar, { dispatch }) => {
+    return await apiHandler(
+      dispatch,
+      updateAvatarAPI,
+      { avatar },
+      () => {
+        dispatch(setSuccessMessage('Cập nhật ảnh đại diện thành công'));
+      },
+      true,
+    );
+  },
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
@@ -69,7 +103,11 @@ const authSlice = createSlice({
     loading: false, // Đang load thông tin đăng nhập, đăng ký hay checkLogin
     isChecking: true, // Dùng để biết lần đầu checkLogin có đang chạy không
   },
-  reducers: {},
+  reducers: {
+    logoutLocal: (state) => {
+      state.user = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       // Xử lý login
@@ -116,8 +154,23 @@ const authSlice = createSlice({
       // Xử lý logout
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
+      })
+
+      // Xử lý cập nhật thông tin người dùng
+      .addCase(updateUser.fulfilled, (state, action) => {
+        if (state.user) {
+          state.user = { ...state.user, ...action.payload.data };
+        }
+      })
+
+      // Xử lý cập nhật avatar
+      .addCase(updateAvatar.fulfilled, (state, action) => {
+        if (state.user) {
+          state.user.avatarUrl = action.payload.newAvartarUrl;
+        }
       });
   },
 });
 
 export default authSlice.reducer;
+export const { logoutLocal } = authSlice.actions;

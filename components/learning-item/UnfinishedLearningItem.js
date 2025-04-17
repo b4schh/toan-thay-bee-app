@@ -15,9 +15,9 @@ export default function UnfinishedLearningItem({ item }) {
 
   const handlePress = () => {
     // Navigate to the lesson containing this learning item
-    if (item.lessonId && item.classCode) {
+    if (item.lesson && item.lesson.class.class_code) {
       router.push({
-        pathname: `/classroom/${item.classCode}/${item.lessonId}`,
+        pathname: `/classroom/${item.lesson.class.class_code}`,
       });
     }
   };

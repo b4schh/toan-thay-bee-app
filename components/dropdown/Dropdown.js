@@ -10,6 +10,7 @@ export default function Dropdown({
   value,
   onChange,
   placeholder = 'Chọn một mục',
+  disabled = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const selectedOption = options.find((opt) => opt.code === value);
@@ -19,9 +20,10 @@ export default function Dropdown({
       {label && <AppText style={styles.label}>{label}</AppText>}
 
       <TouchableOpacity
-        style={[styles.header, isOpen && styles.headerActive]}
-        onPress={() => setIsOpen(!isOpen)}
+        style={[styles.header, isOpen && styles.headerActive, disabled && styles.headerDisabled]}
+        onPress={disabled ? null : () => setIsOpen(!isOpen)}
         activeOpacity={0.7}
+        disabled={disabled}
       >
         <AppText
           style={[styles.selectedText, !selectedOption && styles.placeholder]}
@@ -80,8 +82,7 @@ export default function Dropdown({
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    marginBottom: 10,
+    flex: 1
   },
   label: {
     marginBottom: 5,
@@ -96,10 +97,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.sky.white,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.sky.dark,
+    borderColor: colors.sky.base,
   },
   headerActive: {
     borderColor: colors.ink.base,
+  },
+  headerDisabled: {
+    backgroundColor: colors.sky.lightest,
+    borderColor: colors.sky.light,
   },
   selectedText: {
     color: colors.ink.dark,
@@ -133,8 +138,6 @@ const styles = StyleSheet.create({
   },
   option: {
     padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.sky.lighter,
   },
   optionSelected: {
     backgroundColor: colors.sky.lighter,

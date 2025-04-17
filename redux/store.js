@@ -8,6 +8,7 @@ import answerReducer from '../features/answer/answerSlice';
 import stateReducer from '../features/state/stateApiSlice';
 import codeReducer from '../features/code/codeSlice';
 import attemptReducer from '../features/attempt/attemptSlice';
+import articleReducer from '../features/article/articleSlice';
 
 export const store = configureStore({
   reducer: {
@@ -20,5 +21,6 @@ export const store = configureStore({
     states: stateReducer,
     codes: codeReducer,
     attempts: attemptReducer,
+    articles: articleReducer,
   },
 });

@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const getAllPublicExamAPI = async (data, token) => {
   if (!token) {
-    console.error('🚨 Không tìm thấy token! Người dùng chưa đăng nhập.');
     throw new Error('Bạn cần đăng nhập trước khi lấy danh sách đề thi.');
   }
 
@@ -15,10 +14,18 @@ export const getAllPublicExamAPI = async (data, token) => {
 
 export const getExamById = async ({ examId }, token) => {
   if (!token) {
-    console.error('🚨 Không tìm thấy token! Người dùng chưa đăng nhập.');
     throw new Error('Bạn cần đăng nhập trước khi xem chi tiết đề thi.');
   }
   return api.get(`/v1/exams/${examId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const getSavedExams = async (_, token) => {
+  if (!token) {
+    throw new Error('Bạn cần đăng nhập trước khi lấy danh sách đề thi.');
+  }
+  return api.get(`/v1/user/exam/saved`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 };

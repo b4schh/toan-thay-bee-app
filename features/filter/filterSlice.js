@@ -25,7 +25,15 @@ const initialState = {
       limit: 10,
       search: '',
       sortOrder: 'desc',
-    }
+    },
+    article: {
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0,
+      limit: 10,
+      search: '',
+      sortOrder: 'desc',
+    },
     // Thêm các màn hình khác nếu cần
   },
   isAddView: false,

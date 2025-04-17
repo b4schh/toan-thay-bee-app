@@ -25,3 +25,29 @@ export const checkLoginAPI = async (_, token) => {
     },
   });
 };
+
+// Cập nhật thông tin người dùng
+export const updateUserAPI = (user, token) => {
+  return api.put('/v1/user', user, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+// Cập nhật avatar người dùng
+export const updateAvatarAPI = ({ avatar }, token) => {
+  const formData = new FormData();
+  formData.append('avatar', {
+    uri: avatar.uri,
+    type: avatar.type || 'image/jpeg',
+    name: avatar.name || 'avatar.jpg',
+  });
+
+  return api.put('/v1/user/avatar', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

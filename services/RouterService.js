@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 let routerInstance = null;
 
 export const setRouter = (router) => {
@@ -6,9 +8,7 @@ export const setRouter = (router) => {
 
 export const redirectToLogin = () => {
   console.warn('🔒 Unauthorized! Redirecting to login...');
-
   if (routerInstance) {
-    console.log(routerInstance)
     routerInstance.replace('/login');
   } else {
     console.warn('⚠️ Router chưa sẵn sàng!');

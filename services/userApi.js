@@ -26,3 +26,22 @@ export const putUserTypeAPI = ({id , type}) => {
 export const putUserStatusAPI = ({id , status}) => {
     return api.put(`/v1/admin/user/${id}/status`, {status});
 }
+
+// Đổi mật khẩu người dùng
+export const changePasswordAPI = ({ oldPassword, newPassword, confirmPassword }) => {
+    return api.put('/v1/user/password', {
+        oldPassword,
+        newPassword,
+        confirmPassword,
+    });
+};
+
+// Đổi avatar người dùng
+export const changeAvatarAPI = (formData) => {
+    // formData là FormData chứa file avatar
+    return api.put('/v1/user/avatar', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+};
