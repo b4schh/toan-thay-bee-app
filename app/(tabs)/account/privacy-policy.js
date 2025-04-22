@@ -2,7 +2,7 @@ import React from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import AppText from '../../../components/AppText';
+import { AppText } from '@components/index';
 import colors from '../../../constants/colors';
 
 export default function PrivacyPolicyScreen() {
@@ -23,8 +23,8 @@ export default function PrivacyPolicyScreen() {
       <ScrollView style={styles.content}>
         <AppText style={styles.text}>
           Chúng tôi cam kết bảo vệ quyền riêng tư của bạn. Chính sách này giải
-          thích cách Toán thầy Bee thu thập, sử dụng và bảo vệ thông tin của
-          bạn khi bạn sử dụng ứng dụng học toán của chúng tôi.{'\n\n'}
+          thích cách Toán thầy Bee thu thập, sử dụng và bảo vệ thông tin của bạn
+          khi bạn sử dụng ứng dụng học toán của chúng tôi.{'\n\n'}
           <AppText style={styles.sectionTitle}>
             1. Thông tin chúng tôi thu thập
           </AppText>

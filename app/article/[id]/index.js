@@ -14,13 +14,160 @@ import {
   AppText,
   HeaderWithBackButton,
   LoadingOverlay,
-  Button,
-  MyMathText
+  Button
 } from '@components/index';
 import colors from '../../../constants/colors';
 import { Feather } from '@expo/vector-icons';
-import Markdown from 'react-native-markdown-display';
-import MathJax from 'react-native-mathjax';
+
+import { WebView } from 'react-native-webview';
+// Import a simple markdown-to-html converter
+import marked from 'marked';
+
+const MathMarkdownViewer = ({ content, style }) => {
+  const [height, setHeight] = useState(1);
+
+  // Convert markdown to HTML
+  const processContent = (content) => {
+    try {
+      // Replace math delimiters before processing markdown
+      // This ensures that math formulas are recognized by MathJax
+      let processedContent = content;
+
+      // Replace inline math: \( ... \) with $ ... $
+      processedContent = processedContent.replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$');
+
+      // Replace display math: \[ ... \] with $$ ... $$
+      processedContent = processedContent.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$1$$');
+
+      // Process the markdown to HTML
+      return marked.parse(processedContent);
+    } catch (error) {
+      console.error('Error processing markdown:', error);
+      return content; // Return original content if processing fails
+    }
+  };
+
+  const wrapHTML = (bodyContent) => {
+    // Convert markdown to HTML before wrapping
+    const htmlContent = processContent(bodyContent);
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body {
+            font-size: 16px;
+            color: black;
+            padding: 0;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          }
+          p {
+            margin: 0.8em 0;
+            line-height: 1.5;
+          }
+          h1, h2, h3, h4, h5, h6 {
+            margin-top: 1.2em;
+            margin-bottom: 0.6em;
+            font-weight: bold;
+            color: #333;
+          }
+          h1 { font-size: 1.8em; }
+          h2 { font-size: 1.6em; }
+          h3 { font-size: 1.4em; }
+          h4 { font-size: 1.2em; }
+          h5 { font-size: 1.1em; }
+          h6 { font-size: 1em; }
+          a { color: #0066cc; text-decoration: underline; }
+          img { max-width: 100%; border-radius: 4px; margin: 1em 0; }
+          ul, ol { padding-left: 2em; margin: 0.8em 0; }
+          li { margin: 0.3em 0; }
+          blockquote {
+            border-left: 4px solid #ddd;
+            padding-left: 1em;
+            margin-left: 0;
+            color: #666;
+          }
+          code {
+            background-color: #f5f5f5;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: monospace;
+          }
+          pre {
+            background-color: #f5f5f5;
+            padding: 1em;
+            border-radius: 5px;
+            overflow-x: auto;
+          }
+          pre code {
+            background-color: transparent;
+            padding: 0;
+          }
+          table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+          }
+          th {
+            background-color: #f5f5f5;
+          }
+          .MathJax_Display {
+            text-align: center !important;
+            display: block !important;
+            margin: 1em 0 !important;
+          }
+        </style>
+
+        <script type="text/x-mathjax-config">
+          MathJax.Hub.Config({
+            messageStyle: 'none',
+            extensions: ['tex2jax.js'],
+            jax: ['input/TeX', 'output/HTML-CSS'],
+            tex2jax: {
+              inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+              displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+              processEscapes: true,
+            },
+            TeX: {
+              extensions: ['AMSmath.js', 'AMSsymbols.js']
+            }
+          });
+
+          MathJax.Hub.Queue(function () {
+            var height = document.documentElement.scrollHeight;
+            window.ReactNativeWebView.postMessage(String(height));
+          });
+        </script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js"></script>
+      </head>
+      <body>
+        ${htmlContent}
+      </body>
+      </html>
+    `;
+  };
+
+  return (
+    <View style={[{ height }, style]}>
+      <WebView
+        scrollEnabled={false}
+        originWhitelist={['*']}
+        source={{ html: wrapHTML(content) }}
+        onMessage={(event) => setHeight(Number(event.nativeEvent.data))}
+      />
+    </View>
+  );
+};
+
 
 export default function ArticleDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -30,57 +177,8 @@ export default function ArticleDetailScreen() {
   const { article } = useSelector((state) => state.articles);
   const { loading } = useSelector((state) => state.states);
   const [error, setError] = useState(null);
-  const [processedContent, setProcessedContent] = useState([]);
 
-  // Hàm xử lý nội dung bài viết, tách công thức toán học và Markdown
-  const processArticleContent = useCallback((content) => {
-    if (!content) return [];
 
-    // Regex để tìm công thức toán học trong $$ $$ hoặc $ $
-    const mathRegex = /\$\$(.*?)\$\$|\$(.*?)\$/gs;
-
-    let lastIndex = 0;
-    const parts = [];
-    let match;
-
-    // Tìm tất cả các công thức toán học trong nội dung
-    while ((match = mathRegex.exec(content)) !== null) {
-      // Thêm phần Markdown trước công thức toán học
-      if (match.index > lastIndex) {
-        parts.push({
-          type: 'markdown',
-          content: content.substring(lastIndex, match.index),
-        });
-      }
-
-      // Thêm công thức toán học
-      const formula = match[0];
-      parts.push({
-        type: 'math',
-        content: formula,
-      });
-
-      lastIndex = match.index + formula.length;
-    }
-
-    // Thêm phần Markdown còn lại sau công thức toán học cuối cùng
-    if (lastIndex < content.length) {
-      parts.push({
-        type: 'markdown',
-        content: content.substring(lastIndex),
-      });
-    }
-
-    return parts;
-  }, []);
-
-  // Xử lý nội dung bài viết khi article thay đổi
-  useEffect(() => {
-    if (article && article.content) {
-      const parts = processArticleContent(article.content);
-      setProcessedContent(parts);
-    }
-  }, [article, processArticleContent]);
 
   const fetchArticleDetail = useCallback(async () => {
     try {
@@ -180,62 +278,7 @@ export default function ArticleDetailScreen() {
           )}
 
           {article.content && (
-            <View style={styles.markdownContainer}>
-              {processedContent.map((part, index) => {
-                if (part.type === 'markdown') {
-                  return (
-                    <Markdown
-                      key={`markdown-${index}`}
-                      style={markdownStyles}
-                      mergeStyle={true}
-                      rules={{
-                        image: (node, _children, _parent, styles) => {
-                          return (
-                            <Image
-                              key={node.key}
-                              style={styles.image}
-                              source={{ uri: node.attributes.src }}
-                              resizeMode="contain"
-                            />
-                          );
-                        },
-                      }}
-                      onLinkPress={(url) => {
-                        Linking.openURL(url);
-                        return false;
-                      }}
-                    >
-                      {part.content}
-                    </Markdown>
-                  );
-                } else if (part.type === 'math') {
-                  return (
-                    <View key={`math-${index}`} style={styles.mathContainer}>
-                      <MathJax
-                        html={part.content}
-                        mathJaxOptions={{
-                          messageStyle: 'none',
-                          extensions: ['tex2jax.js'],
-                          jax: ['input/TeX', 'output/HTML-CSS'],
-                          tex2jax: {
-                            inlineMath: [['$', '$']],
-                            displayMath: [['$$', '$$']],
-                            processEscapes: true,
-                          },
-                          TeX: {
-                            extensions: ['AMSmath.js', 'AMSsymbols.js'],
-                          },
-                        }}
-                        style={styles.mathJaxContent}
-                      />
-                    </View>
-                  );
-                }
-                return null;
-              })}
-            </View>
-
-            // <MyMathText statement={article.content}/>
+            <MathMarkdownViewer content={article.content} style={styles.mathViewer} />
           )}
 
           {article.sourceUrl && (
@@ -253,130 +296,7 @@ export default function ArticleDetailScreen() {
   );
 }
 
-// Styles cho Markdown
-const markdownStyles = {
-  body: {
-    color: colors.ink.darker,
-    fontSize: 16,
-    lineHeight: 24,
-    fontFamily: 'Inter-Regular',
-  },
-  heading1: {
-    fontSize: 24,
-    marginTop: 16,
-    marginBottom: 8,
-    fontFamily: 'Inter-Bold',
-    color: colors.ink.darkest,
-  },
-  heading2: {
-    fontSize: 22,
-    marginTop: 16,
-    marginBottom: 8,
-    fontFamily: 'Inter-Bold',
-    color: colors.ink.darkest,
-  },
-  heading3: {
-    fontSize: 20,
-    marginTop: 16,
-    marginBottom: 8,
-    fontFamily: 'Inter-Bold',
-    color: colors.ink.darkest,
-  },
-  heading4: {
-    fontSize: 18,
-    marginTop: 16,
-    marginBottom: 8,
-    fontFamily: 'Inter-Bold',
-    color: colors.ink.darkest,
-  },
-  heading5: {
-    fontSize: 16,
-    marginTop: 12,
-    marginBottom: 6,
-    fontFamily: 'Inter-Bold',
-    color: colors.ink.darkest,
-  },
-  heading6: {
-    fontSize: 14,
-    marginTop: 12,
-    marginBottom: 6,
-    fontFamily: 'Inter-Bold',
-    color: colors.ink.darkest,
-  },
-  paragraph: {
-    marginVertical: 8,
-    fontSize: 16,
-    lineHeight: 24,
-    fontFamily: 'Inter-Regular',
-    color: colors.ink.darker,
-  },
-  link: {
-    color: colors.primary,
-    textDecorationLine: 'underline',
-  },
-  blockquote: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
-    paddingLeft: 16,
-    marginLeft: 0,
-    marginVertical: 12,
-    fontStyle: 'italic',
-  },
-  image: {
-    width: '100%',
-    height: 200,
-    marginVertical: 12,
-    borderRadius: 8,
-  },
-  list_item: {
-    marginVertical: 4,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  bullet_list: {
-    marginVertical: 8,
-  },
-  ordered_list: {
-    marginVertical: 8,
-  },
-  code_inline: {
-    backgroundColor: colors.sky.lighter,
-    color: colors.primary,
-    fontFamily: 'monospace',
-    borderRadius: 4,
-    paddingHorizontal: 4,
-  },
-  code_block: {
-    backgroundColor: colors.sky.lighter,
-    padding: 12,
-    borderRadius: 8,
-    marginVertical: 8,
-    fontFamily: 'monospace',
-  },
-  hr: {
-    backgroundColor: colors.sky.dark,
-    height: 1,
-    marginVertical: 16,
-  },
-  table: {
-    borderWidth: 1,
-    borderColor: colors.sky.dark,
-    borderRadius: 8,
-    marginVertical: 12,
-  },
-  thead: {
-    backgroundColor: colors.sky.lighter,
-  },
-  th: {
-    padding: 8,
-    fontFamily: 'Inter-Bold',
-  },
-  td: {
-    padding: 8,
-    borderTopWidth: 1,
-    borderTopColor: colors.sky.dark,
-  },
-};
+
 
 const styles = StyleSheet.create({
   container: {
@@ -447,6 +367,10 @@ const styles = StyleSheet.create({
   mathContainer: {
     marginVertical: 8,
     width: '100%',
+  },
+  mathViewer: {
+    width: '100%',
+    marginVertical: 8,
   },
   sourceButton: {
     marginTop: 24,

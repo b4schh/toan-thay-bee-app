@@ -4,16 +4,18 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import colors from '../../../constants/colors';
-import AppText from '../../../components/AppText';
-import TextInputField from '../../../components/input-field/TextInputField';
-import Button from '../../../components/button/Button';
-import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
-import Dialog from '../../../components/dialog/Dialog';
+import {
+  AppText,
+  TextInputField,
+  Button,
+  LoadingOverlay,
+  Dialog,
+} from '@components/index';
 import { setLoading } from '../../../features/state/stateApiSlice';
 import { changePasswordAPI } from '../../../services/userApi';
 import { redirectToLogin } from '../../../services/RouterService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logoutLocal } from '../../../features/auth/authSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ChangePasswordScreen() {
   const dispatch = useDispatch();
@@ -328,11 +330,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.sky.base + '80',
     borderRadius: 8,
     padding: 16,
-    gap: 8
+    gap: 8,
   },
   note: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  }
+  },
 });

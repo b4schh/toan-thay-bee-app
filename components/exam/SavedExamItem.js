@@ -8,6 +8,11 @@ import { useRouter } from 'expo-router';
 export default function SavedExamItem({ exam }) {
   const router = useRouter();
 
+  // Handle case where exam might be null or undefined
+  if (!exam) {
+    return null;
+  }
+
   const handlePress = () => {
     router.push(`/practice/${exam.id}`);
   };
@@ -16,7 +21,7 @@ export default function SavedExamItem({ exam }) {
     <TouchableOpacity style={styles.item} onPress={handlePress}>
       <View style={styles.contentContainer}>
         <Feather name="bookmark" size={20} color={colors.primary} />
-        
+
         <View style={styles.textContainer}>
           <AppText style={styles.examName} numberOfLines={1}>
             {exam.name || 'Đề thi chưa có tên'}
@@ -26,7 +31,7 @@ export default function SavedExamItem({ exam }) {
           </AppText>
         </View>
       </View>
-      
+
       <View style={styles.actionContainer}>
         <AppText style={styles.statusText}>
           {exam.isDone ? 'Đã làm' : 'Chưa làm'}

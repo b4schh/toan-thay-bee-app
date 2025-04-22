@@ -2,7 +2,7 @@ import React from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import AppText from '../../../components/AppText';
+import { AppText } from '@components/index';
 import colors from '../../../constants/colors';
 
 export default function TermsOfServiceScreen() {
@@ -34,8 +34,7 @@ export default function TermsOfServiceScreen() {
           <AppText style={styles.sectionTitle}>2. Quyền sở hữu</AppText>
           {'\n\n'}Tất cả nội dung trong ứng dụng bao gồm nhưng không giới hạn:
           văn bản, hình ảnh, bài giảng, câu hỏi, thiết kế, mã nguồn... đều thuộc
-          quyền sở hữu của Toán Thầy Bee và được bảo vệ bởi luật
-          bản quyền.
+          quyền sở hữu của Toán Thầy Bee và được bảo vệ bởi luật bản quyền.
           {'\n\n'}Bạn không được sao chép, phân phối, chỉnh sửa hoặc sử dụng cho
           mục đích thương mại nếu không có sự cho phép bằng văn bản của chúng
           tôi.

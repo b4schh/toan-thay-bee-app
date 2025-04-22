@@ -3,10 +3,6 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Text,
-  Image,
-  TouchableOpacity,
-  Linking,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSelector, useDispatch } from 'react-redux';

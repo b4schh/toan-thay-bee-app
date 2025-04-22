@@ -1,10 +1,22 @@
 import React from 'react';
-import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../../features/auth/authSlice';
 import { useRouter } from 'expo-router';
 import colors from '../../../constants/colors';
-import { Button, ProfileHeader, Section, MenuItem } from '@components/index';
+import {
+  Button,
+  ProfileHeader,
+  Section,
+  MenuItem,
+  AppText,
+} from '@components/index';
+import { Feather } from '@expo/vector-icons';
 
 export default function AccountScreen() {
   const dispatch = useDispatch();
@@ -23,7 +35,7 @@ export default function AccountScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ProfileHeader user={user} router={router} />
-      
+
       <ScrollView style={styles.scrollView}>
         {/* Profile Header */}
 
@@ -71,7 +83,7 @@ export default function AccountScreen() {
 
         {/* Logout Button */}
 
-        <Button
+        {/* <Button
           text="Đăng xuất"
           icon="log-out"
           iconLibrary="Feather"
@@ -80,7 +92,11 @@ export default function AccountScreen() {
           onPress={handleLogout}
           style={styles.logoutButton}
           textStyle={styles.logoutText}
-        />
+        /> */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Feather name="log-out" size={24} color={colors.danger} />
+          <AppText style={styles.logoutText}>Đăng xuất</AppText>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -102,7 +118,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.sky.white,
     marginTop: 24,
     marginBottom: 120,
-    paddingVertical: 32,
+    paddingVertical: 20,
     borderRadius: 8,
     shadowColor: colors.ink.darkest,
     shadowOffset: { width: 0, height: 1 },

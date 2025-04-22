@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.sky.white,
     // borderBottomWidth: 1,
     // borderBottomColor: colors.sky.light,
-    elevation: 2, 
+    elevation: 2,
   },
   backButton: {
     marginRight: 10,

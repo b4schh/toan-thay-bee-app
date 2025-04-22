@@ -162,6 +162,7 @@ const examSlice = createSlice({
       })
       .addCase(fetchSavedExams.fulfilled, (state, action) => {
         if (action.payload) {
+          // API getSavedExams đã trả về chỉ các đề thi đã lưu (isSave = true)
           state.examsSaved = action.payload.data;
         }
       })
@@ -192,12 +193,42 @@ const examSlice = createSlice({
       .addCase(saveExamForUser.fulfilled, (state, action) => {
         if (action.payload) {
           const { examId, isSave } = action.payload;
+
+          // Update exams list
           if (state.exams)
             state.exams.map((exam) => {
               exam.isSave = exam.id === examId ? isSave : exam.isSave;
               return exam;
             });
+
+          // Update current exam
           if (state.exam) state.exam.isSave = isSave;
+
+          // Update exam detail
+          if (state.examDetail && state.examDetail.id === examId) {
+            state.examDetail.isSave = isSave;
+          }
+
+          // Update saved exams list
+          if (isSave) {
+            // If exam was saved, add it to saved exams if not already there
+            const examToAdd = state.exams?.find(exam => exam.id === examId) ||
+                             state.exam ||
+                             state.examDetail;
+
+            if (examToAdd && !state.examsSaved.some(item =>
+                (item.id === examId) || (item.exam && item.exam.id === examId))) {
+              state.examsSaved.push({
+                exam: examToAdd,
+                isDone: examToAdd.isDone || false
+              });
+            }
+          } else {
+            // If exam was unsaved, remove it from saved exams
+            state.examsSaved = state.examsSaved.filter(item =>
+              (item.id !== examId) && (!item.exam || item.exam.id !== examId)
+            );
+          }
         }
       });
   },

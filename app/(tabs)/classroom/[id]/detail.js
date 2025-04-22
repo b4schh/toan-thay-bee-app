@@ -1,8 +1,5 @@
 import {
   View,
-  Text,
-  Pressable,
-  TouchableOpacity,
   StyleSheet,
   ScrollView,
 } from 'react-native';
@@ -10,7 +7,6 @@ import { useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDataForLearning } from '../../../../features/class/classSlice';
-import { Feather } from '@expo/vector-icons';
 import {
   AppText,
   LessonItem,

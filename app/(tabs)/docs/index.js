@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
-import { Feather } from '@expo/vector-icons';
 import {
   ArticleCard,
   AppText,

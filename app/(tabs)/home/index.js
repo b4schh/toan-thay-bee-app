@@ -17,7 +17,7 @@ import {
   CompletedTestItem,
   SavedExamItem,
 } from '@components/index';
-import { Feather } from '@expo/vector-icons'; // Import tất cả icon libraries từ expo
+import { Feather } from '@expo/vector-icons';
 import colors from '../../../constants/colors';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -60,6 +60,13 @@ export default function HomeScreen() {
     dispatch(fetchSavedExams());
   }, []);
 
+  // Refresh saved exams when tab is selected
+  useEffect(() => {
+    if (selectedTab === 'saved_exams') {
+      dispatch(fetchSavedExams());
+    }
+  }, [selectedTab]);
+
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -67,6 +74,7 @@ export default function HomeScreen() {
       dispatch(fetchClassesByUser());
       dispatch(getUncompletedLearningItem());
       dispatch(fetchAttemptCompleted());
+      dispatch(fetchSavedExams());
     } else {
       router.replace('/login');
     }
@@ -92,7 +100,9 @@ export default function HomeScreen() {
   }, []);
 
   const renderSavedExam = useCallback(({ item }) => {
-    return <SavedExamItem exam={{ ...item.exam, isDone: item.isDone }} />;
+    // API getSavedExams trả về các đề thi đã lưu với cấu trúc { exam: {...}, isDone: bool, isSave: bool }
+    const examData = item.exam ? { ...item.exam, isDone: item.isDone } : item;
+    return <SavedExamItem exam={examData} />;
   }, []);
 
   const TabContent = useMemo(

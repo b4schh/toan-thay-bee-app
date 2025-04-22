@@ -18,7 +18,6 @@ export default function Welcome() {
         iconColor={colors.primary}
         style={[styles.button, {}]}
         onPress={() => router.push('(auth)/login')}
-        // onPress={() => router.push('(tabs)')}
       />
     </View>
   );

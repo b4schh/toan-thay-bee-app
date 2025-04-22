@@ -5,14 +5,16 @@ import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { updateUser } from '../../../features/auth/authSlice';
 import colors from '../../../constants/colors';
-import AppText from '../../../components/AppText';
-import TextInputField from '../../../components/input-field/TextInputField';
-import Button from '../../../components/button/Button';
-import LoadingOverlay from '../../../components/overlay/LoadingOverlay';
+import {
+  AppText,
+  TextInputField,
+  Button,
+  LoadingOverlay,
+  Dropdown,
+  HeaderWithBackButton,
+  DatePickerField,
+} from '@components/index';
 import { setLoading } from '../../../features/state/stateApiSlice';
-import Dropdown from '../../../components/dropdown/Dropdown';
-import HeaderWithBackButton from '../../../components/header/HeaderWithBackButton'; // Import component HeaderWithBackButton
-import DatePickerField from '../../../components/input-field/DatePickerField';
 
 export default function EditProfileScreen() {
   const dispatch = useDispatch();

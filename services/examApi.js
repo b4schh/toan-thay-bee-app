@@ -37,3 +37,12 @@ export const getExamPublic = ({ id }, token) => {
       },
   });
 }
+
+export const saveExamForUserAPI = async ({ examId }, token) => {
+  if (!token) {
+    throw new Error('Bạn cần đăng nhập trước khi lưu đề thi.');
+  }
+  return api.post('/v1/user/save-exam', { examId }, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
