@@ -18,47 +18,127 @@ import {
   LoadingOverlay,
   SearchBar,
   Button,
+  Dialog,
+  Dropdown,
 } from '@components/index';
-import { fetchAllArticle } from '../../../features/article/articleSlice';
 import colors from '../../../constants/colors';
+import { fetchAllArticle } from '../../../features/article/articleSlice';
+import { fetchCodesByType } from '../../../features/code/codeSlice';
 
 export default function DocsScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
 
-  // Get data from Redux store
-  const { articles } = useSelector((state) => state.articles);
+  // Lấy từ Redux
   const { loading } = useSelector((state) => state.states);
-  const { search, currentPage, limit, totalPages } = useSelector(
-    (state) => state.filter.screens.article,
-  );
+  const { articles } = useSelector((state) => state.articles);
+  const { screens } = useSelector((state) => state.filter);
+  const articleScreen = screens.article;
+  const { search, currentPage, limit, totalPages, sortOrder } = articleScreen;
 
-  // Local state
-  const [searchQuery, setSearchQuery] = useState(search || '');
+  // State
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
+
+  // Thêm state và options cho filters
+  const [filterDialogVisible, setFilterDialogVisible] = useState(false);
+  const [articleTypeFilters, setArticleTypeFilters] = useState([]); // Mảng rỗng
+  const [gradeFilters, setGradeFilters] = useState(null); // Giá trị đơn lẻ
+  const [chapterFilters, setChapterFilters] = useState([]); // Mảng rỗng
+
+  const { codes } = useSelector((state) => state.codes);
+
+  useEffect(() => {
+    // dispatch(fetchCodesByType(['article type', 'grade', 'chapter']));
+
+    if (
+      !codes ||
+      !codes['article type'] ||
+      !codes['grade'] ||
+      !codes['chapter']
+    ) {
+      dispatch(fetchCodesByType(['article type', 'grade', 'chapter']));
+    }
+  }, [dispatch, codes]);
+
+  //   console.log(`
+  // Article Type: ${articleTypeFilters}
+  // Grade: ${gradeFilters}
+  // Chapter: ${chapterFilters}`);
+
+  // console.log("Article type code:", codes['article type']);
+  // console.log("Grade code:", codes['grade']);
+  // console.log('Chapter code:', codes['chapter']);
+
+  // console.log(
+  //   'Chapter filtered:',
+  //   chapterCodes.filter((chapter) => chapter.code.startsWith(gradeFilters)),
+  // );
+
+  // Thêm hàm xử lý áp dụng filter
+  const handleApplyFilters = () => {
+    dispatch(
+      fetchAllArticle({
+        search,
+        currentPage: 1, // Reset về trang 1 khi tìm kiếm
+        limit,
+        sortOrder,
+        articleType: articleTypeFilters,
+        grade: gradeFilters,
+        chapter: chapterFilters,
+      }),
+    );
+    console.log(`
+Article Type: ${JSON.stringify(articleTypeFilters)}
+Grade: ${JSON.stringify(gradeFilters)}
+Chapter: ${JSON.stringify(chapterFilters)}`);
+
+    setFilterDialogVisible(false);
+  };
 
   // Function to fetch articles
   const fetchArticles = useCallback(async () => {
     try {
       setError(null);
-      await dispatch(
+      dispatch(
         fetchAllArticle({
-          search: searchQuery,
-          currentPage,
+          search,
+          currentPage: 1, // Reset về trang 1 khi tìm kiếm
           limit,
+          sortOrder,
+          articleType: articleTypeFilters,
+        grade: gradeFilters,
+        chapter: chapterFilters,
         }),
       );
     } catch (err) {
       setError('Không thể tải bài viết. Vui lòng thử lại sau.');
       console.error('Error fetching articles:', err);
     }
-  }, [dispatch, searchQuery, currentPage, limit]);
+  }, [dispatch, search, currentPage, limit, articleTypeFilters, gradeFilters, chapterFilters]);
 
-  // Fetch articles on component mount and when pagination changes
   useEffect(() => {
-    fetchArticles();
-  }, [fetchArticles]);
+    const fetchData = async () => {
+      // setIsLoading(true);
+      setError(null);
+      try {
+        dispatch(
+          fetchAllArticle({
+            search,
+            currentPage: 1,
+            limit,
+            sortOrder,
+          }),
+        );
+      } catch (err) {
+        setError('Không thể tải dữ liệu');
+      } finally {
+        // setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [search]);
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {
@@ -67,29 +147,18 @@ export default function DocsScreen() {
     setIsRefreshing(false);
   }, [fetchArticles]);
 
-  // Handle search
-  const handleSearch = useCallback(() => {
-    dispatch(
-      fetchAllArticle({
-        search: searchQuery,
-        currentPage: 1, // Reset to first page when searching
-        limit,
-      }),
-    );
-  }, [dispatch, searchQuery, limit]);
-
   // Handle page change
   const handlePageChange = useCallback(
     (page) => {
       dispatch(
         fetchAllArticle({
-          search: searchQuery,
+          search,
           currentPage: page,
           limit,
         }),
       );
     },
-    [dispatch, searchQuery, limit],
+    [dispatch, search, limit],
   );
 
   // Render article item
@@ -105,6 +174,15 @@ export default function DocsScreen() {
     [router],
   );
 
+  if (
+    !codes ||
+    !codes['grade'] ||
+    !codes['article type'] ||
+    !codes['chapter']
+  ) {
+    return <LoadingOverlay />;
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -119,13 +197,7 @@ export default function DocsScreen() {
         {/* Search Bar */}
 
         <View style={styles.row}>
-          <SearchBar
-            // value={searchQuery}
-            // onChangeText={setSearchQuery}
-            // onSubmitEditing={handleSearch}
-            placeholder="Tìm kiếm bài viết..."
-            screen="article"
-          />
+          <SearchBar placeholder="Tìm kiếm bài viết..." screen="article" />
 
           {/* Nút filter */}
           <Button
@@ -136,10 +208,68 @@ export default function DocsScreen() {
               />
             }
             style={styles.button}
-            onPress={() => console.log('Filter Clicked!')}
+            onPress={() => setFilterDialogVisible(true)}
           />
         </View>
         {/* Articles List */}
+
+        <Dialog
+          visible={filterDialogVisible}
+          title="Bộ lọc"
+          onClose={() => setFilterDialogVisible(false)}
+          actions={[
+            {
+              text: 'Đặt lại',
+              onPress: () => {
+                setGradeFilters(null);
+                setChapterFilters([]);
+                setArticleTypeFilters([]);
+              },
+              style: styles.resetButton,
+              textStyle: styles.resetButtonText,
+            },
+            {
+              text: 'Áp dụng',
+              onPress: handleApplyFilters,
+              style: styles.applyButton,
+            },
+          ]}
+        >
+          <View style={styles.filterContent}>
+            <Dropdown
+              label="Danh mục"
+              options={codes['article type']}
+              value={articleTypeFilters || []}
+              onChange={(codes) => setArticleTypeFilters(codes)}
+              placeholder="Chọn danh mục"
+              multiSelect={true} // Cho phép chọn nhiều
+            />
+            <Dropdown
+              label="Lớp"
+              options={codes['grade']}
+              value={gradeFilters}
+              onChange={(code) => setGradeFilters(code)}
+              placeholder="Chọn lớp"
+              multiSelect={false} // Chỉ chọn một
+            />
+            <Dropdown
+              label="Chương"
+              options={
+                gradeFilters && codes['chapter']
+                  ? codes['chapter'].filter((chapter) =>
+                      chapter.code.startsWith(gradeFilters),
+                    )
+                  : [] // Không hiển thị chương nếu chưa chọn lớp
+              }
+              value={chapterFilters || []}
+              onChange={(codes) => setChapterFilters(codes)}
+              placeholder={gradeFilters ? 'Chọn chương' : 'Vui lòng chọn lớp!'}
+              multiSelect={true} // Cho phép chọn nhiều
+              disabled={!gradeFilters || !codes?.chapter} // Vô hiệu hóa nếu chưa chọn lớp
+            />
+          </View>
+        </Dialog>
+
         <FlatList
           data={articles}
           numColumns={2}
@@ -161,7 +291,8 @@ export default function DocsScreen() {
               onRefresh={handleRefresh}
               isLoading={loading}
               error={error}
-              message="Không có bài viết nào"
+              loadingMessage="Đang tải bài viết..."
+              emptyMessage="Không có bài viết nào"
             />
           }
           ListFooterComponent={
@@ -208,10 +339,24 @@ const styles = StyleSheet.create({
   },
   articleRow: {
     justifyContent: 'space-between',
-    // marginBottom: 10,
-    gap: 10,
   },
   paginationContainer: {
     marginTop: 16,
+  },
+  filterContent: {
+    width: '100%',
+    gap: 10,
+  },
+  resetButton: {
+    backgroundColor: colors.sky.white,
+    borderWidth: 1,
+    borderColor: colors.primary.default,
+    flex: 1,
+  },
+  resetButtonText: {
+    color: colors.primary,
+  },
+  applyButton: {
+    flex: 1,
   },
 });

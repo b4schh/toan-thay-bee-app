@@ -1,14 +1,25 @@
 import api from './api';
 
 export const getAllArticleAPI = async (data, token) => {
-    const { search = '', currentPage = 1, limit = 10, sortOrder = 'desc' } = data || {};
+    const { 
+        search = '', 
+        currentPage = 1, 
+        limit = 10, 
+        sortOrder = 'desc',
+        articleType = [],
+        grade = null,
+        chapter = []
+    } = data || {};
 
     return await api.get('/v1/user/article', {
         params: {
             search,
             page: currentPage,
             limit,
-            sortOrder
+            sortOrder,
+            articleType,
+            grade,
+            chapter
         },
         headers: {
             Authorization: `Bearer ${token}`,
@@ -27,4 +38,4 @@ export const getArticleByIdAPI = async (data, token) => {
             Authorization: `Bearer ${token}`,
         },
     });
-}
+};

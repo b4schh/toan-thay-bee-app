@@ -31,6 +31,24 @@ export default function AccountScreen() {
       console.error('Đăng xuất thất bại:', error);
     }
   };
+  
+  const codes = {
+    chapter: [
+      { code: '10C1', description: 'MỆNH ĐỀ VÀ TẬP HỢP' },
+      { code: '10C11', description: 'Mệnh đề' },
+      { code: '10C12', description: 'Tập hợp và các phép toán trên tập hợp' },
+      { code: '11C1', description: '123' },
+      { code: '11C11', description: '456' },
+      { code: '11C12', description: '789' },
+    ],
+  };
+
+  const gradeFilters = 11;
+  const filtered = codes['chapter'].filter((chapter) =>
+    chapter.code.startsWith(gradeFilters),
+  );
+
+  console.log('Chapter filtered:', filtered);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -82,7 +100,6 @@ export default function AccountScreen() {
         </Section>
 
         {/* Logout Button */}
-
         {/* <Button
           text="Đăng xuất"
           icon="log-out"
@@ -93,6 +110,7 @@ export default function AccountScreen() {
           style={styles.logoutButton}
           textStyle={styles.logoutText}
         /> */}
+
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Feather name="log-out" size={24} color={colors.danger} />
           <AppText style={styles.logoutText}>Đăng xuất</AppText>

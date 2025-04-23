@@ -3,7 +3,8 @@ import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import AppText from '../AppText';
 import Button from '../button/Button';
 import colors from 'constants/colors';
-import MyMathText from '@components/latex/MyMathText';
+import { MyMathText, MathMarkdownViewer } from '@components/index';
+
 
 export default function QuestionStatements({
   type,
@@ -42,6 +43,8 @@ export default function QuestionStatements({
   }
 
   if (type === 'DS') {
+    console.log(question.statements);
+    
     return (
       <View style={styles.dsContainer}>
         {question?.statements?.map((statement, index) => {

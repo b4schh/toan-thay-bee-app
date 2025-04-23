@@ -1,22 +1,22 @@
-import React, { useState, memo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, memo, useEffect, useCallback, useRef, useMemo } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { setScreenSearch } from '../features/filter/filterSlice';
 import colors from '../constants/colors';
 
-const SearchBar = memo(({ placeholder, screen }) => {
+const SearchBar = memo(({ placeholder = 'Tìm kiếm...', screen }) => {
   const dispatch = useDispatch();
   const { screens } = useSelector((state) => state.filter);
-  const [searchText, setSearchText] = useState(screens[screen]?.search || '');
+
+  const initialSearchText = useMemo(() => screens[screen]?.search || '', [screen, screens]);
+  const [searchText, setSearchText] = useState(initialSearchText);
   const timeoutRef = useRef(null);
 
-  // Sync với global state khi component mount hoặc screen thay đổi
   useEffect(() => {
     setSearchText(screens[screen]?.search || '');
-  }, [screen, screens[screen]?.search]);
+  }, [screen, screens]);
 
-  // Cleanup timeout khi component unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -25,7 +25,22 @@ const SearchBar = memo(({ placeholder, screen }) => {
     };
   }, []);
 
-  const handleSearch = (text) => setSearchText(text);
+  const handleSearch = (text) => {
+    setSearchText(text);
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      dispatch(
+        setScreenSearch({
+          screen,
+          search: text.trim(),
+        }),
+      );
+    }, 300); // Debounce 300ms
+  };
 
   const handleClear = useCallback(() => {
     setSearchText('');
@@ -41,13 +56,15 @@ const SearchBar = memo(({ placeholder, screen }) => {
   }, [dispatch, screen]);
 
   const handleBlur = useCallback(() => {
-    dispatch(
-      setScreenSearch({
-        screen,
-        search: searchText.trim(),
-      }),
-    );
-  }, [dispatch, screen, searchText]);
+    if (searchText.trim() !== screens[screen]?.search) {
+      dispatch(
+        setScreenSearch({
+          screen,
+          search: searchText.trim(),
+        }),
+      );
+    }
+  }, [dispatch, screen, searchText, screens]);
 
   return (
     <View style={styles.container}>
@@ -65,9 +82,16 @@ const SearchBar = memo(({ placeholder, screen }) => {
         onChangeText={(text) => handleSearch(text)}
         onBlur={handleBlur}
         returnKeyType="search"
+        accessible={true}
+        accessibilityLabel="Search input"
       />
       {searchText ? (
-        <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
+        <TouchableOpacity
+          onPress={handleClear}
+          style={styles.clearButton}
+          accessible={true}
+          accessibilityLabel="Clear search text"
+        >
           <Ionicons name="close-circle" size={20} color={colors.ink.light} />
         </TouchableOpacity>
       ) : null}
@@ -87,10 +111,6 @@ const styles = StyleSheet.create({
     borderColor: colors.sky.light,
     backgroundColor: colors.sky.lighter,
     elevation: 2,
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 4,
   },
   icon: {
     marginRight: 8,
@@ -106,7 +126,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// Add display name for debugging
 SearchBar.displayName = 'SearchBar';
 
 export default SearchBar;

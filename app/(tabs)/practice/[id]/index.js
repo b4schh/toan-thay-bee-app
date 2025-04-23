@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   LoadingOverlay,
@@ -10,7 +10,10 @@ import {
 } from '@components/index';
 import colors from '../../../../constants/colors';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchPublicExamById, saveExamForUser } from '../../../../features/exam/examSlice';
+import {
+  fetchPublicExamById,
+  saveExamForUser,
+} from '../../../../features/exam/examSlice';
 import { fetchAttemptByStudentId } from '../../../../features/attempt/attemptSlice';
 
 export default function ExamDetailScreen() {
@@ -50,7 +53,9 @@ export default function ExamDetailScreen() {
         // Show success dialog
         const isSaved = response.data.isSave;
         setDialogTitle('Thành công');
-        setDialogMessage(isSaved ? 'Lưu đề thi thành công' : 'Bỏ lưu đề thi thành công');
+        setDialogMessage(
+          isSaved ? 'Lưu đề thi thành công' : 'Bỏ lưu đề thi thành công',
+        );
         setDialogVisible(true);
       })
       .catch((error) => {
@@ -66,7 +71,11 @@ export default function ExamDetailScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ flexGrow: 1 }}
+      showsVerticalScrollIndicator={false}
+    >
       <LoadingOverlay />
       <HeaderWithBackButton
         title={examDetail?.name}
@@ -92,7 +101,7 @@ export default function ExamDetailScreen() {
         type="alert"
         onClose={closeDialog}
       />
-    </View>
+    </ScrollView>
   );
 }
 

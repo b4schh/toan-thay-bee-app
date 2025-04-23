@@ -23,9 +23,22 @@ import {
 } from '@components/index';
 
 import colors from '../../../constants/colors';
-import socket from '../../../services/socket';
 import { fetchAnswersByAttempt } from '../../../features/answer/answerSlice';
 import { fetchPublicExamById } from '../../../features/exam/examSlice';
+import {
+  joinExam,
+  submitExam,
+  selectAnswerTN,
+  selectAnswerDS,
+  selectAnswerTLN,
+  onExamStarted,
+  onExamSubmitted,
+  onSubmitError,
+  onAnswerSaved,
+  onAnswerError,
+  setupDebugListener,
+  cleanupSocketListeners
+} from '../../../services/socketExam';
 
 export default function DoExamScreen() {
   const router = useRouter();
@@ -150,12 +163,12 @@ export default function DoExamScreen() {
     if (!attemptId1 && !examDetail?.testDuration) return;
     setSaveQuestion(new Set());
     setErrorQuestion(new Set());
-    socket.emit('submit_exam', { attemptId: attemptId1 });
+    submitExam({ attemptId: attemptId1 });
   };
 
   const handleSubmit = () => {
     if (!attemptId1) return;
-    socket.emit('submit_exam', { attemptId: attemptId1 });
+    submitExam({ attemptId: attemptId1 });
   };
 
   const handleStartExam = () => {
@@ -165,58 +178,15 @@ export default function DoExamScreen() {
       return;
     }
 
-    if (!socket.connected) {
-      socket.connect();
-
-      socket.once('connect', () => {
-        console.log('✅ Socket connected');
-
-        // socket.once('exam_started', handleExamStarted);
-
-        socket.emit('join_exam', {
-          studentId: user.id,
-          examId: id,
-        });
-      });
-
-      setTimeout(() => {
-        if (!socket.connected) {
-          Alert.alert('Lỗi', 'Không thể kết nối socket.');
-        }
-      }, 5000);
-    } else {
-      socket.emit('join_exam', { studentId: user.id, examId: id });
-    }
-
-    socket.once('exam_error', ({ message }) => {
+    joinExam({ studentId: user.id, examId: id }, (message) => {
       alert('Lỗi', message);
       router.replace('/home');
+    }).catch((error) => {
+      Alert.alert('Lỗi', error.message);
     });
   };
 
-  const handleExamStarted = ({ attemptId, startTime }) => {
-    console.log('📥 Nhận sự kiện exam_started');
 
-    setIsStarted(true);
-    setAttemptId1(attemptId);
-
-    if (examDetail?.testDuration && startTime) {
-      const start = new Date(startTime);
-      const now = new Date();
-      const elapsedSeconds = Math.floor((now - start) / 1000);
-      const totalSeconds = examDetail.testDuration * 60;
-      const remaining = Math.max(totalSeconds - elapsedSeconds, 0);
-      setRemainingTime(remaining);
-    }
-
-    if (attemptId) {
-      dispatch(fetchAnswersByAttempt(attemptId));
-    }
-
-    if (id) {
-      dispatch(fetchPublicQuestionsByExamId(id));
-    }
-  };
 
   const handleSelectAnswerTN = (questionId, statementId, type) => {
     const payload = {
@@ -238,7 +208,7 @@ export default function DoExamScreen() {
       return [...filtered, newAnswer];
     });
 
-    socket.emit('select_answer', payload);
+    selectAnswerTN(payload);
   };
 
   const handleSelectAnswerDS = (questionId, statementId, selectedAnswer) => {
@@ -271,7 +241,7 @@ export default function DoExamScreen() {
       };
 
       // ✨ Gửi toàn bộ lên server
-      socket.emit('select_answer', {
+      selectAnswerDS({
         questionId,
         answerContent: newState[questionId],
         studentId: user.id,
@@ -321,7 +291,7 @@ export default function DoExamScreen() {
       examId: id,
       name: user.lastName + ' ' + user.firstName,
     };
-    socket.emit('select_answer', payload);
+    selectAnswerTLN(payload);
   };
 
   useEffect(() => {
@@ -387,20 +357,14 @@ export default function DoExamScreen() {
   }, [remainingTime]);
 
   useEffect(() => {
-    socket.onAny((event, ...args) => {
-      console.log(`📡 Socket event: ${event}, args`);
-      console.log(args);
-    });
-
-    return () => {
-      socket.offAny();
-    };
+    const cleanup = setupDebugListener();
+    return cleanup;
   }, []);
 
   useEffect(() => {
     if (!examDetail) return;
 
-    socket.once('exam_started', ({ attemptId, startTime }) => {
+    const handleExamStartedCallback = ({ attemptId, startTime }) => {
       console.log('Exam 2:', examDetail);
       console.log('exam.testDuration 2:', examDetail?.testDuration);
       setIsStarted(true);
@@ -424,49 +388,64 @@ export default function DoExamScreen() {
       if (id) {
         dispatch(fetchPublicQuestionsByExamId(id));
       }
-    });
-    return () => {
-      socket.off('exam_started');
     };
+
+    const cleanup = onExamStarted(handleExamStartedCallback);
+    return cleanup;
   }, []);
 
   useEffect(() => {
-    socket.on('exam_submitted', ({ message, attemptId }) => {
+    const handleExamSubmitted = ({ message, attemptId }) => {
       console.log('Bài thi đã được nộp:', message);
       alert(message);
       setSaveQuestion(new Set());
       setErrorQuestion(new Set());
       if (!attemptId) return;
       router.replace(`/exam/${attemptId}/result`);
-    });
-    if (isStarted) {
-      socket.on('submit_error', ({ message }) => {
-        alert(message);
-      });
-    }
+    };
 
-    socket.on('answer_saved', ({ questionId }) => {
+    const handleSubmitError = ({ message }) => {
+      alert(message);
+    };
+
+    const handleAnswerSaved = ({ questionId }) => {
       addQuestion(questionId);
       removeErrorQuestion(questionId);
-    });
+    };
 
-    socket.on('answer_error', ({ questionId, message }) => {
+    const handleAnswerError = ({ questionId }) => {
       addErrorQuestion(questionId);
       removeQuestion(questionId);
-    });
+    };
+
+    // Setup event listeners
+    const cleanupExamSubmitted = onExamSubmitted(handleExamSubmitted);
+    let cleanupSubmitError = null;
+    if (isStarted) {
+      cleanupSubmitError = onSubmitError(handleSubmitError);
+    }
+    const cleanupAnswerSaved = onAnswerSaved(handleAnswerSaved);
+    const cleanupAnswerError = onAnswerError(handleAnswerError);
 
     return () => {
-      socket.off('answer_saved');
-      socket.off('answer_error');
-      socket.off('exam_submitted');
-      socket.off('submit_error');
+      cleanupExamSubmitted();
+      if (cleanupSubmitError) cleanupSubmitError();
+      cleanupAnswerSaved();
+      cleanupAnswerError();
     };
-  }, []);
+  }, [isStarted]);
 
   useEffect(() => {
     console.log('Đã lưu câu hỏi:', Array.from(saveQuestion));
     console.log('Đã lưu câu hỏi lỗi:', Array.from(errorQuestion));
   }, [saveQuestion, errorQuestion]);
+
+  // Cleanup all socket listeners when component unmounts
+  useEffect(() => {
+    return () => {
+      cleanupSocketListeners();
+    };
+  }, []);
 
   return (
     <View style={styles.mainContainer}>
@@ -583,6 +562,7 @@ export default function DoExamScreen() {
 
 const styles = StyleSheet.create({
   mainContainer: {
+    // backgroundColor: colors.sky.white,
     flex: 1,
     // justifyContent: 'center',
     // alignItems: 'center'

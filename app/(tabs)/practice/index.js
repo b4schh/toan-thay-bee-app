@@ -53,14 +53,23 @@ export default function PracticeScreen() {
   const { codes } = useSelector((state) => state.codes);
 
   useEffect(() => {
-    dispatch(fetchCodesByType(['grade', 'exam type', 'chapter']));
-  }, [dispatch]);
+    // dispatch(fetchCodesByType(['exam type', 'grade', 'chapter']));
+
+    if (!codes || !codes['exam type'] || !codes['grade'] || !codes['chapter']) {
+      dispatch(fetchCodesByType(['exam type', 'grade', 'chapter']));
+    }
+  }, [dispatch, codes]);
+
+  // console.log('Code practice:', codes);
+  // console.log('Type of exam code:', typeOfExamCodes);
+  // console.log('Grade code:', gradeCodes);
+  // console.log('Chapter code:', chapterCodes);
 
   // Thêm state và options cho filters
   const [filterDialogVisible, setFilterDialogVisible] = useState(false);
-  const [classFilters, setClassFilters] = useState(null);
-  const [chapterFilters, setChapterFilters] = useState(null);
-  const [typeOfExamFilters, setTypeOfExamFilters] = useState(null);
+  const [gradeFilters, setGradeFilters] = useState(null);
+  const [chapterFilters, setChapterFilters] = useState([]);
+  const [typeOfExamFilters, setTypeOfExamFilters] = useState([]);
 
   // Thêm hàm xử lý áp dụng filter
   const handleApplyFilters = () => {
@@ -70,11 +79,16 @@ export default function PracticeScreen() {
         currentPage: 1, // Reset về trang 1 khi tìm kiếm
         limit,
         sortOrder,
-        typeOfExam: [typeOfExamFilters],
-        class: classFilters,
-        chapter: [chapterFilters],
+        grade: gradeFilters,
+        typeOfExam: typeOfExamFilters,
+        chapter: chapterFilters,
       }),
     );
+    console.log(`
+Grade: ${JSON.stringify(gradeFilters)}
+Type of Exam: ${JSON.stringify(typeOfExamFilters)}
+Chapter: ${JSON.stringify(chapterFilters)}`);
+
     setFilterDialogVisible(false);
   };
 
@@ -159,6 +173,10 @@ export default function PracticeScreen() {
     [search, limit, sortOrder],
   );
 
+  if (!codes || !codes['grade'] || !codes['exam type'] || !codes['chapter']) {
+    return <LoadingOverlay />;
+  }
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -187,9 +205,9 @@ export default function PracticeScreen() {
           {
             text: 'Đặt lại',
             onPress: () => {
-              setClassFilters(null);
-              setChapterFilters(null);
-              setTypeOfExamFilters(null);
+              setGradeFilters(null);
+              setChapterFilters([]);
+              setTypeOfExamFilters([]);
             },
             style: styles.resetButton,
             textStyle: styles.resetButtonText,
@@ -205,9 +223,10 @@ export default function PracticeScreen() {
           <Dropdown
             label="Lớp"
             options={codes['grade']}
-            value={classFilters}
-            onChange={(code) => setClassFilters(code)}
+            value={gradeFilters}
+            onChange={(code) => setGradeFilters(code)}
             placeholder="Chọn lớp"
+            multiSelect={false}
           />
           <Dropdown
             label="Loại đề thi"
@@ -215,6 +234,7 @@ export default function PracticeScreen() {
             value={typeOfExamFilters}
             onChange={(code) => setTypeOfExamFilters(code)}
             placeholder="Chọn loại đề thi"
+            multiSelect={true}
           />
           <Dropdown
             label="Chương"
@@ -222,6 +242,7 @@ export default function PracticeScreen() {
             value={chapterFilters}
             onChange={(code) => setChapterFilters(code)}
             placeholder="Chọn chương"
+            multiSelect={true}
           />
         </View>
       </Dialog>

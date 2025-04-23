@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Text, Image } from 'react-native';
 import AppText from '../AppText';
-import MyMathText from '@components/latex/MyMathText';
+import { MyMathText, MathMarkdownViewer } from '@components/index';
 
 export default function QuestionContent({
   sectionTitle,

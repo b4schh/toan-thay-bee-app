@@ -87,16 +87,16 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: '#fff',
     borderRadius: 12,
-    flex: 1,
+    // flex: 1
     marginBottom: 70,
+    height: 400,
   },
   tableBody: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
     overflow: 'hidden',
-    flex: 1,
-    
+    flex: 1, 
   },
   row: {
     flexDirection: 'row',

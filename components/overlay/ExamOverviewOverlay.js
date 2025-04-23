@@ -122,10 +122,14 @@ export default function ExamOverviewOverlay({
       {/* Fixed Header */}
       <View style={styles.headerContainer}>
         <AppText style={styles.title}>TIẾN ĐỘ LÀM BÀI</AppText>
-        <AppText style={styles.timer}>⏳ {remainingTime}</AppText>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <Feather name="x" size={24} color="black" />
         </TouchableOpacity>
+      </View>
+
+      <View style={styles.timeContainer}>
+        <AppText style={{ fontFamily: 'Inter-Bold' , fontSize: 18 }}>Thời gian còn lại</AppText>
+        <AppText style={styles.timer}>⏳ {remainingTime}</AppText>
       </View>
 
       {/* Scrollable Content */}
@@ -304,11 +308,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.sky.lighter,
   },
+  timeContainer: {
+    alignItems: 'center',
+    padding: 8,
+    gap: 4
+  },
   timer: {
-    fontSize: 18,
+    fontSize: 20,
     color: colors.danger,
     fontFamily: 'Inter-Bold',
-    marginHorizontal: 12,
   },
   title: {
     fontSize: 20,
@@ -316,7 +324,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flex: 1,
-    padding: 20,
+    paddingTop: 12,
+    paddingHorizontal: 20,
   },
   sectionContainer: {
     marginBottom: 16,

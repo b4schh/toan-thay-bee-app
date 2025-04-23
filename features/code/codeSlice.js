@@ -61,9 +61,10 @@ const codeSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchCodesByType.fulfilled, (state, action) => {
-
                 const { data } = action.payload;
                 const formattedCodes = {};
+
+                // Định dạng dữ liệu mới
                 data.forEach(({ type, code, description }) => {
                     if (!formattedCodes[type]) {
                         formattedCodes[type] = [];
@@ -71,9 +72,11 @@ const codeSlice = createSlice({
                     formattedCodes[type].push({ code, description });
                 });
 
-                if (action.payload) {
-                    state.codes = formattedCodes
-                }
+                // Hợp nhất dữ liệu mới với dữ liệu cũ
+                state.codes = {
+                    ...state.codes, // Dữ liệu cũ
+                    ...formattedCodes, // Dữ liệu mới
+                };
             })
             .addCase(fetchAllCodes.pending, (state) => {
                 state.allCodes = [];

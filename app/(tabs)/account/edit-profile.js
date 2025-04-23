@@ -10,7 +10,7 @@ import {
   TextInputField,
   Button,
   LoadingOverlay,
-  Dropdown,
+  CustomDropdown,
   HeaderWithBackButton,
   DatePickerField,
 } from '@components/index';
@@ -201,7 +201,7 @@ export default function EditProfileScreen() {
             <View style={styles.inputContainer}>
               <AppText style={styles.label}>Lớp</AppText>
               <View style={styles.row}>
-                <Dropdown
+                <CustomDropdown
                   options={classOptions}
                   value={className}
                   onChange={setClassName}
@@ -228,7 +228,7 @@ export default function EditProfileScreen() {
                 <View style={styles.inputContainer}>
                   <AppText style={styles.label}>Giới tính</AppText>
                   <View style={styles.row}>
-                    <Dropdown
+                    <CustomDropdown
                       options={genderOptions}
                       value={gender}
                       onChange={setGender}

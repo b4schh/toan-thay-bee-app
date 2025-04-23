@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
 import AppText from '../AppText';
 import colors from '../../constants/colors';
 import Feather from '@expo/vector-icons/Feather';
+import { MaterialIcons } from '@expo/vector-icons'; // Thêm icon cho checkbox và radio button
 
 export default function Dropdown({
   label,
@@ -11,24 +17,54 @@ export default function Dropdown({
   onChange,
   placeholder = 'Chọn một mục',
   disabled = false,
+  multiSelect = false, // Thêm prop để hỗ trợ multi-select
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const selectedOption = options.find((opt) => opt.code === value);
+
+  const handleOptionPress = (optionCode) => {
+    if (multiSelect) {
+      // Xử lý chọn nhiều lựa chọn
+      if (value.includes(optionCode)) {
+        onChange(value.filter((code) => code !== optionCode));
+      } else {
+        onChange([...value, optionCode]);
+      }
+    } else {
+      // Xử lý chọn một lựa chọn
+      onChange(optionCode);
+      setIsOpen(false);
+    }
+  };
+
+  const selectedOptions = multiSelect
+    ? (options?.filter((opt) => value.includes(opt.code)) || [])
+    : options.find((opt) => opt.code === value);
 
   return (
     <View style={styles.container}>
       {label && <AppText style={styles.label}>{label}</AppText>}
 
       <TouchableOpacity
-        style={[styles.header, isOpen && styles.headerActive, disabled && styles.headerDisabled]}
+        style={[
+          styles.header,
+          isOpen && styles.headerActive,
+          disabled && styles.headerDisabled,
+        ]}
         onPress={disabled ? null : () => setIsOpen(!isOpen)}
         activeOpacity={0.7}
         disabled={disabled}
       >
         <AppText
-          style={[styles.selectedText, !selectedOption && styles.placeholder]}
+          style={[
+            styles.selectedText,
+            (!selectedOptions || (multiSelect && selectedOptions.length === 0)) &&
+              styles.placeholder,
+          ]}
         >
-          {selectedOption ? selectedOption.description : placeholder}
+          {multiSelect
+            ? selectedOptions.map((opt) => opt.description).join(', ') ||
+              placeholder
+            : selectedOptions?.description || placeholder}
         </AppText>
         <AppText style={styles.arrow}>
           {isOpen ? (
@@ -39,50 +75,63 @@ export default function Dropdown({
         </AppText>
       </TouchableOpacity>
 
-      <Modal
-        visible={isOpen}
-        transparent
-        animationType="none"
-        onRequestClose={() => setIsOpen(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setIsOpen(false)}
-        >
-          <View style={[styles.optionsContainer]}>
-            {options.map((option) => (
-              <TouchableOpacity
-                key={option.code}
-                style={[
-                  styles.option,
-                  value === option.code && styles.optionSelected,
-                ]}
-                onPress={() => {
-                  onChange(option.code);
-                  setIsOpen(false);
-                }}
-              >
-                <AppText
-                  style={[
-                    styles.optionText,
-                    value === option.code && styles.selectedOption,
-                  ]}
-                >
-                  {option.description}
-                </AppText>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      {isOpen && (
+        (() => {
+          const validOptions = Array.isArray(options) ? options : [];
+
+          return (
+            <ScrollView style={styles.optionsContainer}>
+              {validOptions.map((option) => {
+                const isSelected = multiSelect
+                  ? value.includes(option.code)
+                  : value === option.code;
+
+                return (
+                  <TouchableOpacity
+                    key={option.code}
+                    style={[
+                      styles.option,
+                      isSelected && styles.optionSelected,
+                    ]}
+                    onPress={() => handleOptionPress(option.code)}
+                  >
+                    <View style={styles.iconContainer}>
+                      {multiSelect ? (
+                        <MaterialIcons
+                          name={isSelected ? 'check-box' : 'check-box-outline-blank'}
+                          size={20}
+                          color={isSelected ? colors.primary.default : colors.ink.light}
+                        />
+                      ) : (
+                        <MaterialIcons
+                          name={isSelected ? 'radio-button-checked' : 'radio-button-unchecked'}
+                          size={20}
+                          color={isSelected ? colors.primary.default : colors.ink.light}
+                        />
+                      )}
+                    </View>
+                    <AppText
+                      style={[
+                        styles.optionText,
+                        isSelected && styles.selectedOption,
+                      ]}
+                    >
+                      {option.description}
+                    </AppText>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          );
+        })()
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    marginBottom: 10,
   },
   label: {
     marginBottom: 5,
@@ -116,31 +165,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.ink.dark,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'center',
-    padding: 20,
-  },
   optionsContainer: {
     backgroundColor: colors.sky.white,
     borderRadius: 8,
-    maxHeight: '80%',
-    width: '100%',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderWidth: 1,
+    borderColor: colors.sky.base,
+    marginTop: 5,
+    maxHeight: 180,
   },
   option: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 12,
   },
   optionSelected: {
     backgroundColor: colors.sky.lighter,
+  },
+  iconContainer: {
+    marginRight: 10,
   },
   optionText: {
     color: colors.ink.dark,
