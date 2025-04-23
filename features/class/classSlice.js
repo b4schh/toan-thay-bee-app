@@ -214,7 +214,7 @@ const classSlice = createSlice({
         state.learningItems = [];
       })
       .addCase(getUncompletedLearningItem.fulfilled, (state, action) => {
-        state.learningItems = action.payload.data.map((item) => item.learningItem);
+        state.learningItems = action.payload?.data?.map((item) => item.learningItem);
       });
   },
 });

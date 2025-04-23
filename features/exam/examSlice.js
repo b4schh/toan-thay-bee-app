@@ -38,7 +38,7 @@ export const fetchSavedExams = createAsyncThunk(
       dispatch,
       examApi.getSavedExams,
       null,
-      () => {},
+      () => { },
       true,
       false,
     );
@@ -76,7 +76,7 @@ export const fetchExamById = createAsyncThunk(
       dispatch,
       examApi.getExamById,
       id,
-      () => {},
+      () => { },
       true,
       false,
     );
@@ -90,7 +90,7 @@ export const fetchPublicExamById = createAsyncThunk(
       dispatch,
       examApi.getExamPublic,
       data,
-      () => {},
+      () => { },
       true,
       false,
     );
@@ -104,7 +104,7 @@ export const saveExamForUser = createAsyncThunk(
       dispatch,
       examApi.saveExamForUserAPI,
       { examId },
-      () => {},
+      () => { },
       true,
       false,
     );
@@ -127,24 +127,24 @@ const examSlice = createSlice({
       state.exam = action.payload;
     },
     initializeTimer: (state, action) => {
-        state.timeLeft = action.payload;
-        state.initialDuration = action.payload;
-        state.isTimerRunning = true;
+      state.timeLeft = action.payload;
+      state.initialDuration = action.payload;
+      state.isTimerRunning = true;
     },
     decrementTimer: (state) => {
-        if (state.timeLeft > 0 && state.isTimerRunning) {
-            state.timeLeft -= 1;
-        }
+      if (state.timeLeft > 0 && state.isTimerRunning) {
+        state.timeLeft -= 1;
+      }
     },
     pauseTimer: (state) => {
-        state.isTimerRunning = false;
+      state.isTimerRunning = false;
     },
     resumeTimer: (state) => {
-        state.isTimerRunning = true;
+      state.isTimerRunning = true;
     },
     resetTimer: (state) => {
-        state.timeLeft = state.initialDuration;
-        state.isTimerRunning = false;
+      state.timeLeft = state.initialDuration;
+      state.isTimerRunning = false;
     },
   },
   extraReducers: (builder) => {
@@ -213,11 +213,11 @@ const examSlice = createSlice({
           if (isSave) {
             // If exam was saved, add it to saved exams if not already there
             const examToAdd = state.exams?.find(exam => exam.id === examId) ||
-                             state.exam ||
-                             state.examDetail;
+              state.exam ||
+              state.examDetail;
 
             if (examToAdd && !state.examsSaved.some(item =>
-                (item.id === examId) || (item.exam && item.exam.id === examId))) {
+              (item.id === examId) || (item.exam && item.exam.id === examId))) {
               state.examsSaved.push({
                 exam: examToAdd,
                 isDone: examToAdd.isDone || false
@@ -225,9 +225,10 @@ const examSlice = createSlice({
             }
           } else {
             // If exam was unsaved, remove it from saved exams
-            state.examsSaved = state.examsSaved.filter(item =>
-              (item.id !== examId) && (!item.exam || item.exam.id !== examId)
-            );
+            state.examsSaved = state.examsSaved.filter(item => {
+              const itemId = item.id || item.exam?.id;
+              return itemId !== examId;
+            });
           }
         }
       });

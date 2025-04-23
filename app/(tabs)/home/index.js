@@ -64,6 +64,10 @@ export default function HomeScreen() {
   useEffect(() => {
     if (selectedTab === 'saved_exams') {
       dispatch(fetchSavedExams());
+    } else if (selectedTab === 'exam_history') {
+      dispatch(fetchAttemptCompleted());
+    } else {
+      dispatch(getUncompletedLearningItem());
     }
   }, [selectedTab]);
 
@@ -111,7 +115,7 @@ export default function HomeScreen() {
         <View style={styles.tabContentContainer}>
           {learningItems && learningItems.length > 0 ? (
             <FlatList
-              data={learningItems}
+              data={learningItems.slice(0, 5)}
               renderItem={renderLearningItem}
               keyExtractor={(item) =>
                 item && item.id ? item.id.toString() : Math.random().toString()
@@ -130,8 +134,8 @@ export default function HomeScreen() {
         <View style={styles.tabContentContainer}>
           {examsSaved && examsSaved.length > 0 ? (
             <FlatList
-              data={examsSaved}
-              renderItem={renderSavedExam}
+            data={examsSaved.slice(0, 5)}
+            renderItem={renderSavedExam}
               keyExtractor={(item) =>
                 item && item.id ? item.id.toString() : Math.random().toString()
               }
@@ -149,8 +153,8 @@ export default function HomeScreen() {
         <View style={styles.tabContentContainer}>
           {completedAttempts && completedAttempts.length > 0 ? (
             <FlatList
-              data={completedAttempts}
-              renderItem={renderCompletedTest}
+            data={completedAttempts.slice(0, 5)}
+            renderItem={renderCompletedTest}
               keyExtractor={(item) =>
                 item && item.id ? item.id.toString() : Math.random().toString()
               }
